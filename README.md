@@ -1,5 +1,8 @@
 # Doughy - Your open source dough calculator!
 
+## Update 6/8/2026
+This app will now be maintained by Allyson Urick
+
 You can find this app on the iOS App Store [here](https://apps.apple.com/us/app/doughy/id1507706828)
 
 This app is created to make it as easy as possible to calculate your dough recipes. Use the default recipes that I have provided or add your favorite ones. This app uses bakers percentages to calculate your recipe for you, so make sure you read up on that. The intention of this app is to make it easy to calculate your recipes, but also to perfect them. Version 1.0 allows you to tweak your ingredient ratios and temperatures, but there will be a release soon that allows you to take notes on your recipes so you can keep a history of the tweaks you've made and the effects of those tweaks. Create the best possible bread, pizza, bagels, cake, anything! If it uses flour, you can calculate your recipe here.
