@@ -39,7 +39,7 @@ struct SettingsView: View {
                 Link("Source Code on GitHub",
                      destination: URL(string: "https://github.com/georgie-codes/Doughy")!)
                 Link("Send Feedback",
-                     destination: URL(string: "mailto:curiousurick@icloud.com")!)
+                     destination: URL(string: "mailto:doughyapp@icloud.com")!)
                 HStack {
                     Text("Version")
                     Spacer()
