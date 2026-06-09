@@ -60,7 +60,11 @@ extension Settings {
             setPreferredTemp(measurement: .fahrenheit)
             
             defaultRecipeFactory.create().forEach {
-                try! recipeWriter.writeRecipe(recipe: $0)
+                do {
+                    try recipeWriter.writeRecipe(recipe: $0)
+                } catch {
+                    print("Failed to write default recipe: \(error)")
+                }
             }
             userDefaults.set(true, forKey: hasInitializedDefaultsKey)
         }

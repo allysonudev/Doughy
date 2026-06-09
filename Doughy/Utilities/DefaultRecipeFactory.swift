@@ -21,10 +21,7 @@ class DefaultRecipeFactory: NSObject {
         return [createNeopolitan(),
                 createNewYorkPizza(),
                 createBagel(),
-                createBagelWithPoolish(),
-//                createBigaBread(),
-//                createfiftyPercentWholeWheatBreadWithBiga()
-        ]
+                createBagelWithPoolish()]
     }
     
     private func createNeopolitan() -> Recipe {
@@ -98,93 +95,6 @@ class DefaultRecipeFactory: NSObject {
         
         return Recipe(name: name, collection: collection, defaultWeight: defaultWeight, ingredients: ingredients, instructions: instructions)
     }
-    
-    private func createBigaBread() -> PrefermentRecipe {
-        let bigaFlour = Ingredient(name: "White Flour", isFlour: true, defaultPercentage: 100, temperature: nil)
-        let bigaWaterTemp = Temperature(value: 80, measurement: .fahrenheit)
-        let bigaWater = Ingredient(name: "Water", isFlour: false, defaultPercentage: 68, temperature: bigaWaterTemp)
-        let bigaYeast = Ingredient(name: "Instant Yeast", isFlour: false, defaultPercentage: 0.08, temperature: nil)
-        let bigaIngredients = [bigaFlour, bigaWater, bigaYeast]
-        
-        let biga = Preferment(name: "Biga", flourPercentage: 80, ingredients: bigaIngredients)
-        
-        
-        let flour = Ingredient(name: "White Flour", isFlour: true, defaultPercentage: 100, temperature: nil)
-        let waterTemp = Temperature(value: 105, measurement: .fahrenheit)
-        let water = Ingredient(name: "Water", isFlour: false, defaultPercentage: 75, temperature: waterTemp)
-        let salt = Ingredient(name: "Fine Sea Salt", isFlour: false, defaultPercentage: 2.2, temperature: nil)
-        let yeast = Ingredient(name: "Instant Yeast", isFlour: false, defaultPercentage: 0.264, temperature: nil)
-        let ingredients = [flour, water, salt, yeast]
-        
-        var instructions = [Instruction]()
-        
-        instructions.append(Instruction(step:
-            "Ferment the biga.\nCombine all the ingredients for the biga in a mixing bowl. Stir with hands to combine. Once fully incorporated, cover it and let is rise at room temp for 12-14 hours."))
-        instructions.append(Instruction(step:
-            "Mix the final dough.\nPut the remaining flour into the mixing container. Add the salt into the flour and stir it to combine. Add the remaining yeast into the flour and salt mixture and stir to combine. Add the remaining water to the bowl with the biga to help it release from the sides. Dump all of the biga and water into the flour mixture. Use your hands to fully incorporate all the ingredients. Use the pincer method along with stretch and fold for only about 1 minute."))
-        instructions.append(Instruction(step:
-            "Bulk ferment, Stretch and fold the dough.\nThe dough will start its bulk ferment period now. It should only take about 2.5-3 hours to triple in volume. You should stretch and fold the dough 2-3 times in the first 1.5 hours of the rise. Start by letting the dough rest, covered, for 30 minutes. Then use a damp hand to separate the dough from the sides. Then grab one edge of the dough and stretch it up as far as it will go without tearing and fold it into the center of the dough. Turn the container and continue stretching until you go all the way around the dough. Cover and rest the dough for another 30 minutes. You will need to stretch the dough 2-3 times until you are able to stretch the dough thin enough to see light through it. This is called the window pane test."))
-        instructions.append(Instruction(step:
-            "Divide and shape the dough.\nOnce the dough is tripled in volume, dump it out onto a moderately floured surface. Divide it into individual sized doughs, flouring the edge to make it a little easier to separate. Pre-shape the dough by using a bench scraper to fold the top over into the middle. Then fold the bottom, the left and right sides. Use the bench scraper to flip the dough over. Then with swift motions, use the bench scraper to shove the edge of the dough under itself. You want the dough to tighten a little bit all the way around. Use any of Food Geek's videos to get a good understanding of the pre-shape and shape steps of the dough. Here's an example video but most of his sourdough videos will show the shaping steps. https://www.youtube.com/watch?v=Znv99QbfWGs \nAnother tip is to make sure you pop bubbles, because those can exacerbate while proofing, leading to uneven crumb."))
-        instructions.append(Instruction(step:
-            "Place into a basket, banneton, batard, etc.\nUse rice flour to cover the cloth in the basket, then carefully place the dough ball seam-side out into the basket. Cover it with cloth and let it proof for 1 hour. The way to know if it's proofed is by denting it with your finger. If it springs back quickly, it's not ready. If it stays poked, it's over-proofed. If it comes back slowly, it's just right."))
-        instructions.append(Instruction(step:
-            "Preheat your oven to 475º F.\nDo not make the mistake of pre-heating your oven (to 475º F) too late. If you're waiting for your oven, the dough can overproof. You need to take your dutch oven with the lid on and place it in the oven, then pre-heat to 475º F. Do this as soon as you start the proof because a dutch oven's metal can absorb heat, causing the oven to heat up more slowly."))
-        instructions.append(Instruction(step:
-            "Score and bake.\nWhen the dough is ready, place onto parchment paper. Score the dough however you like, but if you don't score, it won't be able to rise in the oven as well because it can't break through the tight skin of the dough. Once scored, pull out the dutch oven, remove the lid, and carefully transfer the dough into the dutch oven on the parchment paper. Close the lid and place back in the oven.\nBake with the lid on for 30 minutes. Then remove the lid and bake for another 20-25 minutes. You want the bread to be a dark color because that's where the best flavor comes from."))
-        instructions.append(Instruction(step:
-            "Rest the bread on a rack for 1 hour to let the dough cool down and the inside of the bread will finish baking. Put on a rack so the bottom doesn't get soggy from steam. "))
-        
-        
-        let name = "80% Biga White Bread"
-        let collection = "Bread"
-        let defaultWeight = 887.32
-        
-        return PrefermentRecipe(name: name, collection: collection, defaultWeight: defaultWeight, ingredients: ingredients, preferment: biga, instructions: instructions)
-    }
-    
-    private func createfiftyPercentWholeWheatBreadWithBiga() -> PrefermentRecipe {
-        let bigaFlour = Ingredient(name: "White Flour", isFlour: true, defaultPercentage: 100, temperature: nil)
-        let bigaWaterTemp = Temperature(value: 80, measurement: .fahrenheit)
-        let bigaWater = Ingredient(name: "Water", isFlour: false, defaultPercentage: 68, temperature: bigaWaterTemp)
-        let bigaYeast = Ingredient(name: "Instant Yeast", isFlour: false, defaultPercentage: 0.08, temperature: nil)
-        let bigaIngredients = [bigaFlour, bigaWater, bigaYeast]
-        
-        let biga = Preferment(name: "Biga", flourPercentage: 50, ingredients: bigaIngredients)
-        
-        let flour = Ingredient(name: "White Flour", isFlour: true, defaultPercentage: 50, temperature: nil)
-        let wholeWheatFlour = Ingredient(name: "Whole Wheat Flour", isFlour: true, defaultPercentage: 50, temperature: nil)
-        let waterTemp = Temperature(value: 100, measurement: .fahrenheit)
-        let water = Ingredient(name: "Water", isFlour: false, defaultPercentage: 80, temperature: waterTemp)
-        let salt = Ingredient(name: "Fine Sea Salt", isFlour: false, defaultPercentage: 2.2, temperature: nil)
-        let yeast = Ingredient(name: "Instant Yeast", isFlour: false, defaultPercentage: 0.34, temperature: nil)
-        let ingredients = [flour, wholeWheatFlour, water, salt, yeast]
-        
-        var instructions = [Instruction]()
-        instructions.append(Instruction(step:
-            "Ferment the biga.\nCombine all the ingredients for the biga in a mixing bowl. Stir with hands to combine. Once fully incorporated, cover it and let is rise at room temp for 12-14 hours."))
-        instructions.append(Instruction(step:
-            "Mix the final dough.\nPut the whole wheat flour into the mixing container. Add the salt into the flour and stir it to combine. Add the remaining yeast into the flour and salt mixture and stir to combine. Add the remaining water to the bowl with the biga to help it release from the sides. Dump all of the biga and water into the flour mixture. Use your hands to fully incorporate all the ingredients. Use the pincer method along with stretch and fold for only about 1 minute."))
-        instructions.append(Instruction(step:
-            "Bulk ferment, Stretch and fold the dough.\nThe dough will start its bulk ferment period now. It should only take about 3-4 hours to triple in volume. You should stretch and fold the dough 2-3 times in the first 1.5 hours of the rise. Start by letting the dough rest, covered, for 30 minutes. Then use a damp hand to separate the dough from the sides. Then grab one edge of the dough and stretch it up as far as it will go without tearing and fold it into the center of the dough. Turn the container and continue stretching until you go all the way around the dough. Cover and rest the dough for another 30 minutes. You will need to stretch the dough 2-3 times until you are able to stretch the dough thin enough to see light through it. This is called the window pane test."))
-        instructions.append(Instruction(step:
-            "Divide and shape the dough.\nOnce the dough is tripled in volume, dump it out onto a moderately floured surface. Divide it into individual sized doughs, flouring the edge to make it a little easier to separate. Pre-shape the dough by using a bench scraper to fold the top over into the middle. Then fold the bottom, the left and right sides. Use the bench scraper to flip the dough over. Then with swift motions, use the bench scraper to shove the edge of the dough under itself. You want the dough to tighten a little bit all the way around. Use any of Food Geek's videos to get a good understanding of the pre-shape and shape steps of the dough. Here's an example video but most of his sourdough videos will show the shaping steps. https://www.youtube.com/watch?v=Znv99QbfWGs \nAnother tip is to make sure you pop bubbles, because those can exacerbate while proofing, leading to uneven crumb."))
-        instructions.append(Instruction(step:
-            "Place into a basket, banneton, batard, etc.\nUse rice flour to cover the cloth in the basket, then carefully place the dough ball seam-side out into the basket. Cover it with cloth and let it proof for 1 hour. The way to know if it's proofed is by denting it with your finger. If it springs back quickly, it's not ready. If it stays poked, it's over-proofed. If it comes back slowly, it's just right."))
-        instructions.append(Instruction(step:
-            "Preheat your oven to 475º F.\nDo not make the mistake of pre-heating your oven (to 475º F) too late. If you're waiting for your oven, the dough can overproof. You need to take your dutch oven with the lid on and place it in the oven, then pre-heat to 475º F. Do this as soon as you start the proof because a dutch oven's metal can absorb heat, causing the oven to heat up more slowly."))
-        instructions.append(Instruction(step:
-            "Score and bake.\nWhen the dough is ready, place onto parchment paper. Score the dough however you like, but if you don't score, it won't be able to rise in the oven as well because it can't break through the tight skin of the dough. Once scored, pull out the dutch oven, remove the lid, and carefully transfer the dough into the dutch oven on the parchment paper. Close the lid and place back in the oven.\nBake with the lid on for 30 minutes. Then remove the lid and bake for another 20-25 minutes. You want the bread to be a dark color because that's where the best flavor comes from."))
-        instructions.append(Instruction(step:
-            "Rest the bread on a rack for 1 hour to let the dough cool down and the inside of the bread will finish baking. Put on a rack so the bottom doesn't get soggy from steam. "))
-        
-        let name = "50% Whole Wheat Bread With Biga"
-        let collection = "Bread"
-        let defaultWeight = 912.7
-        
-        return PrefermentRecipe(name: name, collection: collection, defaultWeight: defaultWeight, ingredients: ingredients, preferment: biga, instructions: instructions)
-    }
-    
     private func createBagel() -> Recipe {
         
         let flour = Ingredient(name: "Bread Flour", isFlour: true, defaultPercentage: 100, temperature: nil)

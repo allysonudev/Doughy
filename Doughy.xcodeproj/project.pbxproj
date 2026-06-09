@@ -3,12 +3,14 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 51;
+	objectVersion = 50;
 	objects = {
 
 /* Begin PBXBuildFile section */
-		9811A656AB98C05E8645F0A3 /* Pods_Doughy_Tests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1CCB99E947EAFEB2F90A6DEC /* Pods_Doughy_Tests.framework */; };
-		988EE0764C624091724AD0C7 /* Pods_Doughy.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6AB8C4EC3E1302B4C836AC25 /* Pods_Doughy.framework */; };
+		3FD1800DB04184845AC60A3F /* CalculatedRecipeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B31864D344883DD71A807B7C /* CalculatedRecipeView.swift */; };
+		6FFC277DF945E4E8632C1095 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36E8F59880EE98064C4AD020 /* SettingsView.swift */; };
+		73D001FFB0DEE3BBDB2BFEF3 /* RecipeStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39CC5426652CEF6C8DF863BB /* RecipeStore.swift */; };
+		7D5BAD3319FBC2BBE8A0812A /* CalculatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC478C29AFD50FC6F4F02412 /* CalculatorView.swift */; };
 		BB06F1732425F5F0001A03AD /* ObjectFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB06F1722425F5F0001A03AD /* ObjectFactory.swift */; };
 		BB06F1752425F681001A03AD /* CoreDataGateway.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB06F1742425F681001A03AD /* CoreDataGateway.swift */; };
 		BB06F1772425FAE6001A03AD /* RecipeReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB06F1762425FAE6001A03AD /* RecipeReader.swift */; };
@@ -96,6 +98,8 @@
 		BBEA0CBA24345D8A00A708C7 /* IngredientCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = BBEA0CB924345D8A00A708C7 /* IngredientCell.xib */; };
 		BBEA0CBC24345DA400A708C7 /* IngredientWithPrefermentCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = BBEA0CBB24345DA400A708C7 /* IngredientWithPrefermentCell.xib */; };
 		BBEA0CBE24345DBB00A708C7 /* PrefermentCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = BBEA0CBD24345DBB00A708C7 /* PrefermentCell.xib */; };
+		DDA522364120C5B7AF1238D4 /* CreateRecipeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D3CD9D13F590A51EDD39033 /* CreateRecipeView.swift */; };
+		EAB3150D4BD26C22D891FC75 /* RecipeListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F3DC0F90C6416B3782E7EA1 /* RecipeListView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -109,14 +113,13 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		1CCB99E947EAFEB2F90A6DEC /* Pods_Doughy_Tests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Doughy_Tests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		246BE6D0B6B9CF451884B530 /* Pods-Recipe Helper.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Recipe Helper.release.xcconfig"; path = "Target Support Files/Pods-Recipe Helper/Pods-Recipe Helper.release.xcconfig"; sourceTree = "<group>"; };
-		3783B7B70D78281B1D30EE29 /* Pods-Recipe Helper.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Recipe Helper.debug.xcconfig"; path = "Target Support Files/Pods-Recipe Helper/Pods-Recipe Helper.debug.xcconfig"; sourceTree = "<group>"; };
-		44726C748A218985B2E3D581 /* Pods-Recipe HelperTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Recipe HelperTests.debug.xcconfig"; path = "Target Support Files/Pods-Recipe HelperTests/Pods-Recipe HelperTests.debug.xcconfig"; sourceTree = "<group>"; };
-		6AB8C4EC3E1302B4C836AC25 /* Pods_Doughy.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Doughy.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		7B2520F7B982408CF53CFE60 /* Pods-Doughy Tests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Doughy Tests.release.xcconfig"; path = "Target Support Files/Pods-Doughy Tests/Pods-Doughy Tests.release.xcconfig"; sourceTree = "<group>"; };
-		8EC38689D6DFFD8ABED233C7 /* Pods-Doughy Tests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Doughy Tests.debug.xcconfig"; path = "Target Support Files/Pods-Doughy Tests/Pods-Doughy Tests.debug.xcconfig"; sourceTree = "<group>"; };
-		BA065991B61286A560FBA49B /* Pods-Doughy.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Doughy.release.xcconfig"; path = "Target Support Files/Pods-Doughy/Pods-Doughy.release.xcconfig"; sourceTree = "<group>"; };
+		36E8F59880EE98064C4AD020 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		39CC5426652CEF6C8DF863BB /* RecipeStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeStore.swift; sourceTree = "<group>"; };
+		4F3DC0F90C6416B3782E7EA1 /* RecipeListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeListView.swift; sourceTree = "<group>"; };
+		8D5DEA7121902BEE05D59CD2 /* Doughy.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Doughy.entitlements; sourceTree = "<group>"; };
+		9D3CD9D13F590A51EDD39033 /* CreateRecipeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateRecipeView.swift; sourceTree = "<group>"; };
+		AC478C29AFD50FC6F4F02412 /* CalculatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalculatorView.swift; sourceTree = "<group>"; };
+		B31864D344883DD71A807B7C /* CalculatedRecipeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalculatedRecipeView.swift; sourceTree = "<group>"; };
 		BB06F1722425F5F0001A03AD /* ObjectFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjectFactory.swift; sourceTree = "<group>"; };
 		BB06F1742425F681001A03AD /* CoreDataGateway.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataGateway.swift; sourceTree = "<group>"; };
 		BB06F1762425FAE6001A03AD /* RecipeReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeReader.swift; sourceTree = "<group>"; };
@@ -208,8 +211,6 @@
 		BBEA0CB924345D8A00A708C7 /* IngredientCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = IngredientCell.xib; sourceTree = "<group>"; };
 		BBEA0CBB24345DA400A708C7 /* IngredientWithPrefermentCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = IngredientWithPrefermentCell.xib; sourceTree = "<group>"; };
 		BBEA0CBD24345DBB00A708C7 /* PrefermentCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = PrefermentCell.xib; sourceTree = "<group>"; };
-		EE5570DB89FC86B023456613 /* Pods-Recipe HelperTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Recipe HelperTests.release.xcconfig"; path = "Target Support Files/Pods-Recipe HelperTests/Pods-Recipe HelperTests.release.xcconfig"; sourceTree = "<group>"; };
-		F2CE067B34D508A070A10DF1 /* Pods-Doughy.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Doughy.debug.xcconfig"; path = "Target Support Files/Pods-Doughy/Pods-Doughy.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -217,7 +218,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				988EE0764C624091724AD0C7 /* Pods_Doughy.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -225,45 +225,18 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				9811A656AB98C05E8645F0A3 /* Pods_Doughy_Tests.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		27F3DE80123C4FE3EE2476AC /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-				6AB8C4EC3E1302B4C836AC25 /* Pods_Doughy.framework */,
-				1CCB99E947EAFEB2F90A6DEC /* Pods_Doughy_Tests.framework */,
-			);
-			name = Frameworks;
-			sourceTree = "<group>";
-		};
-		9485710AABFE6214653E2376 /* Pods */ = {
-			isa = PBXGroup;
-			children = (
-				3783B7B70D78281B1D30EE29 /* Pods-Recipe Helper.debug.xcconfig */,
-				246BE6D0B6B9CF451884B530 /* Pods-Recipe Helper.release.xcconfig */,
-				44726C748A218985B2E3D581 /* Pods-Recipe HelperTests.debug.xcconfig */,
-				EE5570DB89FC86B023456613 /* Pods-Recipe HelperTests.release.xcconfig */,
-				F2CE067B34D508A070A10DF1 /* Pods-Doughy.debug.xcconfig */,
-				BA065991B61286A560FBA49B /* Pods-Doughy.release.xcconfig */,
-				8EC38689D6DFFD8ABED233C7 /* Pods-Doughy Tests.debug.xcconfig */,
-				7B2520F7B982408CF53CFE60 /* Pods-Doughy Tests.release.xcconfig */,
-			);
-			path = Pods;
-			sourceTree = "<group>";
-		};
 		BB30DEC32425B83D00BFD472 = {
 			isa = PBXGroup;
 			children = (
 				BB30DECE2425B83D00BFD472 /* Doughy */,
 				BB30DEE82425B83F00BFD472 /* Doughy Tests */,
 				BB30DECD2425B83D00BFD472 /* Products */,
-				9485710AABFE6214653E2376 /* Pods */,
-				27F3DE80123C4FE3EE2476AC /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -287,9 +260,11 @@
 				BB30DEF42425BB5800BFD472 /* Model */,
 				BB30DECF2425B83E00BFD472 /* AppDelegate.swift */,
 				BB30DED12425B83E00BFD472 /* SceneDelegate.swift */,
+				39CC5426652CEF6C8DF863BB /* RecipeStore.swift */,
 				BB30DEDB2425B83F00BFD472 /* Assets.xcassets */,
 				BB30DEDD2425B83F00BFD472 /* LaunchScreen.storyboard */,
 				BB30DEE02425B83F00BFD472 /* Info.plist */,
+				8D5DEA7121902BEE05D59CD2 /* Doughy.entitlements */,
 			);
 			path = Doughy;
 			sourceTree = "<group>";
@@ -366,6 +341,11 @@
 				BBEA0CA82434574000A708C7 /* Saved Recipes */,
 				BBD2642B2431484500DF8987 /* Create Recipe */,
 				BBE2FF3C2436F5290091A485 /* Settings */,
+				4F3DC0F90C6416B3782E7EA1 /* RecipeListView.swift */,
+				AC478C29AFD50FC6F4F02412 /* CalculatorView.swift */,
+				B31864D344883DD71A807B7C /* CalculatedRecipeView.swift */,
+				9D3CD9D13F590A51EDD39033 /* CreateRecipeView.swift */,
+				36E8F59880EE98064C4AD020 /* SettingsView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -570,11 +550,9 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = BB30DEEE2425B83F00BFD472 /* Build configuration list for PBXNativeTarget "Doughy" */;
 			buildPhases = (
-				218AD85B504B659F8B567B92 /* [CP] Check Pods Manifest.lock */,
 				BB30DEC82425B83D00BFD472 /* Sources */,
 				BB30DEC92425B83D00BFD472 /* Frameworks */,
 				BB30DECA2425B83D00BFD472 /* Resources */,
-				4B5D081ED032B57DB2447AB9 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -589,7 +567,6 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = BB30DEF12425B83F00BFD472 /* Build configuration list for PBXNativeTarget "Doughy Tests" */;
 			buildPhases = (
-				B9BDDAF52004121055C61AAB /* [CP] Check Pods Manifest.lock */,
 				BB30DEE12425B83F00BFD472 /* Sources */,
 				BB30DEE22425B83F00BFD472 /* Frameworks */,
 				BB30DEE32425B83F00BFD472 /* Resources */,
@@ -669,70 +646,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
-
-/* Begin PBXShellScriptBuildPhase section */
-		218AD85B504B659F8B567B92 /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-Doughy-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
-		4B5D081ED032B57DB2447AB9 /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-Doughy/Pods-Doughy-frameworks-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-Doughy/Pods-Doughy-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Doughy/Pods-Doughy-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		B9BDDAF52004121055C61AAB /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-Doughy Tests-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
-/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		BB30DEC82425B83D00BFD472 /* Sources */ = {
@@ -814,6 +727,12 @@
 				BBE2FF4624370BF00091A485 /* TemperatureToggleFactory.swift in Sources */,
 				BBD2643B2431574200DF8987 /* IngredientsBuilder.swift in Sources */,
 				BB30DEF72425BD2900BFD472 /* RecipeWriter.swift in Sources */,
+				73D001FFB0DEE3BBDB2BFEF3 /* RecipeStore.swift in Sources */,
+				EAB3150D4BD26C22D891FC75 /* RecipeListView.swift in Sources */,
+				7D5BAD3319FBC2BBE8A0812A /* CalculatorView.swift in Sources */,
+				3FD1800DB04184845AC60A3F /* CalculatedRecipeView.swift in Sources */,
+				DDA522364120C5B7AF1238D4 /* CreateRecipeView.swift in Sources */,
+				6FFC277DF945E4E8632C1095 /* SettingsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -906,7 +825,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -961,7 +880,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
@@ -973,13 +892,13 @@
 		};
 		BB30DEEF2425B83F00BFD472 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = F2CE067B34D508A070A10DF1 /* Pods-Doughy.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Doughy/Doughy.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 66KJD3WYAH;
+				DEVELOPMENT_TEAM = RU9TPSC3GX;
 				INFOPLIST_FILE = Doughy/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -993,13 +912,13 @@
 		};
 		BB30DEF02425B83F00BFD472 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = BA065991B61286A560FBA49B /* Pods-Doughy.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Doughy/Doughy.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 66KJD3WYAH;
+				DEVELOPMENT_TEAM = RU9TPSC3GX;
 				INFOPLIST_FILE = Doughy/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1013,14 +932,13 @@
 		};
 		BB30DEF22425B83F00BFD472 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 8EC38689D6DFFD8ABED233C7 /* Pods-Doughy Tests.debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 66KJD3WYAH;
 				INFOPLIST_FILE = "Doughy Tests/Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 13.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1036,14 +954,13 @@
 		};
 		BB30DEF32425B83F00BFD472 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 7B2520F7B982408CF53CFE60 /* Pods-Doughy Tests.release.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 66KJD3WYAH;
 				INFOPLIST_FILE = "Doughy Tests/Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 13.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
