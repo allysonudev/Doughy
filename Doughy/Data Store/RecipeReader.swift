@@ -47,7 +47,7 @@ class RecipeReader: NSObject {
     func getRecipes(collection: String) -> [XCRecipe] {
         let fetchRequest = NSFetchRequest<XCRecipe>(entityName: "XCRecipe")
         fetchRequest.predicate = NSPredicate(format: "collection == %@", collection)
-        
+
         do {
             return try self.coreDataGateway.managedObjectConext.fetch(fetchRequest)
         }
@@ -55,6 +55,11 @@ class RecipeReader: NSObject {
             print("No recipe collection with name \(collection)")
         }
         return []
+    }
+
+    func getHistoryEntries(for recipe: XCRecipe) -> [XCHistoryEntry] {
+        let entries = recipe.historyEntries?.allObjects as? [XCHistoryEntry] ?? []
+        return entries.sorted { ($0.date ?? .distantPast) > ($1.date ?? .distantPast) }
     }
 
 }

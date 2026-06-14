@@ -17,7 +17,7 @@ struct CalculatorView: View {
     @State private var ingredientTemps: [Int: Double] = [:]
     @State private var prefermentIngredientPercents: [Int: Double] = [:]
     @State private var prefermentTotalPercent: Double?
-    @State private var calculatedRecipe: (any CalculatedRecipeProtocol)?
+    @State private var calculatedResult: CalculatedWrapper?
     @State private var calculationError: String?
     @State private var showingEdit = false
 
@@ -25,9 +25,21 @@ struct CalculatorView: View {
     private let settings = Settings.shared
     private let weightFormatter = WeightFormatter.shared
 
-    private var prefermentRecipe: PrefermentRecipe? { recipe as? PrefermentRecipe }
-    private var hasTemps: Bool { recipe.containsVariableTemps() }
-    private var effectiveWeight: Double { singleDoughWeight ?? recipe.defaultWeight }
+    /// The recipe as currently stored, looked up from `store.collections` so
+    /// edits made elsewhere (e.g. "Set as Default", or the recipe editor) are
+    /// reflected here once the store refreshes - the `recipe` passed at
+    /// navigation time is a snapshot and doesn't update on its own. Falls
+    /// back to that snapshot if the recipe can no longer be found (e.g. it
+    /// was just deleted).
+    private var currentRecipe: any RecipeProtocol {
+        store.collections
+            .first { $0.name == recipe.collection }?
+            .recipes.first { $0.name == recipe.name } ?? recipe
+    }
+
+    private var prefermentRecipe: PrefermentRecipe? { currentRecipe as? PrefermentRecipe }
+    private var hasTemps: Bool { currentRecipe.containsVariableTemps() }
+    private var effectiveWeight: Double { singleDoughWeight ?? currentRecipe.defaultWeight }
     private var totalWeight: Double { effectiveWeight * Double(doughCount) }
 
     var body: some View {
@@ -41,16 +53,18 @@ struct CalculatorView: View {
                         .multilineTextAlignment(.trailing)
                         .keyboardType(.numberPad)
                         .frame(width: 80)
+                        .accessibilityIdentifier("doughCountField")
                 }
                 HStack {
                     Text("Single Dough Weight")
                     Spacer()
-                    TextField("\(Int(recipe.defaultWeight))",
+                    TextField("\(Int(currentRecipe.defaultWeight))",
                               value: $singleDoughWeight,
                               format: .number)
                         .multilineTextAlignment(.trailing)
                         .keyboardType(.decimalPad)
                         .frame(width: 100)
+                        .accessibilityIdentifier("singleDoughWeightField")
                     Text("g").foregroundStyle(.secondary)
                 }
             }
@@ -68,6 +82,7 @@ struct CalculatorView: View {
             // MARK: - Ingredient toggle + adjustments
             Section {
                 Toggle("Adjust Dough Ingredients", isOn: $adjustIngredients)
+                    .accessibilityIdentifier("adjustIngredientsToggle")
             }
             if adjustIngredients {
                 ingredientAdjustSection
@@ -95,22 +110,28 @@ struct CalculatorView: View {
                         Spacer()
                     }
                 }
+                .accessibilityIdentifier("calculateButton")
             }
         }
-        .navigationTitle(recipe.name)
-        .navigationDestination(item: Binding(
-            get: { calculatedRecipe.map { CalculatedWrapper(recipe: $0) } },
-            set: { calculatedRecipe = $0?.recipe }
-        )) { wrapper in
-            CalculatedRecipeView(calculatedRecipe: wrapper.recipe)
+        .navigationTitle(currentRecipe.name)
+        .navigationDestination(item: $calculatedResult) { wrapper in
+            CalculatedRecipeView(calculatedRecipe: wrapper.recipe, recipe: currentRecipe, overrides: wrapper.overrides)
         }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Edit") { showingEdit = true }
             }
+            ToolbarItem(placement: .topBarTrailing) {
+                NavigationLink {
+                    RecipeHistoryView(recipe: currentRecipe)
+                } label: {
+                    Image(systemName: "clock.arrow.circlepath")
+                }
+                .accessibilityIdentifier("historyButton")
+            }
         }
         .sheet(isPresented: $showingEdit, onDismiss: { store.refresh() }) {
-            CreateRecipeView(editingRecipe: recipe)
+            CreateRecipeView(editingRecipe: currentRecipe)
                 .environment(store)
         }
         .alert("Calculation Error", isPresented: Binding(
@@ -127,7 +148,7 @@ struct CalculatorView: View {
 
     private var ingredientAdjustSection: some View {
         Section("Ingredients") {
-            ForEach(Array(recipe.ingredients.enumerated()), id: \.offset) { index, ingredient in
+            ForEach(Array(currentRecipe.ingredients.enumerated()), id: \.offset) { index, ingredient in
                 if ingredient.isFlour {
                     HStack {
                         Text(ingredient.name)
@@ -150,6 +171,7 @@ struct CalculatorView: View {
                         .multilineTextAlignment(.trailing)
                         .keyboardType(.decimalPad)
                         .frame(width: 70)
+                        .accessibilityIdentifier("ingredientPercentField_\(index)")
                         Text("%").foregroundStyle(.secondary)
                     }
                 }
@@ -161,7 +183,7 @@ struct CalculatorView: View {
 
     private var temperatureAdjustSection: some View {
         Section("Temperatures") {
-            ForEach(Array(recipe.ingredients.enumerated()), id: \.offset) { index, ingredient in
+            ForEach(Array(currentRecipe.ingredients.enumerated()), id: \.offset) { index, ingredient in
                 if let temp = ingredient.temperature {
                     HStack {
                         Text(ingredient.name)
@@ -262,12 +284,13 @@ struct CalculatorView: View {
         let preferment = buildMeasuredPreferment()
 
         do {
-            calculatedRecipe = try calculator.calculate(
+            let calculated = try calculator.calculate(
                 ingredients: ingredients,
                 preferment: preferment,
-                recipe: recipe,
+                recipe: currentRecipe,
                 totalWeight: weight
             )
+            calculatedResult = CalculatedWrapper(recipe: calculated, overrides: currentOverrides())
         } catch CalculationError.finalDoughNegativeValue(let name, let value) {
             calculationError = "Calculated final dough \(name) weight is \(weightFormatter.format(weight: value)). Please adjust input."
         } catch CalculationError.prefermentNegativeValue(let name, let value) {
@@ -277,8 +300,19 @@ struct CalculatorView: View {
         }
     }
 
+    private func currentOverrides() -> CalculatorOverrides {
+        CalculatorOverrides(
+            ingredientPercents: ingredientPercents,
+            ingredientTemps: ingredientTemps,
+            prefermentIngredientPercents: prefermentIngredientPercents,
+            prefermentTotalPercent: prefermentTotalPercent,
+            singleDoughWeight: singleDoughWeight,
+            temperatureMeasurement: settings.preferredTemp()
+        )
+    }
+
     private func buildMeasuredIngredients() -> [MeasuredIngredient] {
-        recipe.ingredients.enumerated().map { index, ingredient in
+        currentRecipe.ingredients.enumerated().map { index, ingredient in
             let percent = ingredientPercents[index] ?? ingredient.defaultPercentage
             var temp = ingredient.temperature
             if let rawTemp = ingredientTemps[index] {
@@ -303,10 +337,12 @@ struct CalculatorView: View {
     }
 }
 
-// Wraps CalculatedRecipeProtocol for use as a NavigationStack value.
+// Wraps CalculatedRecipeProtocol (plus the overrides used to produce it) for
+// use as a NavigationStack value.
 private struct CalculatedWrapper: Identifiable, Hashable {
     let id = UUID()
     let recipe: any CalculatedRecipeProtocol
+    let overrides: CalculatorOverrides
 
     static func == (lhs: CalculatedWrapper, rhs: CalculatedWrapper) -> Bool { lhs.id == rhs.id }
     func hash(into hasher: inout Hasher) { hasher.combine(id) }

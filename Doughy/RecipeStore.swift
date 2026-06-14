@@ -11,6 +11,7 @@ class RecipeStore {
 
     private let writer = RecipeWriter.shared
     private let predicates = RecipePredicates.shared
+    private let historyWriter = HistoryWriter.shared
 
     init() {
         refresh()
@@ -41,6 +42,33 @@ class RecipeStore {
 
     func update(recipe: any RecipeProtocol, existingName: String, existingCollection: String) throws {
         try writer.updateRecipe(recipe: recipe, existingName: existingName, existingCollection: existingCollection)
+        refresh()
+    }
+
+    // MARK: - History
+
+    func historyEntries(for recipe: any RecipeProtocol) -> [HistoryEntry] {
+        historyWriter.historyEntries(for: recipe)
+    }
+
+    func addNote(_ text: String, to recipe: any RecipeProtocol) throws {
+        try historyWriter.addNote(text, to: recipe)
+    }
+
+    func deleteHistoryEntry(_ entry: HistoryEntry, from recipe: any RecipeProtocol) throws {
+        try historyWriter.deleteEntry(entry, from: recipe)
+    }
+
+    func restoreVersion(_ entry: HistoryEntry, for recipe: any RecipeProtocol) throws {
+        try historyWriter.restoreVersion(entry, for: recipe)
+        refresh()
+    }
+
+    func setAsDefault(recipe: any RecipeProtocol, overrides: CalculatorOverrides) throws {
+        let currentSnapshot = RecipeSnapshot(from: recipe)
+        let newSnapshot = overrides.applied(to: recipe)
+        let summary = RecipeDiff.summarize(from: currentSnapshot, to: newSnapshot)
+        try historyWriter.setAsDefault(snapshot: newSnapshot, summary: summary, recipe: recipe)
         refresh()
     }
 }

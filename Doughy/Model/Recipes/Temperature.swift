@@ -18,7 +18,7 @@ public class Temperature: NSObject {
         self.measurement = measurement
     }
 
-    public enum Measurement {
+    public enum Measurement: String {
         case celsius
         case fahrenheit
         

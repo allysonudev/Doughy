@@ -15,6 +15,7 @@ class RecipeWriter: NSObject {
     private let coreDataGateway = CoreDataGateway.shared
     private let recipeConverter = RecipeConverter.shared
     private let recipeReader = RecipeReader.shared
+    private let historyEntryConverter = HistoryEntryConverter.shared
     
     static let shared = RecipeWriter()
     
@@ -47,7 +48,16 @@ class RecipeWriter: NSObject {
             print("Attempted to update a recipe when none exists in the collection with this name")
             throw RecipeWritingError.noRecipeToUpdate
         }
-        
+
+        // Record a history entry for the pre-edit state, but only if this edit
+        // actually changes something - no-op saves shouldn't clutter history.
+        let oldSnapshot = RecipeSnapshot(from: recipeConverter.convertToExternal(recipe: existingRecipe))
+        let newSnapshot = RecipeSnapshot(from: recipe)
+        if let summary = RecipeDiff.summarize(from: oldSnapshot, to: newSnapshot) {
+            let entry = HistoryEntry(id: UUID(), date: Date(), kind: .version(oldSnapshot), text: summary)
+            existingRecipe.addToHistoryEntries(historyEntryConverter.convertToCoreData(entry: entry))
+        }
+
         let _ = recipeConverter.overWriteCoreData(recipe: recipe, existing: existingRecipe)
         
         do {

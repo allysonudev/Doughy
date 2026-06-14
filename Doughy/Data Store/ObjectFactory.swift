@@ -52,4 +52,9 @@ class ObjectFactory: NSObject {
         return NSManagedObject(entity: entity!, insertInto: self.coreDataGateway.managedObjectConext) as! XCInstruction
     }
 
+    func createHistoryEntry() -> XCHistoryEntry {
+        let entity = NSEntityDescription.entity(forEntityName: "XCHistoryEntry", in: self.coreDataGateway.managedObjectConext)
+        return NSManagedObject(entity: entity!, insertInto: self.coreDataGateway.managedObjectConext) as! XCHistoryEntry
+    }
+
 }

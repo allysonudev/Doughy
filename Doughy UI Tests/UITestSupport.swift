@@ -402,4 +402,106 @@ extension XCUIApplication {
         scrollToElement(save)
         save.tap()
     }
+
+    // MARK: - Navigation
+
+    /// Pops the current screen via the leading navigation bar button.
+    func navigateBack() {
+        let back = navigationBars.buttons.element(boundBy: 0)
+        XCTAssertTrue(back.waitForExistence(timeout: 5), "Back button not found")
+        back.tap()
+    }
+
+    // MARK: - History
+
+    /// Taps the toolbar button to open a recipe's history from the calculator screen.
+    func openHistory() {
+        let button = buttons["historyButton"]
+        XCTAssertTrue(button.waitForExistence(timeout: 5), "History button not found")
+        button.tap()
+    }
+
+    /// Finds a history entry row whose text contains `text`.
+    func historyEntry(containing text: String) -> XCUIElement {
+        staticTexts.matching(NSPredicate(format: "label CONTAINS %@", text)).firstMatch
+    }
+
+    /// Asserts a history entry containing `text` exists, scrolling to find it if needed.
+    func assertHistoryEntryExists(containing text: String, _ message: String = "") {
+        let entry = historyEntry(containing: text)
+        scrollUntilExists(entry)
+        XCTAssertTrue(entry.waitForExistence(timeout: 5), "History entry containing \"\(text)\" not found. \(message)")
+    }
+
+    /// Asserts no history entry contains `text`.
+    func assertHistoryEntryDoesNotExist(containing text: String, _ message: String = "") {
+        XCTAssertFalse(historyEntry(containing: text).exists, "History entry containing \"\(text)\" unexpectedly found. \(message)")
+    }
+
+    /// Asserts the history screen is showing its empty state.
+    func assertNoHistoryEntries(_ message: String = "") {
+        XCTAssertTrue(staticTexts["No History Yet"].waitForExistence(timeout: 5), "Expected empty history state. \(message)")
+    }
+
+    /// Swipes a history entry row left and taps "Delete".
+    func deleteHistoryEntry(containing text: String) {
+        let entry = historyEntry(containing: text)
+        scrollUntilExists(entry)
+        XCTAssertTrue(entry.waitForExistence(timeout: 5), "History entry containing \"\(text)\" not found")
+        scrollToElement(entry)
+        entry.swipeLeft()
+        let deleteButton = buttons["Delete"]
+        XCTAssertTrue(deleteButton.waitForExistence(timeout: 5), "Delete button not found after swiping history entry")
+        deleteButton.tap()
+    }
+
+    /// Swipes a history entry row left, taps "Restore", and confirms the alert.
+    func restoreHistoryEntry(containing text: String) {
+        let entry = historyEntry(containing: text)
+        scrollUntilExists(entry)
+        XCTAssertTrue(entry.waitForExistence(timeout: 5), "History entry containing \"\(text)\" not found")
+        scrollToElement(entry)
+        entry.swipeLeft()
+        let restoreButton = buttons["Restore"]
+        XCTAssertTrue(restoreButton.waitForExistence(timeout: 5), "Restore button not found after swiping history entry")
+        restoreButton.tap()
+
+        let confirmButton = alerts["Restore Version"].buttons["Restore"]
+        XCTAssertTrue(confirmButton.waitForExistence(timeout: 5), "Restore confirmation alert not found")
+        confirmButton.tap()
+    }
+
+    // MARK: - Calculator results: notes + set as default
+
+    /// Enters text into the results screen's note field and taps "Save Note".
+    func saveHistoryNote(_ text: String) {
+        let field = textFields["historyNoteField"]
+        XCTAssertTrue(field.waitForExistence(timeout: 5), "History note field not found")
+        field.clearAndType(text, app: self)
+
+        let saveButton = buttons["saveNoteButton"]
+        XCTAssertTrue(saveButton.waitForExistence(timeout: 5), "Save Note button not found")
+        scrollToElement(saveButton)
+        saveButton.tap()
+    }
+
+    /// Taps the results screen's "Save Note" button without changing its current text.
+    func tapSaveNote() {
+        let saveButton = buttons["saveNoteButton"]
+        XCTAssertTrue(saveButton.waitForExistence(timeout: 5), "Save Note button not found")
+        scrollToElement(saveButton)
+        saveButton.tap()
+    }
+
+    /// Taps "Set as Default" and confirms the resulting confirmation dialog.
+    func setAsDefaultAndConfirm() {
+        let button = buttons["setAsDefaultButton"]
+        XCTAssertTrue(button.waitForExistence(timeout: 5), "Set as Default button not found")
+        scrollToElement(button)
+        button.tap()
+
+        let confirmButton = sheets.buttons["Set as Default"]
+        XCTAssertTrue(confirmButton.waitForExistence(timeout: 5), "Set as Default confirmation not found")
+        confirmButton.tap()
+    }
 }
