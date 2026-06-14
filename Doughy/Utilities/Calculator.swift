@@ -20,32 +20,35 @@ class Calculator: NSObject {
                    preferment: MeasuredPreferment?,
                    recipe: RecipeProtocol,
                    totalWeight: Double) throws -> CalculatedRecipeProtocol {
+        let extraScale = recipe.defaultWeight > 0 ? totalWeight / recipe.defaultWeight : 1
         let totalPercent = ingredients.map { $0.percent }.reduce(0, +)
         var doughIngredients = [CalculatedIngredient]()
         ingredients.forEach { ingredient in
             let actualPercent = ingredient.percent / totalPercent
             let weight = actualPercent * totalWeight
-            let calcIngredient = CalculatedIngredient(name: ingredient.ingredient.name, isFlour: ingredient.ingredient.isFlour, percentage: ingredient.percent, totalPercentage: ingredient.percent, temperature: ingredient.temperature, weight: weight)
+            let scaledExtraAmount = ingredient.ingredient.extraAmount.map { $0 * extraScale }
+            let calcIngredient = CalculatedIngredient(name: ingredient.ingredient.name, isFlour: ingredient.ingredient.isFlour, percentage: ingredient.percent, totalPercentage: ingredient.percent, temperature: ingredient.temperature, weight: weight, extraAmount: scaledExtraAmount, extraUnit: ingredient.ingredient.extraUnit)
             doughIngredients.append(calcIngredient)
         }
-        
+
         let totalFlourWeight = doughIngredients.filter { $0.isFlour }
             .map { $0.weight }
             .reduce(0, +)
-        
+
         var calculatedPreferment: CalculatedPreferment? = nil
         if let preferment = preferment {
             let prefermentIngredients = preferment.ingredients
             let prefermentFlourWeight = (preferment.flourPercentage / 100) * totalFlourWeight
             let prefermentTotalPercent = prefermentIngredients
                 .map { $0.percent }.reduce(0, +)
-            
+
             let prefermentWeight = prefermentFlourWeight * (prefermentTotalPercent / 100)
             var calculatedPrefIngredients = [CalculatedIngredient]()
             for prefIngredient in prefermentIngredients {
                 let actualPercent = prefIngredient.percent / prefermentTotalPercent
                 let weight = actualPercent * prefermentWeight
-                let ingredient = CalculatedIngredient(name: prefIngredient.ingredient.name, isFlour: prefIngredient.ingredient.isFlour, percentage: prefIngredient.percent, totalPercentage: prefIngredient.percent, temperature: prefIngredient.temperature, weight: weight)
+                let scaledExtraAmount = prefIngredient.ingredient.extraAmount.map { $0 * extraScale }
+                let ingredient = CalculatedIngredient(name: prefIngredient.ingredient.name, isFlour: prefIngredient.ingredient.isFlour, percentage: prefIngredient.percent, totalPercentage: prefIngredient.percent, temperature: prefIngredient.temperature, weight: weight, extraAmount: scaledExtraAmount, extraUnit: prefIngredient.ingredient.extraUnit)
                 calculatedPrefIngredients.append(ingredient)
             }
             calculatedPreferment = CalculatedPreferment(name: preferment.name, flourPercentage: preferment.flourPercentage, weight: prefermentWeight, ingredients: calculatedPrefIngredients)
@@ -86,7 +89,7 @@ class Calculator: NSObject {
     
     func calculate(recipe: RecipeProtocol) throws -> CalculatedRecipeProtocol {
         let totalWeight = recipe.defaultWeight
-        
+
         let ingredients = recipe.ingredients
         let totalPercent = ingredients
             .map { $0.defaultPercentage }
@@ -95,15 +98,15 @@ class Calculator: NSObject {
         ingredients.forEach { ingredient in
             let actualPercent = ingredient.defaultPercentage / totalPercent
             let weight = actualPercent * totalWeight
-            let calcIngredient = CalculatedIngredient(name: ingredient.name, isFlour: ingredient.isFlour, percentage: ingredient.defaultPercentage, totalPercentage: ingredient.defaultPercentage, temperature: ingredient.temperature, weight: weight)
+            let calcIngredient = CalculatedIngredient(name: ingredient.name, isFlour: ingredient.isFlour, percentage: ingredient.defaultPercentage, totalPercentage: ingredient.defaultPercentage, temperature: ingredient.temperature, weight: weight, extraAmount: ingredient.extraAmount, extraUnit: ingredient.extraUnit)
             doughIngredients.append(calcIngredient)
         }
-        
+
         let totalFlourWeight = doughIngredients
             .filter { $0.isFlour }
             .map { $0.weight }
             .reduce(0, +)
-        
+
         var calculatedPreferment: CalculatedPreferment? = nil
         if recipe is PrefermentRecipe {
             let preferment = (recipe as! PrefermentRecipe).preferment
@@ -117,7 +120,7 @@ class Calculator: NSObject {
             for prefIngredient in prefermentIngredients {
                 let actualPercent = prefIngredient.defaultPercentage / prefermentTotalPercent
                 let weight = actualPercent * prefermentWeight
-                let calcIngredient = CalculatedIngredient(name: prefIngredient.name, isFlour: prefIngredient.isFlour, percentage: prefIngredient.defaultPercentage, totalPercentage: prefIngredient.defaultPercentage, temperature: prefIngredient.temperature, weight: weight)
+                let calcIngredient = CalculatedIngredient(name: prefIngredient.name, isFlour: prefIngredient.isFlour, percentage: prefIngredient.defaultPercentage, totalPercentage: prefIngredient.defaultPercentage, temperature: prefIngredient.temperature, weight: weight, extraAmount: prefIngredient.extraAmount, extraUnit: prefIngredient.extraUnit)
                 calculatedIngredients.append(calcIngredient)
             }
 

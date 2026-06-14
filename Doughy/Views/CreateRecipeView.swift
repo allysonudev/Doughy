@@ -3,41 +3,150 @@
 //  Doughy
 
 import SwiftUI
+import PhotosUI
+import UIKit
 
-// MARK: - Local data models
+// MARK: - Types
 
-private struct FlourRow: Identifiable {
-    var id = UUID()
-    var name: String = ""
-    var percent: Double? = nil
+private enum RecipeInputMode {
+    case byPercent
+    case byWeight
 }
 
-private struct IngredientRow: Identifiable {
+private struct FlourRow: Identifiable, Equatable {
     var id = UUID()
-    var name: String = ""
-    var mode: IngredientMeasurementMode = .percent
-    var percent: Double? = nil
-    var weight: Double? = nil
+    var name = ""
+    var value: Double? = nil  // percent in .byPercent, grams in .byWeight
+
+    static func == (lhs: FlourRow, rhs: FlourRow) -> Bool {
+        lhs.name == rhs.name && lhs.value == rhs.value
+    }
+}
+
+private struct IngredientRow: Identifiable, Equatable {
+    var id = UUID()
+    var name = ""
+    var value: Double? = nil  // percent or grams depending on mode
     var tempValue: Double? = nil
+
+    static func == (lhs: IngredientRow, rhs: IngredientRow) -> Bool {
+        lhs.name == rhs.name && lhs.value == rhs.value && lhs.tempValue == rhs.tempValue
+    }
 }
 
-private struct PrefIngRow: Identifiable {
+/// An ingredient with a quantity that isn't converted to grams (e.g. "2 tablespoons" of
+/// rosemary leaves). Kept separate from the percent-based flours/ingredients and scaled
+/// by the recipe's scaling ratio when calculated.
+private struct ExtraIngredientRow: Identifiable, Equatable {
     var id = UUID()
     var name: String
-    var isFlour: Bool
-    var included: Bool = false
-    var weight: Double? = nil
+    var amount: Double
+    var unit: String  // "teaspoon" | "tablespoon" | "cup"
+    var isPreferment: Bool
+
+    static func == (lhs: ExtraIngredientRow, rhs: ExtraIngredientRow) -> Bool {
+        lhs.name == rhs.name && lhs.amount == rhs.amount
+            && lhs.unit == rhs.unit && lhs.isPreferment == rhs.isPreferment
+    }
+}
+
+/// A scanned ingredient with no gram conversion, awaiting the user's input on whether
+/// they know a gram conversion for it.
+private struct PendingConversion: Identifiable {
+    var id = UUID()
+    var name: String
+    var amount: Double
+    var unit: String
+    var isPreferment: Bool
 }
 
 private enum CreateStep: Hashable {
-    case flours
+    case details
     case ingredients
     case preferment
-    case instructions
     case preview
 }
 
-// MARK: - Main view
+/// A snapshot of the editable fields of the recipe draft, used to detect unsaved changes
+/// so the user can be warned before discarding them.
+private struct DraftSnapshot: Equatable {
+    var recipeName = ""
+    var collectionName = ""
+    var isNewCollection = false
+    var newCollectionText = ""
+    var defaultWeight: Double? = nil
+    var containsPreferment = false
+    var flours: [FlourRow] = [FlourRow()]
+    var ingredients: [IngredientRow] = [IngredientRow()]
+    var extraIngredients: [ExtraIngredientRow] = []
+    var prefermentName = ""
+    var prefermentFlourPercent: Double? = nil
+    var prefermentFlours: [FlourRow] = [FlourRow()]
+    var prefermentIngredientRows: [IngredientRow] = [IngredientRow()]
+    var instructions: [String] = []
+}
+
+// MARK: - Scan diagnostics
+
+/// A snapshot of a recipe scan's inputs/outputs (OCR text, raw + resolved model output,
+/// and the final recipe values applied to the form), exportable as JSON for debugging
+/// and improving the scan prompt/category mappings.
+private struct ScanDiagnostics: Codable {
+    var ocrText: String
+    var rawIngredients: [DiagIngredient]
+    var resolvedIngredients: [DiagIngredient]
+    var finalRecipe: DiagFinalRecipe
+
+    struct DiagIngredient: Codable {
+        var name: String
+        var category: String
+        var weightGrams: Double
+        var volumeAmount: Double
+        var volumeUnit: String
+        var isFlour: Bool
+        var isPreferment: Bool
+        var isExtra: Bool
+    }
+
+    struct DiagFinalRecipe: Codable {
+        var name: String
+        var defaultWeightGrams: Double?
+        var flours: [DiagPercent]
+        var ingredients: [DiagPercent]
+        var extraIngredients: [DiagExtra]
+        var preferment: DiagPreferment?
+
+        struct DiagPercent: Codable {
+            var name: String
+            var percent: Double
+        }
+
+        struct DiagExtra: Codable {
+            var name: String
+            var amount: Double
+            var unit: String
+            var isPreferment: Bool
+        }
+
+        struct DiagPreferment: Codable {
+            var name: String
+            var flourPercentOfTotalFlour: Double
+            var ingredients: [DiagPercent]
+        }
+    }
+
+    func jsonString() -> String {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        guard let data = try? encoder.encode(self),
+              let string = String(data: data, encoding: .utf8) else {
+            return "{}"
+        }
+        return string
+    }
+}
+
+// MARK: - CreateRecipeView
 
 struct CreateRecipeView: View {
     let editingRecipe: (any RecipeProtocol)?
@@ -45,136 +154,435 @@ struct CreateRecipeView: View {
     @Environment(RecipeStore.self) private var store
     @Environment(\.dismiss) private var dismiss
 
+    @State private var inputMode: RecipeInputMode? = nil  // nil → show mode picker
     @State private var navPath: [CreateStep] = []
 
-    // Step 1 - Details
-    @State private var recipeName: String = ""
-    @State private var collectionName: String = ""
-    @State private var isNewCollection: Bool = false
-    @State private var newCollectionText: String = ""
+    // Scan state
+    @State private var showScanOptions = false
+    @State private var showPhotoPicker = false
+    @State private var showCamera = false
+    @State private var selectedPhotoItem: PhotosPickerItem?
+    @State private var isScanning = false
+    @State private var scanError: String?
+    @State private var lastScanDiagnostics: String?
+
+    // Details
+    @State private var recipeName = ""
+    @State private var collectionName = ""
+    @State private var isNewCollection = false
+    @State private var newCollectionText = ""
     @State private var defaultWeight: Double? = nil
-    @State private var containsPreferment: Bool = false
+    @State private var containsPreferment = false
 
-    // Step 2 - Flours
+    // Ingredients
     @State private var flours: [FlourRow] = [FlourRow()]
-
-    // Step 3 - Ingredients
     @State private var ingredients: [IngredientRow] = [IngredientRow()]
+    @State private var extraIngredients: [ExtraIngredientRow] = []
 
-    // Step 4 - Preferment
-    @State private var prefermentName: String = ""
-    @State private var prefermentFlourPercent: Double? = nil
-    @State private var prefermentIngredients: [PrefIngRow] = []
+    // Conversion prompts for scanned "extra" ingredients
+    @State private var pendingConversions: [PendingConversion] = []
+    @State private var conversionGramsText: String = ""
+    @State private var lastTotalFlourWeight: Double = 0
+    @State private var lastTotalPrefFlourWeight: Double = 0
 
-    // Step 5 - Instructions
+    // Preferment: entered first, as its own flour/ingredient list (in grams for .byWeight,
+    // or baker's percentage relative to the preferment's own flour for .byPercent). The
+    // "Ingredients"/"Main Dough" step then collects only the additional amounts used in
+    // the rest of the dough, and the two are combined when building the recipe.
+    @State private var prefermentName = ""
+    @State private var prefermentFlourPercent: Double? = nil  // .byPercent only: % of total flour in the preferment
+    @State private var prefermentFlours: [FlourRow] = [FlourRow()]
+    @State private var prefermentIngredientRows: [IngredientRow] = [IngredientRow()]
+
+    // Preview + save
     @State private var instructions: [String] = []
+    @State private var newStepText = ""
+    @State private var saveError: String?
 
-    // Misc
-    @State private var saveError: String? = nil
+    // Discard safeguard
+    @State private var showDiscardConfirmation = false
+    @State private var initialSnapshot: DraftSnapshot
 
     init(editingRecipe: (any RecipeProtocol)? = nil) {
         self.editingRecipe = editingRecipe
-        guard let recipe = editingRecipe else { return }
+        guard let recipe = editingRecipe else {
+            _initialSnapshot = State(initialValue: DraftSnapshot())
+            return
+        }
 
+        _inputMode = State(initialValue: .byPercent)
         _recipeName = State(initialValue: recipe.name)
         _collectionName = State(initialValue: recipe.collection)
         _defaultWeight = State(initialValue: recipe.defaultWeight)
         _instructions = State(initialValue: recipe.instructions.map(\.step))
 
-        let flourRows = recipe.ingredients
-            .filter(\.isFlour)
-            .map { FlourRow(name: $0.name, percent: $0.defaultPercentage) }
-        _flours = State(initialValue: flourRows.isEmpty ? [FlourRow()] : flourRows)
+        let flourRows = recipe.ingredients.filter(\.isFlour)
+            .map { FlourRow(name: $0.name, value: $0.defaultPercentage) }
+        let ingRows = recipe.ingredients.filter { !$0.isFlour }
+            .map { IngredientRow(name: $0.name, value: $0.defaultPercentage, tempValue: $0.temperature?.value) }
 
-        let ingRows = recipe.ingredients
-            .filter { !$0.isFlour }
-            .map { IngredientRow(name: $0.name, mode: .percent, percent: $0.defaultPercentage, tempValue: $0.temperature?.value) }
-        _ingredients = State(initialValue: ingRows.isEmpty ? [IngredientRow()] : ingRows)
+        var prefName = ""
+        var prefFlourPercent: Double? = nil
+        var prefFlours = [FlourRow()]
+        var prefIngRows: [IngredientRow] = [IngredientRow()]
+        var finalFlours: [FlourRow]
+        var finalIngredients: [IngredientRow]
+        let hasPreferment: Bool
 
-        if let prefRecipe = recipe as? PrefermentRecipe {
-            _containsPreferment = State(initialValue: true)
-            _prefermentName = State(initialValue: prefRecipe.preferment.name)
-            _prefermentFlourPercent = State(initialValue: prefRecipe.preferment.flourPercentage)
+        if let pref = (recipe as? PrefermentRecipe)?.preferment {
+            hasPreferment = true
+            prefName = pref.name
+            prefFlourPercent = pref.flourPercentage
+            let fp = pref.flourPercentage
 
-            let prefRows = prefRecipe.preferment.ingredients.map { ing in
-                PrefIngRow(name: ing.name, isFlour: ing.isFlour, included: true, weight: nil)
+            let prefFlourRows = pref.ingredients.filter(\.isFlour)
+                .map { FlourRow(name: $0.name, value: $0.defaultPercentage) }
+            prefFlours = prefFlourRows.isEmpty ? [FlourRow()] : prefFlourRows
+
+            let prefIngredientRows = pref.ingredients.filter { !$0.isFlour }
+                .map { IngredientRow(name: $0.name, value: $0.defaultPercentage, tempValue: $0.temperature?.value) }
+            prefIngRows = prefIngredientRows.isEmpty ? [IngredientRow()] : prefIngredientRows
+
+            // `flourRows`/`ingRows` hold recipe-wide totals; the "Main Dough" step only
+            // collects the *additional* amounts on top of the preferment's contribution.
+            func additional(total: Double?, prefRows: [(name: String, percent: Double?)], name: String) -> Double? {
+                let contribution = (prefRows.first(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame })?.percent ?? 0) / 100 * fp
+                return max(0, (total ?? 0) - contribution)
             }
-            _prefermentIngredients = State(initialValue: prefRows)
+            let prefFlourLookup = prefFlourRows.map { (name: $0.name, percent: $0.value) }
+            let prefIngLookup = prefIngredientRows.map { (name: $0.name, percent: $0.value) }
+
+            let adjustedFlourRows = flourRows.map {
+                FlourRow(name: $0.name, value: additional(total: $0.value, prefRows: prefFlourLookup, name: $0.name))
+            }
+            let adjustedIngRows = ingRows.map {
+                IngredientRow(name: $0.name, value: additional(total: $0.value, prefRows: prefIngLookup, name: $0.name), tempValue: $0.tempValue)
+            }
+            finalFlours = adjustedFlourRows.isEmpty ? [FlourRow()] : adjustedFlourRows
+            finalIngredients = adjustedIngRows.isEmpty ? [IngredientRow()] : adjustedIngRows
+        } else {
+            hasPreferment = false
+            finalFlours = flourRows.isEmpty ? [FlourRow()] : flourRows
+            finalIngredients = ingRows.isEmpty ? [IngredientRow()] : ingRows
         }
+
+        _containsPreferment = State(initialValue: hasPreferment)
+        _prefermentName = State(initialValue: prefName)
+        _prefermentFlourPercent = State(initialValue: prefFlourPercent)
+        _prefermentFlours = State(initialValue: prefFlours)
+        _prefermentIngredientRows = State(initialValue: prefIngRows)
+        _flours = State(initialValue: finalFlours)
+        _ingredients = State(initialValue: finalIngredients)
+
+        _initialSnapshot = State(initialValue: DraftSnapshot(
+            recipeName: recipe.name,
+            collectionName: recipe.collection,
+            isNewCollection: false,
+            newCollectionText: "",
+            defaultWeight: recipe.defaultWeight,
+            containsPreferment: hasPreferment,
+            flours: finalFlours,
+            ingredients: finalIngredients,
+            extraIngredients: [],
+            prefermentName: prefName,
+            prefermentFlourPercent: prefFlourPercent,
+            prefermentFlours: prefFlours,
+            prefermentIngredientRows: prefIngRows,
+            instructions: recipe.instructions.map(\.step)
+        ))
     }
 
     private var effectiveCollection: String {
         isNewCollection ? newCollectionText : collectionName
     }
 
+    // MARK: - Discard safeguard
+
+    private var currentSnapshot: DraftSnapshot {
+        DraftSnapshot(
+            recipeName: recipeName,
+            collectionName: collectionName,
+            isNewCollection: isNewCollection,
+            newCollectionText: newCollectionText,
+            defaultWeight: defaultWeight,
+            containsPreferment: containsPreferment,
+            flours: flours,
+            ingredients: ingredients,
+            extraIngredients: extraIngredients,
+            prefermentName: prefermentName,
+            prefermentFlourPercent: prefermentFlourPercent,
+            prefermentFlours: prefermentFlours,
+            prefermentIngredientRows: prefermentIngredientRows,
+            instructions: instructions
+        )
+    }
+
+    private var isDirty: Bool {
+        currentSnapshot != initialSnapshot
+    }
+
+    /// Dismisses immediately if nothing has changed; otherwise asks the user to confirm
+    /// discarding their edits.
+    private func requestDismiss() {
+        if isDirty {
+            showDiscardConfirmation = true
+        } else {
+            dismiss()
+        }
+    }
+
+    // MARK: - Body
+
     var body: some View {
-        NavigationStack(path: $navPath) {
-            detailsForm
-                .navigationDestination(for: CreateStep.self) { step in
-                    switch step {
-                    case .flours:      floursForm
-                    case .ingredients: ingredientsForm
-                    case .preferment:  prefermentForm
-                    case .instructions: instructionsForm
-                    case .preview:     previewForm
+        coreView
+            .overlay { if isScanning { scanningOverlay } }
+            .sheet(isPresented: $showCamera) {
+                CameraPickerView { image in
+                    showCamera = false
+                    guard let image else { return }
+                    #if canImport(FoundationModels)
+                    if #available(iOS 26, *) {
+                        Task { await processImage(image) }
                     }
+                    #endif
                 }
+            }
+            .alert("Save Error", isPresented: Binding(
+                get: { saveError != nil },
+                set: { if !$0 { saveError = nil } }
+            )) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(saveError ?? "")
+            }
+            .alert("Scan Error", isPresented: Binding(
+                get: { scanError != nil },
+                set: { if !$0 { scanError = nil } }
+            )) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(scanError ?? "")
+            }
+            .alert("Unknown Ingredient", isPresented: Binding(
+                get: { pendingConversions.first != nil },
+                set: { _ in }
+            )) {
+                TextField("Grams per \(pendingConversions.first.map { VolumeUnitFormatter.label(unit: $0.unit, amount: 1) } ?? "unit")",
+                          text: $conversionGramsText)
+                    .keyboardType(.decimalPad)
+                Button("Save & Use") { resolveConversionPrompt(useGrams: true) }
+                Button("Keep Original Unit", role: .cancel) { resolveConversionPrompt(useGrams: false) }
+            } message: {
+                if let pending = pendingConversions.first {
+                    Text("We don't have a gram conversion for \"\(pending.name)\" (\(VolumeUnitFormatter.format(amount: pending.amount, unit: pending.unit))). If you know how many grams are in one \(VolumeUnitFormatter.label(unit: pending.unit, amount: 1)), enter it to use it now and remember it for future scans.")
+                }
+            }
+            .confirmationDialog("Are you sure? You will lose unsaved changes", isPresented: $showDiscardConfirmation, titleVisibility: .visible) {
+                Button("Discard", role: .destructive) { dismiss() }
+                    .accessibilityIdentifier("discardChangesButton")
+                Button("Keep Editing", role: .cancel) {}
+                    .accessibilityIdentifier("keepEditingButton")
+            }
+            .interactiveDismissDisabled(isDirty)
+    }
+
+    @ViewBuilder
+    private var coreView: some View {
+        #if canImport(FoundationModels)
+        if #available(iOS 26, *) {
+            navigationStack
+                .photosPicker(isPresented: $showPhotoPicker,
+                               selection: $selectedPhotoItem,
+                               matching: .images)
+                .onChange(of: selectedPhotoItem) { _, item in
+                    guard let item else { return }
+                        Task { await processPickedPhoto(item) }
+                }
+                .confirmationDialog("Choose Source", isPresented: $showScanOptions,
+                                     titleVisibility: .visible) {
+                    Button("Photo Library") { showPhotoPicker = true }
+                    if UIImagePickerController.isSourceTypeAvailable(.camera) {
+                        Button("Camera") { showCamera = true }
+                    }
+                    Button("Cancel", role: .cancel) {}
+                }
+        } else {
+            navigationStack
         }
-        .alert("Save Error", isPresented: Binding(
-            get: { saveError != nil },
-            set: { if !$0 { saveError = nil } }
-        )) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(saveError ?? "")
+        #else
+        navigationStack
+        #endif
+    }
+
+    private var navigationStack: some View {
+        NavigationStack(path: $navPath) {
+            Group {
+                if editingRecipe != nil {
+                    detailsForm
+                } else {
+                    modeSelectionPage
+                }
+            }
+            .navigationDestination(for: CreateStep.self) { step in
+                switch step {
+                case .details:     detailsForm
+                case .ingredients: ingredientsForm
+                case .preferment:  prefermentForm
+                case .preview:     previewForm
+                }
+            }
         }
+    }
+
+    // MARK: - Scanning overlay
+
+    private var scanningOverlay: some View {
+        ZStack {
+            Color.black.opacity(0.4).ignoresSafeArea()
+            VStack(spacing: 16) {
+                ProgressView().scaleEffect(1.5).tint(.white)
+                Text("Scanning recipe…")
+                    .foregroundStyle(.white)
+                    .font(.headline)
+            }
+            .padding(32)
+            .background(.ultraThinMaterial)
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+        }
+    }
+
+    // MARK: - Mode selection
+
+    private var modeSelectionPage: some View {
+        ScrollView {
+            VStack(spacing: 0) {
+                Text("How would you like to create your recipe?")
+                    .font(.title2)
+                    .bold()
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 24)
+                    .padding(.top, 40)
+                    .padding(.bottom, 32)
+
+                VStack(spacing: 16) {
+                    ModeCard(
+                        icon: "percent",
+                        title: "By Baker's Percentage",
+                        description: "Enter ingredients as percentages relative to total flour",
+                        accessibilityID: "byPercentModeCard"
+                    ) {
+                        inputMode = .byPercent
+                        navPath.append(.details)
+                    }
+
+                    ModeCard(
+                        icon: "scalemass",
+                        title: "By Weight",
+                        description: "Enter ingredient weights in grams — percentages are calculated automatically",
+                        accessibilityID: "byWeightModeCard"
+                    ) {
+                        inputMode = .byWeight
+                        navPath.append(.details)
+                    }
+
+                    scanCard
+                }
+                .padding(.horizontal, 24)
+                .padding(.bottom, 32)
+            }
+        }
+        .navigationTitle("New Recipe")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button("Cancel") { requestDismiss() }
+                    .accessibilityIdentifier("modeSelectionCancelButton")
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var scanCard: some View {
+        #if canImport(FoundationModels)
+        if #available(iOS 26, *) {
+            ModeCard(
+                icon: "camera.viewfinder",
+                title: "Scan a Recipe",
+                description: "Use Apple Intelligence to read a recipe from a photo or screenshot"
+            ) {
+                showScanOptions = true
+            }
+        } else {
+            ModeCard(
+                icon: "camera.viewfinder",
+                title: "Scan a Recipe",
+                description: "Requires iOS 26 or later with Apple Intelligence",
+                enabled: false
+            ) {}
+        }
+        #else
+        ModeCard(
+            icon: "camera.viewfinder",
+            title: "Scan a Recipe",
+            description: "Requires iOS 26 or later with Apple Intelligence",
+            enabled: false
+        ) {}
+        #endif
     }
 
     // MARK: - Step 1: Details
 
     private var detailsForm: some View {
         let collections = store.collectionNames
-
         return Form {
             Section("Recipe") {
                 TextField("Name", text: $recipeName)
                     .autocorrectionDisabled()
+                    .accessibilityIdentifier("recipeNameField")
             }
 
             Section("Collection") {
                 if !collections.isEmpty && !isNewCollection {
                     Picker("Collection", selection: $collectionName) {
-                        ForEach(collections, id: \.self) { name in
-                            Text(name).tag(name)
-                        }
+                        ForEach(collections, id: \.self) { Text($0).tag($0) }
                     }
+                    .accessibilityIdentifier("collectionPicker")
                     .onAppear {
                         if collectionName.isEmpty, let first = collections.first {
                             collectionName = first
+                            // This is an automatic default, not a user edit — update the
+                            // baseline so it doesn't trip the discard-changes safeguard.
+                            initialSnapshot.collectionName = first
                         }
                     }
                 }
                 Toggle("New Collection", isOn: $isNewCollection.animation())
+                    .accessibilityIdentifier("newCollectionToggle")
                 if isNewCollection {
                     TextField("Collection Name", text: $newCollectionText)
                         .autocorrectionDisabled()
+                        .accessibilityIdentifier("newCollectionNameField")
                 }
             }
 
-            Section("Weight") {
-                HStack {
-                    Text("Default Dough Weight")
-                    Spacer()
-                    TextField("500", value: $defaultWeight, format: .number)
-                        .multilineTextAlignment(.trailing)
-                        .keyboardType(.decimalPad)
-                        .frame(width: 80)
-                    Text("g").foregroundStyle(.secondary)
+            if inputMode == .byPercent {
+                Section("Weight") {
+                    HStack {
+                        Text("Default Dough Weight")
+                        Spacer()
+                        TextField("500", value: $defaultWeight, format: .number)
+                            .multilineTextAlignment(.trailing)
+                            .keyboardType(.decimalPad)
+                            .frame(width: 80)
+                            .accessibilityIdentifier("defaultWeightField")
+                        Text("g").foregroundStyle(.secondary)
+                    }
                 }
             }
 
             Section {
                 Toggle("Include Preferment", isOn: $containsPreferment)
+                    .accessibilityIdentifier("containsPrefermentToggle")
             } footer: {
                 Text("A preferment (biga, poolish, etc.) is a portion of the dough fermented separately.")
             }
@@ -182,217 +590,357 @@ struct CreateRecipeView: View {
         .navigationTitle(editingRecipe != nil ? "Edit Recipe" : "New Recipe")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                Button("Cancel") { dismiss() }
+            if editingRecipe != nil {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Cancel") { requestDismiss() }
+                        .accessibilityIdentifier("detailsCancelButton")
+                }
             }
             ToolbarItem(placement: .topBarTrailing) {
-                Button("Next") { navPath.append(.flours) }
-                    .disabled(!detailsReady)
+                Button("Next") {
+                    navPath.append(containsPreferment ? .preferment : .ingredients)
+                }
+                .disabled(!detailsReady)
+                .accessibilityIdentifier("detailsNextButton")
             }
         }
     }
 
     private var detailsReady: Bool {
         !recipeName.trimmingCharacters(in: .whitespaces).isEmpty
-            && !(isNewCollection ? newCollectionText.trimmingCharacters(in: .whitespaces).isEmpty : collectionName.isEmpty)
-            && defaultWeight != nil && (defaultWeight ?? 0) > 0
+            && !(isNewCollection
+                 ? newCollectionText.trimmingCharacters(in: .whitespaces).isEmpty
+                 : collectionName.isEmpty)
+            && (inputMode == .byWeight || (defaultWeight != nil && (defaultWeight ?? 0) > 0))
     }
 
-    // MARK: - Step 2: Flours
-
-    private var floursForm: some View {
-        let flourSum = flours.compactMap(\.percent).reduce(0, +)
-
-        return Form {
-            Section {
-                ForEach($flours) { $flour in
-                    HStack {
-                        TextField("Flour Name", text: $flour.name)
-                            .autocorrectionDisabled()
-                        Spacer()
-                        TextField("0", value: $flour.percent, format: .number)
-                            .multilineTextAlignment(.trailing)
-                            .keyboardType(.decimalPad)
-                            .frame(width: 60)
-                        Text("%").foregroundStyle(.secondary)
-                    }
-                }
-                .onDelete { indices in flours.remove(atOffsets: indices) }
-                Button { flours.append(FlourRow()) } label: {
-                    Label("Add Flour", systemImage: "plus.circle")
-                }
-            } header: {
-                Text("Flours")
-            } footer: {
-                let diff = 100.0 - flourSum
-                if flours.compactMap(\.percent).isEmpty {
-                    Text("Flour percentages must add up to 100%.")
-                } else if diff != 0 {
-                    Text(String(format: "%.4g%% remaining (needs to total 100%%)", diff))
-                        .foregroundStyle(diff < 0 ? .red : .orange)
-                } else {
-                    Text("Flour percentages total 100%. ✓").foregroundStyle(.green)
-                }
-            }
-        }
-        .navigationTitle("Flours")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button("Next") { navPath.append(.ingredients) }
-                    .disabled(!floursReady)
-            }
-        }
-    }
-
-    private var floursReady: Bool {
-        let ready = flours.allSatisfy { !$0.name.trimmingCharacters(in: .whitespaces).isEmpty && $0.percent != nil }
-        let sum = flours.compactMap(\.percent).reduce(0, +)
-        return ready && !flours.isEmpty && abs(sum - 100) < 0.001
-    }
-
-    // MARK: - Step 3: Ingredients
+    // MARK: - Step 2: Ingredients (flours + other, combined)
 
     private var ingredientsForm: some View {
         let useCelsius = Settings.shared.preferredTemp() == .celsius
+        let isPercent = inputMode == .byPercent
 
         return Form {
-            ForEach($ingredients) { $ing in
-                Section {
-                    TextField("Ingredient Name", text: $ing.name)
-                        .autocorrectionDisabled()
-
-                    Picker("Measurement", selection: $ing.mode) {
-                        Text("Percent").tag(IngredientMeasurementMode.percent)
-                        Text("Weight").tag(IngredientMeasurementMode.weight)
+            Section {
+                ForEach(Array(flours.enumerated()), id: \.element.id) { index, _ in
+                    HStack {
+                        TextField("Flour Name", text: $flours[index].name)
+                            .autocorrectionDisabled()
+                            .accessibilityIdentifier("flourNameField_\(index)")
+                        Spacer()
+                        TextField("0", value: $flours[index].value, format: .number)
+                            .multilineTextAlignment(.trailing)
+                            .keyboardType(.decimalPad)
+                            .frame(width: 70)
+                            .accessibilityIdentifier("flourValueField_\(index)")
+                        Text(isPercent ? "%" : "g").foregroundStyle(.secondary)
                     }
-                    .pickerStyle(.segmented)
-
-                    if ing.mode == .percent {
-                        HStack {
-                            Text("Percentage")
-                            Spacer()
-                            TextField("0", value: $ing.percent, format: .number)
-                                .multilineTextAlignment(.trailing)
-                                .keyboardType(.decimalPad)
-                                .frame(width: 70)
-                            Text("%").foregroundStyle(.secondary)
+                }
+                .onDelete { offsets in
+                    flours.remove(atOffsets: offsets)
+                    renormalizeFlourPercentages()
+                }
+                Button { flours.append(FlourRow()) } label: {
+                    Label("Add Flour", systemImage: "plus.circle")
+                }
+                .accessibilityIdentifier("addFlourButton")
+            } header: {
+                Text("Flours")
+            } footer: {
+                if containsPreferment {
+                    let prefermentLabel = prefermentName.isEmpty ? "preferment" : prefermentName
+                    if isPercent {
+                        let sum = combinedFlours.compactMap(\.value).reduce(0, +)
+                        let diff = 100.0 - sum
+                        if abs(diff) > 0.001 {
+                            Text(String(format: "Enter any additional flour used in the main dough, on top of what's in the \(prefermentLabel). Combined with the preferment, flour percentages must total 100%% (%.4g%% remaining).", diff))
+                                .foregroundStyle(diff < 0 ? .red : .orange)
+                        } else {
+                            Text("Combined flour percentages total 100%. ✓").foregroundStyle(.green)
                         }
                     } else {
-                        HStack {
-                            Text("Weight")
-                            Spacer()
-                            TextField("0", value: $ing.weight, format: .number)
-                                .multilineTextAlignment(.trailing)
-                                .keyboardType(.decimalPad)
-                                .frame(width: 70)
-                            Text("g").foregroundStyle(.secondary)
-                        }
+                        Text("Enter any additional flour used in the main dough, on top of what's in the \(prefermentLabel). Leave at 0 (or remove) if all the flour is in the preferment.")
                     }
+                } else if isPercent {
+                    let sum = flours.compactMap(\.value).reduce(0, +)
+                    let diff = 100.0 - sum
+                    if flours.compactMap(\.value).isEmpty {
+                        Text("Flour percentages must add up to 100%.")
+                    } else if abs(diff) > 0.001 {
+                        Text(String(format: "%.4g%% remaining to reach 100%%", diff))
+                            .foregroundStyle(diff < 0 ? .red : .orange)
+                    } else {
+                        Text("Flour percentages total 100%. ✓").foregroundStyle(.green)
+                    }
+                }
+            }
 
+            Section {
+                ForEach(Array(ingredients.enumerated()), id: \.element.id) { index, _ in
+                    HStack {
+                        TextField("Ingredient Name", text: $ingredients[index].name)
+                            .autocorrectionDisabled()
+                            .accessibilityIdentifier("ingredientNameField_\(index)")
+                        Spacer()
+                        TextField("0", value: $ingredients[index].value, format: .number)
+                            .multilineTextAlignment(.trailing)
+                            .keyboardType(.decimalPad)
+                            .frame(width: 70)
+                            .accessibilityIdentifier("ingredientValueField_\(index)")
+                        Text(isPercent ? "%" : "g").foregroundStyle(.secondary)
+                    }
                     HStack {
                         Text("Temperature (optional)")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
                         Spacer()
-                        TextField("–", value: $ing.tempValue, format: .number)
+                        TextField("–", value: $ingredients[index].tempValue, format: .number)
                             .multilineTextAlignment(.trailing)
                             .keyboardType(.decimalPad)
                             .frame(width: 60)
+                            .accessibilityIdentifier("ingredientTempField_\(index)")
                         Text("°\(useCelsius ? "C" : "F")").foregroundStyle(.secondary)
                     }
                 }
-            }
-            .onDelete { indices in ingredients.remove(atOffsets: indices) }
-
-            Section {
+                .onDelete { ingredients.remove(atOffsets: $0) }
                 Button { ingredients.append(IngredientRow()) } label: {
                     Label("Add Ingredient", systemImage: "plus.circle")
                 }
+                .accessibilityIdentifier("addIngredientButton")
+            } header: {
+                Text("Other Ingredients")
+            } footer: {
+                if containsPreferment {
+                    let prefermentLabel = prefermentName.isEmpty ? "preferment" : prefermentName
+                    Text("Enter the additional amount of each ingredient used in the main dough, on top of what's in the \(prefermentLabel). Leave at 0 (or remove) if it's only used in the preferment.")
+                }
+            }
+
+            if !extraIngredients.isEmpty {
+                Section {
+                    ForEach(extraIngredients) { extra in
+                        LabeledContent(extra.name, value: VolumeUnitFormatter.format(amount: extra.amount, unit: extra.unit))
+                    }
+                    .onDelete { extraIngredients.remove(atOffsets: $0) }
+                } header: {
+                    Text("Additional Ingredients")
+                } footer: {
+                    Text("These ingredients couldn't be converted to grams, so they're kept in their original units and scaled with the recipe.")
+                }
             }
         }
-        .navigationTitle("Ingredients")
+        .navigationTitle(containsPreferment ? "Main Dough" : "Ingredients")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Button("Next") {
-                    syncPrefermentIngredients()
-                    navPath.append(containsPreferment ? .preferment : .instructions)
-                }
-                .disabled(!ingredientsReady)
+                Button("Next") { navPath.append(.preview) }
+                    .disabled(!ingredientsReady)
+                    .accessibilityIdentifier("ingredientsNextButton")
             }
         }
     }
 
     private var ingredientsReady: Bool {
-        !ingredients.isEmpty && ingredients.allSatisfy { ing in
-            !ing.name.trimmingCharacters(in: .whitespaces).isEmpty
-                && (ing.mode == .percent ? ing.percent != nil : ing.weight != nil)
+        if containsPreferment {
+            let namesOK = flours.allSatisfy { !$0.name.trimmingCharacters(in: .whitespaces).isEmpty }
+                && ingredients.allSatisfy { !$0.name.trimmingCharacters(in: .whitespaces).isEmpty }
+            guard namesOK else { return false }
+            if inputMode == .byPercent {
+                let sum = combinedFlours.compactMap(\.value).reduce(0, +)
+                return abs(sum - 100) < 0.001
+            }
+            return true
         }
+
+        let floursOK: Bool
+        if inputMode == .byPercent {
+            let sum = flours.compactMap(\.value).reduce(0, +)
+            floursOK = !flours.isEmpty
+                && flours.allSatisfy { !$0.name.trimmingCharacters(in: .whitespaces).isEmpty && $0.value != nil }
+                && abs(sum - 100) < 0.001
+        } else {
+            floursOK = !flours.isEmpty
+                && flours.allSatisfy { !$0.name.trimmingCharacters(in: .whitespaces).isEmpty && ($0.value ?? 0) > 0 }
+        }
+        return floursOK
+            && !ingredients.isEmpty
+            && ingredients.allSatisfy { !$0.name.trimmingCharacters(in: .whitespaces).isEmpty && ($0.value ?? 0) > 0 }
     }
 
-    private func syncPrefermentIngredients() {
+    /// The preferment is entered first. This pre-seeds the "Main Dough" step with a row
+    /// for each preferment flour/ingredient (left at 0) so the user can fill in any
+    /// *additional* amount used in the rest of the dough, on top of what's already in the
+    /// preferment.
+    private func syncMainDoughFromPreferment() {
         guard containsPreferment else { return }
-        var merged: [PrefIngRow] = []
-        for flour in flours where !flour.name.isEmpty {
-            if let existing = prefermentIngredients.first(where: { $0.name == flour.name && $0.isFlour }) {
-                merged.append(existing)
+        for prefFlour in prefermentFlours where !prefFlour.name.trimmingCharacters(in: .whitespaces).isEmpty {
+            guard !flours.contains(where: { $0.name.caseInsensitiveCompare(prefFlour.name) == .orderedSame }) else { continue }
+            if flours.count == 1, flours[0].name.trimmingCharacters(in: .whitespaces).isEmpty, flours[0].value == nil {
+                flours[0] = FlourRow(name: prefFlour.name)
             } else {
-                merged.append(PrefIngRow(name: flour.name, isFlour: true))
+                flours.append(FlourRow(name: prefFlour.name))
             }
         }
-        for ing in ingredients where !ing.name.isEmpty {
-            if let existing = prefermentIngredients.first(where: { $0.name == ing.name && !$0.isFlour }) {
-                merged.append(existing)
+        for prefIng in prefermentIngredientRows where !prefIng.name.trimmingCharacters(in: .whitespaces).isEmpty {
+            guard !ingredients.contains(where: { $0.name.caseInsensitiveCompare(prefIng.name) == .orderedSame }) else { continue }
+            if ingredients.count == 1, ingredients[0].name.trimmingCharacters(in: .whitespaces).isEmpty, ingredients[0].value == nil {
+                ingredients[0] = IngredientRow(name: prefIng.name)
             } else {
-                merged.append(PrefIngRow(name: ing.name, isFlour: false))
+                ingredients.append(IngredientRow(name: prefIng.name))
             }
         }
-        prefermentIngredients = merged
     }
 
-    // MARK: - Step 4: Preferment
+    /// The amount of a preferment flour/ingredient row that counts toward the recipe-wide
+    /// total. In `.byWeight` mode this is just the preferment's grams. In `.byPercent`
+    /// mode, the preferment's own percentages are relative to the *preferment's* flour, so
+    /// they're scaled by `prefermentFlourPercent` (the preferment's share of the total
+    /// flour) to get their contribution to the total-flour-relative percentage.
+    private func prefermentContribution(_ prefValue: Double?) -> Double {
+        guard let prefValue else { return 0 }
+        if inputMode == .byPercent {
+            return prefValue / 100 * (prefermentFlourPercent ?? 0)
+        }
+        return prefValue
+    }
+
+    /// After deleting a flour in `.byPercent` mode, rescale the remaining flours'
+    /// percentages proportionally so they still sum to 100% (or to
+    /// `100% - <preferment's flour contribution>` when there's a preferment).
+    /// Without this, deleting a flour can leave the remaining percentages summing
+    /// to far less than 100%, permanently disabling "Next" with no way to fix it
+    /// other than manually re-entering every remaining flour's percentage.
+    private func renormalizeFlourPercentages() {
+        guard inputMode == .byPercent else { return }
+        let prefermentContributionSum = prefermentFlours.reduce(0) { $0 + prefermentContribution($1.value) }
+        let target = 100 - prefermentContributionSum
+        let sum = flours.compactMap(\.value).reduce(0, +)
+        guard sum > 0, target > 0 else { return }
+        let scale = target / sum
+        for index in flours.indices {
+            if let value = flours[index].value {
+                flours[index].value = value * scale
+            }
+        }
+    }
+
+    /// `flours`/`ingredients` hold only the *additional* amounts used in the main dough.
+    /// These combine those with the preferment's contribution (matched by name,
+    /// case-insensitive) to get the totals for the recipe as a whole.
+    private var combinedFlours: [FlourRow] {
+        var result = flours.filter { !$0.name.trimmingCharacters(in: .whitespaces).isEmpty }
+        for prefRow in prefermentFlours where !prefRow.name.trimmingCharacters(in: .whitespaces).isEmpty {
+            let contribution = prefermentContribution(prefRow.value)
+            if let idx = result.firstIndex(where: { $0.name.caseInsensitiveCompare(prefRow.name) == .orderedSame }) {
+                result[idx].value = (result[idx].value ?? 0) + contribution
+            } else {
+                result.append(FlourRow(name: prefRow.name, value: contribution))
+            }
+        }
+        return result
+    }
+
+    private var combinedIngredients: [IngredientRow] {
+        var result = ingredients.filter { !$0.name.trimmingCharacters(in: .whitespaces).isEmpty }
+        for prefRow in prefermentIngredientRows where !prefRow.name.trimmingCharacters(in: .whitespaces).isEmpty {
+            let contribution = prefermentContribution(prefRow.value)
+            if let idx = result.firstIndex(where: { $0.name.caseInsensitiveCompare(prefRow.name) == .orderedSame }) {
+                result[idx].value = (result[idx].value ?? 0) + contribution
+            } else {
+                result.append(IngredientRow(name: prefRow.name, value: contribution))
+            }
+        }
+        return result
+    }
+
+    // MARK: - Step 3: Preferment (optional)
 
     private var prefermentForm: some View {
-        let useCelsius = Settings.shared.preferredTemp() == .celsius
-
+        let isPercent = inputMode == .byPercent
+        let unit = isPercent ? "%" : "g"
         return Form {
             Section("Preferment Details") {
-                TextField("Preferment Name (e.g. Biga)", text: $prefermentName)
+                TextField("Name (e.g. Biga, Poolish)", text: $prefermentName)
                     .autocorrectionDisabled()
-                HStack {
-                    Text("% of Total Flour")
-                    Spacer()
-                    TextField("0", value: $prefermentFlourPercent, format: .number)
-                        .multilineTextAlignment(.trailing)
-                        .keyboardType(.decimalPad)
-                        .frame(width: 70)
-                    Text("%").foregroundStyle(.secondary)
+                    .accessibilityIdentifier("prefermentNameField")
+                if isPercent {
+                    HStack {
+                        Text("% of Total Flour")
+                        Spacer()
+                        TextField("0", value: $prefermentFlourPercent, format: .number)
+                            .multilineTextAlignment(.trailing)
+                            .keyboardType(.decimalPad)
+                            .frame(width: 70)
+                            .accessibilityIdentifier("prefermentFlourPercentField")
+                        Text("%").foregroundStyle(.secondary)
+                    }
                 }
             }
 
-            Section("Include in Preferment") {
-                ForEach($prefermentIngredients) { $row in
+            Section {
+                ForEach(Array(prefermentFlours.enumerated()), id: \.element.id) { index, _ in
                     HStack {
-                        Toggle(isOn: $row.included) {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(row.name)
-                                Text(row.isFlour ? "Flour" : "Ingredient")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
+                        TextField("Flour Name", text: $prefermentFlours[index].name)
+                            .autocorrectionDisabled()
+                            .accessibilityIdentifier("prefermentFlourNameField_\(index)")
+                        Spacer()
+                        TextField("0", value: $prefermentFlours[index].value, format: .number)
+                            .multilineTextAlignment(.trailing)
+                            .keyboardType(.decimalPad)
+                            .frame(width: 70)
+                            .accessibilityIdentifier("prefermentFlourValueField_\(index)")
+                        Text(unit).foregroundStyle(.secondary)
                     }
-                    if row.included {
-                        HStack {
-                            Text("Weight in Preferment")
-                            Spacer()
-                            TextField("0", value: $row.weight, format: .number)
-                                .multilineTextAlignment(.trailing)
-                                .keyboardType(.decimalPad)
-                                .frame(width: 70)
-                            Text("g").foregroundStyle(.secondary)
-                        }
-                        .padding(.leading, 8)
+                }
+                .onDelete { prefermentFlours.remove(atOffsets: $0) }
+                Button { prefermentFlours.append(FlourRow()) } label: {
+                    Label("Add Flour", systemImage: "plus.circle")
+                }
+                .accessibilityIdentifier("addPrefermentFlourButton")
+            } header: {
+                Text("Flours")
+            } footer: {
+                if isPercent {
+                    let sum = prefermentFlours.compactMap(\.value).reduce(0, +)
+                    let diff = 100.0 - sum
+                    if prefermentFlours.compactMap(\.value).isEmpty {
+                        Text("Flour percentages (relative to the preferment's own flour) must add up to 100%.")
+                    } else if abs(diff) > 0.001 {
+                        Text(String(format: "%.4g%% remaining to reach 100%% of the preferment's flour.", diff))
+                            .foregroundStyle(diff < 0 ? .red : .orange)
+                    } else {
+                        Text("Flour percentages total 100%. ✓").foregroundStyle(.green)
                     }
+                }
+            }
+
+            Section {
+                ForEach(Array(prefermentIngredientRows.enumerated()), id: \.element.id) { index, _ in
+                    HStack {
+                        TextField("Ingredient Name", text: $prefermentIngredientRows[index].name)
+                            .autocorrectionDisabled()
+                            .accessibilityIdentifier("prefermentIngredientNameField_\(index)")
+                        Spacer()
+                        TextField("0", value: $prefermentIngredientRows[index].value, format: .number)
+                            .multilineTextAlignment(.trailing)
+                            .keyboardType(.decimalPad)
+                            .frame(width: 70)
+                            .accessibilityIdentifier("prefermentIngredientValueField_\(index)")
+                        Text(unit).foregroundStyle(.secondary)
+                    }
+                }
+                .onDelete { prefermentIngredientRows.remove(atOffsets: $0) }
+                Button { prefermentIngredientRows.append(IngredientRow()) } label: {
+                    Label("Add Ingredient", systemImage: "plus.circle")
+                }
+                .accessibilityIdentifier("addPrefermentIngredientButton")
+            } header: {
+                Text("Other Ingredients")
+            } footer: {
+                if isPercent {
+                    Text("Enter each ingredient's percentage relative to the preferment's own flour (e.g. 50 = 50% hydration). You'll add any additional amounts for the rest of the dough next.")
+                } else {
+                    Text("Enter the weight of each ingredient as it's used in the preferment. You'll add any additional amounts for the rest of the dough next.")
                 }
             }
         }
@@ -400,26 +948,93 @@ struct CreateRecipeView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Button("Next") { navPath.append(.instructions) }
-                    .disabled(!prefermentReady)
+                Button("Next") {
+                    syncMainDoughFromPreferment()
+                    navPath.append(.ingredients)
+                }
+                .disabled(!prefermentReady)
+                .accessibilityIdentifier("prefermentNextButton")
             }
         }
     }
 
     private var prefermentReady: Bool {
-        !prefermentName.trimmingCharacters(in: .whitespaces).isEmpty
-            && prefermentFlourPercent != nil
-            && (prefermentFlourPercent ?? 0) > 0
-            && prefermentIngredients.filter(\.included).allSatisfy { $0.weight != nil }
-            && !prefermentIngredients.filter(\.included).isEmpty
+        guard !prefermentName.trimmingCharacters(in: .whitespaces).isEmpty else { return false }
+
+        let namedFlours = prefermentFlours.filter { !$0.name.trimmingCharacters(in: .whitespaces).isEmpty }
+        guard !namedFlours.isEmpty, namedFlours.allSatisfy({ ($0.value ?? 0) > 0 }) else { return false }
+        let namedIngredients = prefermentIngredientRows.filter { !$0.name.trimmingCharacters(in: .whitespaces).isEmpty }
+        guard namedIngredients.allSatisfy({ ($0.value ?? 0) > 0 }) else { return false }
+
+        if inputMode == .byPercent {
+            guard let fp = prefermentFlourPercent, fp > 0 else { return false }
+            let flourSum = namedFlours.compactMap(\.value).reduce(0, +)
+            return abs(flourSum - 100) < 0.001
+        }
+        return true
     }
 
-    // MARK: - Step 5: Instructions
+    // MARK: - Step 4: Preview + Instructions + Save
 
-    @State private var newStepText: String = ""
+    private var previewForm: some View {
+        let isPercent = inputMode == .byPercent
+        return Form {
+            Section("Details") {
+                LabeledContent("Name", value: recipeName)
+                LabeledContent("Collection", value: effectiveCollection)
+                if let w = defaultWeight, isPercent {
+                    LabeledContent("Default Weight", value: "\(Int(w))g")
+                }
+                if containsPreferment { LabeledContent("Preferment", value: prefermentName) }
+            }
 
-    private var instructionsForm: some View {
-        Form {
+            Section("Flours") {
+                ForEach(containsPreferment ? combinedFlours : flours.filter { !$0.name.isEmpty }, id: \.id) { flour in
+                    LabeledContent(flour.name, value: isPercent
+                        ? String(format: "%.4g%%", flour.value ?? 0)
+                        : "\(Int(flour.value ?? 0))g")
+                }
+            }
+
+            Section("Other Ingredients") {
+                ForEach(containsPreferment ? combinedIngredients : ingredients.filter { !$0.name.isEmpty }, id: \.id) { ing in
+                    LabeledContent(ing.name, value: isPercent
+                        ? String(format: "%.4g%%", ing.value ?? 0)
+                        : "\(Int(ing.value ?? 0))g")
+                }
+            }
+
+            if !extraIngredients.isEmpty {
+                Section {
+                    ForEach(extraIngredients) { extra in
+                        LabeledContent(extra.name, value: VolumeUnitFormatter.format(amount: extra.amount, unit: extra.unit))
+                    }
+                } header: {
+                    Text("Additional Ingredients")
+                } footer: {
+                    Text("Scaled with the recipe but not included in the gram total.")
+                }
+            }
+
+            if containsPreferment {
+                Section("Preferment") {
+                    if isPercent {
+                        LabeledContent("% of Total Flour",
+                                       value: String(format: "%.4g%%", prefermentFlourPercent ?? 0))
+                    }
+                    ForEach(prefermentFlours.filter { !$0.name.isEmpty }, id: \.id) { flour in
+                        LabeledContent(flour.name, value: isPercent
+                            ? String(format: "%.4g%%", flour.value ?? 0)
+                            : "\(Int(flour.value ?? 0))g")
+                    }
+                    ForEach(prefermentIngredientRows.filter { !$0.name.isEmpty }, id: \.id) { ing in
+                        LabeledContent(ing.name, value: isPercent
+                            ? String(format: "%.4g%%", ing.value ?? 0)
+                            : "\(Int(ing.value ?? 0))g")
+                    }
+                }
+            }
+
             Section {
                 ForEach(Array(instructions.enumerated()), id: \.offset) { index, step in
                     HStack(alignment: .top, spacing: 12) {
@@ -427,10 +1042,10 @@ struct CreateRecipeView: View {
                         Text(step)
                     }
                 }
-                .onDelete { indices in instructions.remove(atOffsets: indices) }
-                .onMove { source, destination in instructions.move(fromOffsets: source, toOffset: destination) }
+                .onDelete { instructions.remove(atOffsets: $0) }
+                .onMove { instructions.move(fromOffsets: $0, toOffset: $1) }
             } header: {
-                Text("Steps")
+                Text("Instructions (Optional)")
             } footer: {
                 Text("Swipe to delete, drag to reorder.")
             }
@@ -440,95 +1055,260 @@ struct CreateRecipeView: View {
                     .lineLimit(3, reservesSpace: true)
                 Button("Add Step") {
                     let trimmed = newStepText.trimmingCharacters(in: .whitespaces)
-                    if !trimmed.isEmpty {
-                        instructions.append(trimmed)
-                        newStepText = ""
-                    }
+                    guard !trimmed.isEmpty else { return }
+                    instructions.append(trimmed)
+                    newStepText = ""
                 }
                 .disabled(newStepText.trimmingCharacters(in: .whitespaces).isEmpty)
             }
-        }
-        .navigationTitle("Instructions")
-        .navigationBarTitleDisplayMode(.inline)
-        .environment(\.editMode, .constant(.active))
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button("Next") { navPath.append(.preview) }
-            }
-        }
-    }
 
-    // MARK: - Step 6: Preview + Save
-
-    private var previewForm: some View {
-        Form {
-            Section("Details") {
-                LabeledContent("Name", value: recipeName)
-                LabeledContent("Collection", value: effectiveCollection)
-                LabeledContent("Default Weight", value: "\(Int(defaultWeight ?? 0))g")
-                if containsPreferment { LabeledContent("Preferment", value: prefermentName) }
-            }
-
-            Section("Flours") {
-                ForEach(flours.filter { !$0.name.isEmpty }, id: \.id) { flour in
-                    LabeledContent(flour.name, value: "\(Int(flour.percent ?? 0))%")
-                }
-            }
-
-            Section("Ingredients") {
-                ForEach(ingredients.filter { !$0.name.isEmpty }, id: \.id) { ing in
-                    if ing.mode == .percent {
-                        LabeledContent(ing.name, value: "\(Int(ing.percent ?? 0))%")
-                    } else {
-                        LabeledContent(ing.name, value: "\(Int(ing.weight ?? 0))g")
+            if let diagnostics = lastScanDiagnostics {
+                Section {
+                    Button("Copy Scan Diagnostics") {
+                        UIPasteboard.general.string = diagnostics
                     }
-                }
-            }
-
-            if containsPreferment && !prefermentIngredients.filter(\.included).isEmpty {
-                Section("Preferment Ingredients") {
-                    LabeledContent("Flour of Total", value: "\(Int(prefermentFlourPercent ?? 0))%")
-                    ForEach(prefermentIngredients.filter(\.included), id: \.id) { ing in
-                        LabeledContent(ing.name, value: "\(Int(ing.weight ?? 0))g")
-                    }
-                }
-            }
-
-            if !instructions.isEmpty {
-                Section("Instructions") {
-                    ForEach(Array(instructions.enumerated()), id: \.offset) { index, step in
-                        HStack(alignment: .top, spacing: 8) {
-                            Text("\(index + 1).").foregroundStyle(.secondary)
-                            Text(step)
-                        }
-                    }
-                }
-            }
-
-            Section {
-                Button {
-                    saveRecipe()
-                } label: {
-                    HStack {
-                        Spacer()
-                        Text(editingRecipe != nil ? "Save Changes" : "Save Recipe")
-                            .bold()
-                        Spacer()
-                    }
+                } footer: {
+                    Text("Copies the scan's OCR text and parsed ingredient data to the clipboard for debugging.")
                 }
             }
         }
         .navigationTitle("Preview")
         .navigationBarTitleDisplayMode(.inline)
+        .environment(\.editMode, .constant(.active))
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button(editingRecipe != nil ? "Save Changes" : "Save Recipe") {
+                    saveRecipe()
+                }
+                .bold()
+                .accessibilityIdentifier("saveRecipeButton")
+            }
+        }
     }
 
-    // MARK: - Save logic
+    // MARK: - AI scan processing
+
+    #if canImport(FoundationModels)
+    @available(iOS 26, *)
+    private func processPickedPhoto(_ item: PhotosPickerItem) async {
+        isScanning = true
+        defer {
+            isScanning = false
+            selectedPhotoItem = nil
+        }
+        do {
+            guard let data = try await item.loadTransferable(type: Data.self),
+                  let image = UIImage(data: data) else {
+                scanError = "Could not load the selected image."
+                return
+            }
+            let result = try await RecipeScanner.shared.scan(image: image)
+            try applyParsed(result)
+        } catch {
+            scanError = error.localizedDescription
+        }
+    }
+
+    @available(iOS 26, *)
+    private func processImage(_ image: UIImage) async {
+        isScanning = true
+        defer { isScanning = false }
+        do {
+            let result = try await RecipeScanner.shared.scan(image: image)
+            try applyParsed(result)
+        } catch {
+            scanError = error.localizedDescription
+        }
+    }
+
+    @available(iOS 26, *)
+    private func applyParsed(_ result: ScanResult) throws {
+        let parsed = result.resolvedRecipe
+        let valid = parsed.ingredients.filter { $0.weightGrams > 0 }
+        let extras = parsed.ingredients.filter { $0.isExtra }
+
+        let mainFlours = valid.filter { !$0.isPreferment && $0.isFlour }
+        let mainOthers = valid.filter { !$0.isPreferment && !$0.isFlour }
+        let prefFlours = valid.filter { $0.isPreferment && $0.isFlour }
+        let prefOthers = valid.filter { $0.isPreferment && !$0.isFlour }
+
+        let totalMainFlourWeight = mainFlours.reduce(0) { $0 + $1.weightGrams }
+        let totalPrefFlourWeight = prefFlours.reduce(0) { $0 + $1.weightGrams }
+        let totalFlourWeight = totalMainFlourWeight + totalPrefFlourWeight
+        guard totalFlourWeight > 0 else {
+            lastScanDiagnostics = makeScanDiagnostics(result: result, defaultWeightGrams: nil,
+                                                       flours: [], ingredients: [], extras: [], preferment: nil)
+            throw ScanError.noFlourFound
+        }
+
+        recipeName = parsed.name
+        defaultWeight = valid.reduce(0) { $0 + $1.weightGrams }
+
+        flours = mainFlours.map {
+            FlourRow(name: $0.name, value: $0.weightGrams / totalFlourWeight * 100)
+        }
+        if flours.isEmpty { flours = [FlourRow()] }
+
+        ingredients = mainOthers.map {
+            IngredientRow(name: $0.name, value: $0.weightGrams / totalFlourWeight * 100)
+        }
+        if ingredients.isEmpty { ingredients = [IngredientRow()] }
+
+        instructions = parsed.instructions
+
+        var diagPreferment: ScanDiagnostics.DiagFinalRecipe.DiagPreferment? = nil
+        if parsed.hasPreferment && totalPrefFlourWeight > 0 {
+            containsPreferment = true
+            prefermentName = parsed.prefermentName
+            prefermentFlourPercent = totalPrefFlourWeight / totalFlourWeight * 100
+
+            let prefFlourRows = prefFlours.map {
+                FlourRow(name: $0.name, value: $0.weightGrams / totalPrefFlourWeight * 100)
+            }
+            prefermentFlours = prefFlourRows.isEmpty ? [FlourRow()] : prefFlourRows
+
+            let prefIngRows = prefOthers.map {
+                IngredientRow(name: $0.name, value: $0.weightGrams / totalPrefFlourWeight * 100)
+            }
+            prefermentIngredientRows = prefIngRows.isEmpty ? [IngredientRow()] : prefIngRows
+
+            // Pre-seed the "Main Dough" step with any preferment ingredient names not
+            // already present (e.g. when all of a flour is in the preferment).
+            syncMainDoughFromPreferment()
+
+            diagPreferment = .init(
+                name: prefermentName,
+                flourPercentOfTotalFlour: prefermentFlourPercent ?? 0,
+                ingredients: prefFlourRows.map { .init(name: $0.name, percent: $0.value ?? 0) }
+                    + prefIngRows.map { .init(name: $0.name, percent: $0.value ?? 0) }
+            )
+        } else {
+            containsPreferment = false
+        }
+
+        // Extra ingredients with no reliable gram conversion: queue a prompt for each so
+        // the user can teach us the conversion (used now and remembered for next time)
+        // or leave it in its original unit.
+        lastTotalFlourWeight = totalFlourWeight
+        lastTotalPrefFlourWeight = totalPrefFlourWeight
+        extraIngredients = []
+        pendingConversions = []
+        for extra in extras {
+            if IngredientConversionStore.shared.isAlwaysExtra(name: extra.name, unit: extra.extraUnit.rawValue) {
+                extraIngredients.append(ExtraIngredientRow(name: extra.name, amount: extra.extraAmount,
+                                                             unit: extra.extraUnit.rawValue, isPreferment: extra.isPreferment))
+            } else {
+                pendingConversions.append(PendingConversion(name: extra.name, amount: extra.extraAmount,
+                                                              unit: extra.extraUnit.rawValue, isPreferment: extra.isPreferment))
+            }
+        }
+
+        lastScanDiagnostics = makeScanDiagnostics(
+            result: result,
+            defaultWeightGrams: defaultWeight,
+            flours: flours.map { .init(name: $0.name, percent: $0.value ?? 0) },
+            ingredients: ingredients.map { .init(name: $0.name, percent: $0.value ?? 0) },
+            extras: extras.map { .init(name: $0.name, amount: $0.extraAmount, unit: $0.extraUnit.rawValue, isPreferment: $0.isPreferment) },
+            preferment: diagPreferment
+        )
+
+        inputMode = .byPercent
+        navPath.append(.details)
+    }
+
+    @available(iOS 26, *)
+    private func makeScanDiagnostics(result: ScanResult,
+                                      defaultWeightGrams: Double?,
+                                      flours: [ScanDiagnostics.DiagFinalRecipe.DiagPercent],
+                                      ingredients: [ScanDiagnostics.DiagFinalRecipe.DiagPercent],
+                                      extras: [ScanDiagnostics.DiagFinalRecipe.DiagExtra],
+                                      preferment: ScanDiagnostics.DiagFinalRecipe.DiagPreferment?) -> String {
+        let rawIngredients = result.rawRecipe.ingredients.map {
+            ScanDiagnostics.DiagIngredient(name: $0.name,
+                                            category: $0.category.rawValue,
+                                            weightGrams: $0.weightGrams,
+                                            volumeAmount: $0.volumeAmount,
+                                            volumeUnit: $0.volumeUnit.rawValue,
+                                            isFlour: $0.isFlour,
+                                            isPreferment: $0.isPreferment,
+                                            isExtra: false)
+        }
+        let resolvedIngredients = result.resolvedRecipe.ingredients.map {
+            ScanDiagnostics.DiagIngredient(name: $0.name,
+                                            category: $0.category.rawValue,
+                                            weightGrams: $0.weightGrams,
+                                            volumeAmount: $0.extraAmount,
+                                            volumeUnit: $0.extraUnit.rawValue,
+                                            isFlour: $0.isFlour,
+                                            isPreferment: $0.isPreferment,
+                                            isExtra: $0.isExtra)
+        }
+        let diagnostics = ScanDiagnostics(
+            ocrText: result.ocrText,
+            rawIngredients: rawIngredients,
+            resolvedIngredients: resolvedIngredients,
+            finalRecipe: .init(name: result.resolvedRecipe.name,
+                                defaultWeightGrams: defaultWeightGrams,
+                                flours: flours,
+                                ingredients: ingredients,
+                                extraIngredients: extras,
+                                preferment: preferment)
+        )
+        return diagnostics.jsonString()
+    }
+    #endif
+
+    /// Handles the user's response to an "unknown ingredient" conversion prompt: either
+    /// saves the provided gram conversion and folds the ingredient into the regular
+    /// percent-based ingredients, or keeps it as an "extra" ingredient in its original unit.
+    private func resolveConversionPrompt(useGrams: Bool) {
+        guard let pending = pendingConversions.first else { return }
+        pendingConversions.removeFirst()
+        defer { conversionGramsText = "" }
+
+        if useGrams, let perUnit = Double(conversionGramsText), perUnit > 0 {
+            IngredientConversionStore.shared.save(name: pending.name, unit: pending.unit, gramsPerUnit: perUnit)
+            let totalGrams = pending.amount * perUnit
+
+            if pending.isPreferment {
+                guard lastTotalPrefFlourWeight > 0 else {
+                    extraIngredients.append(ExtraIngredientRow(name: pending.name, amount: pending.amount,
+                                                                 unit: pending.unit, isPreferment: pending.isPreferment))
+                    return
+                }
+                let percent = totalGrams / lastTotalPrefFlourWeight * 100
+                if prefermentIngredientRows.count == 1, prefermentIngredientRows[0].name.trimmingCharacters(in: .whitespaces).isEmpty {
+                    prefermentIngredientRows[0] = IngredientRow(name: pending.name, value: percent)
+                } else {
+                    prefermentIngredientRows.append(IngredientRow(name: pending.name, value: percent))
+                }
+            } else {
+                guard lastTotalFlourWeight > 0 else {
+                    extraIngredients.append(ExtraIngredientRow(name: pending.name, amount: pending.amount,
+                                                                 unit: pending.unit, isPreferment: pending.isPreferment))
+                    return
+                }
+                let percent = totalGrams / lastTotalFlourWeight * 100
+                if ingredients.count == 1, ingredients[0].name.trimmingCharacters(in: .whitespaces).isEmpty {
+                    ingredients[0] = IngredientRow(name: pending.name, value: percent)
+                } else {
+                    ingredients.append(IngredientRow(name: pending.name, value: percent))
+                }
+            }
+        } else {
+            IngredientConversionStore.shared.markAsExtra(name: pending.name, unit: pending.unit)
+            extraIngredients.append(ExtraIngredientRow(name: pending.name, amount: pending.amount,
+                                                         unit: pending.unit, isPreferment: pending.isPreferment))
+        }
+    }
+
+    // MARK: - Save
 
     private func saveRecipe() {
         do {
             let recipe = try buildRecipe()
-            if let existingName = editingRecipe?.name, let existingCollection = editingRecipe?.collection {
-                try store.update(recipe: recipe, existingName: existingName, existingCollection: existingCollection)
+            if let existing = editingRecipe {
+                try store.update(recipe: recipe, existingName: existing.name, existingCollection: existing.collection)
             } else {
                 try store.save(recipe: recipe)
             }
@@ -546,7 +1326,7 @@ struct CreateRecipeView: View {
         } catch RecipeBuilderError.mainDoughMissingPreferment(let ing) {
             saveError = "Preferment ingredient \"\(ing.name)\" is not in the main dough."
         } catch {
-            saveError = "Failed to save recipe: \(error.localizedDescription)"
+            saveError = "Failed to save: \(error.localizedDescription)"
         }
     }
 
@@ -554,48 +1334,237 @@ struct CreateRecipeView: View {
         let builder = RecipeBuilder()
         builder.name = recipeName.trimmingCharacters(in: .whitespaces)
         builder.collection = effectiveCollection.trimmingCharacters(in: .whitespaces)
-        builder.defaultWeight = defaultWeight
         builder.instructions = instructions.map { Instruction(step: $0) }
         builder.containsPreferment = containsPreferment
-
         builder.mainDoughBuilder = MainDoughBuilder()
 
-        for flour in flours where !flour.name.trimmingCharacters(in: .whitespaces).isEmpty {
-            let fb = FlourBuilder()
-            fb.name = flour.name.trimmingCharacters(in: .whitespaces)
-            fb.percent = flour.percent
-            builder.mainDoughBuilder.flourBuilders.append(fb)
+        let tempMeasurement = Settings.shared.preferredTemp()
+
+        if inputMode == .byWeight {
+            // With a preferment, `flours`/`ingredients` hold only the *additional*
+            // amounts used in the main dough; combine them with the preferment's own
+            // amounts to get the recipe-wide totals.
+            let useFlours = containsPreferment ? combinedFlours : flours
+            let useIngredients = containsPreferment ? combinedIngredients : ingredients
+
+            let totalFlourWeight = useFlours.compactMap(\.value).reduce(0, +)
+            guard totalFlourWeight > 0 else { throw RecipeBuilderError.invalidIngredients }
+
+            for flour in useFlours where !flour.name.trimmingCharacters(in: .whitespaces).isEmpty {
+                let fb = FlourBuilder()
+                fb.name = flour.name.trimmingCharacters(in: .whitespaces)
+                fb.percent = ((flour.value ?? 0) / totalFlourWeight) * 100
+                builder.mainDoughBuilder.flourBuilders.append(fb)
+            }
+
+            for ing in useIngredients where !ing.name.trimmingCharacters(in: .whitespaces).isEmpty {
+                let ib = IngredientBuilder()
+                ib.name = ing.name.trimmingCharacters(in: .whitespaces)
+                ib.mode = .weight
+                ib.weight = ing.value
+                if let tv = ing.tempValue {
+                    ib.temperature = Temperature(value: tv, measurement: tempMeasurement)
+                }
+                builder.mainDoughBuilder.ingredientBuilders.append(ib)
+            }
+
+            // Total weight = sum of all entered weights
+            let totalWeight = useFlours.compactMap(\.value).reduce(0, +)
+                            + useIngredients.compactMap(\.value).reduce(0, +)
+            builder.defaultWeight = totalWeight
+
+        } else {
+            builder.defaultWeight = defaultWeight
+
+            // With a preferment, `flours`/`ingredients` hold only the *additional*
+            // percentages used in the main dough; combine them with the preferment's
+            // contribution to get the recipe-wide totals.
+            let useFlours = containsPreferment ? combinedFlours : flours
+            let useIngredients = containsPreferment ? combinedIngredients : ingredients
+
+            for flour in useFlours where !flour.name.trimmingCharacters(in: .whitespaces).isEmpty {
+                let fb = FlourBuilder()
+                fb.name = flour.name.trimmingCharacters(in: .whitespaces)
+                fb.percent = flour.value
+                builder.mainDoughBuilder.flourBuilders.append(fb)
+            }
+
+            for ing in useIngredients where !ing.name.trimmingCharacters(in: .whitespaces).isEmpty {
+                let ib = IngredientBuilder()
+                ib.name = ing.name.trimmingCharacters(in: .whitespaces)
+                ib.mode = .percent
+                ib.percent = ing.value
+                if let tv = ing.tempValue {
+                    ib.temperature = Temperature(value: tv, measurement: tempMeasurement)
+                }
+                builder.mainDoughBuilder.ingredientBuilders.append(ib)
+            }
         }
 
-        let tempMeasurement = Settings.shared.preferredTemp()
-        for ing in ingredients where !ing.name.trimmingCharacters(in: .whitespaces).isEmpty {
+        for extra in extraIngredients where !extra.isPreferment {
             let ib = IngredientBuilder()
-            ib.name = ing.name.trimmingCharacters(in: .whitespaces)
-            ib.mode = ing.mode
-            ib.percent = ing.percent
-            ib.weight = ing.weight
-            if let tv = ing.tempValue {
-                ib.temperature = Temperature(value: tv, measurement: tempMeasurement)
-            }
+            ib.name = extra.name.trimmingCharacters(in: .whitespaces)
+            ib.extraAmount = extra.amount
+            ib.extraUnit = extra.unit
             builder.mainDoughBuilder.ingredientBuilders.append(ib)
         }
 
         if containsPreferment {
             builder.prefermentBuilder.name = prefermentName.trimmingCharacters(in: .whitespaces)
-            builder.prefermentBuilder.totalFlourPercent = prefermentFlourPercent
 
-            for prefIng in prefermentIngredients where prefIng.included {
-                let pb = PrefermentIngredientBuilder(isFlour: prefIng.isFlour)
-                pb.name = prefIng.name
-                pb.weight = prefIng.weight
-                if prefIng.isFlour {
-                    builder.prefermentBuilder.flourBuilders.append(pb)
-                } else {
-                    builder.prefermentBuilder.ingredientBuilders.append(pb)
+            if inputMode == .byWeight {
+                let combinedFlourWeight = combinedFlours.compactMap(\.value).reduce(0, +)
+                let prefFlourWeight = prefermentFlours.compactMap(\.value).reduce(0, +)
+                guard combinedFlourWeight > 0, prefFlourWeight > 0 else {
+                    throw RecipeBuilderError.invalidIngredients
                 }
+                builder.prefermentBuilder.totalFlourPercent = prefFlourWeight / combinedFlourWeight * 100
+            } else {
+                builder.prefermentBuilder.totalFlourPercent = prefermentFlourPercent
+            }
+
+            for prefFlour in prefermentFlours where !prefFlour.name.trimmingCharacters(in: .whitespaces).isEmpty {
+                let pb = PrefermentIngredientBuilder(isFlour: true)
+                pb.name = prefFlour.name.trimmingCharacters(in: .whitespaces)
+                if inputMode == .byWeight {
+                    pb.weight = prefFlour.value
+                } else {
+                    pb.percent = prefFlour.value
+                }
+                builder.prefermentBuilder.flourBuilders.append(pb)
+            }
+            for prefIng in prefermentIngredientRows where !prefIng.name.trimmingCharacters(in: .whitespaces).isEmpty {
+                let pb = PrefermentIngredientBuilder(isFlour: false)
+                pb.name = prefIng.name.trimmingCharacters(in: .whitespaces)
+                if inputMode == .byWeight {
+                    pb.weight = prefIng.value
+                } else {
+                    pb.percent = prefIng.value
+                }
+                if let tv = prefIng.tempValue {
+                    pb.temperature = Temperature(value: tv, measurement: tempMeasurement)
+                }
+                builder.prefermentBuilder.ingredientBuilders.append(pb)
+            }
+
+            for extra in extraIngredients where extra.isPreferment {
+                let pb = PrefermentIngredientBuilder(isFlour: false)
+                pb.name = extra.name.trimmingCharacters(in: .whitespaces)
+                pb.extraAmount = extra.amount
+                pb.extraUnit = extra.unit
+                builder.prefermentBuilder.ingredientBuilders.append(pb)
+
+                // Also add a matching (zero-percent) main-dough entry, since preferment
+                // ingredients must have a corresponding main-dough ingredient.
+                let ib = IngredientBuilder()
+                ib.name = extra.name.trimmingCharacters(in: .whitespaces)
+                ib.extraAmount = extra.amount
+                ib.extraUnit = extra.unit
+                builder.mainDoughBuilder.ingredientBuilders.append(ib)
+            }
+        } else {
+            for extra in extraIngredients where extra.isPreferment {
+                let ib = IngredientBuilder()
+                ib.name = extra.name.trimmingCharacters(in: .whitespaces)
+                ib.extraAmount = extra.amount
+                ib.extraUnit = extra.unit
+                builder.mainDoughBuilder.ingredientBuilders.append(ib)
             }
         }
 
         return try builder.build()
+    }
+}
+
+// MARK: - ModeCard
+
+private struct ModeCard: View {
+    let icon: String
+    let title: String
+    let description: String
+    var enabled: Bool = true
+    var accessibilityID: String? = nil
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 16) {
+                Image(systemName: icon)
+                    .font(.title2)
+                    .frame(width: 36)
+                    .foregroundStyle(enabled ? Color.accentColor : Color.secondary)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(title)
+                        .font(.headline)
+                        .foregroundStyle(enabled ? Color.primary : Color.secondary)
+                    Text(description)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                Spacer()
+
+                if enabled {
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                }
+            }
+            .padding(16)
+            .background(Color(.secondarySystemBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+        }
+        .disabled(!enabled)
+        .buttonStyle(.plain)
+        .opacity(enabled ? 1.0 : 0.5)
+        .modifier(OptionalAccessibilityIdentifier(id: accessibilityID))
+    }
+}
+
+private struct OptionalAccessibilityIdentifier: ViewModifier {
+    let id: String?
+
+    func body(content: Content) -> some View {
+        if let id {
+            content.accessibilityIdentifier(id)
+        } else {
+            content
+        }
+    }
+}
+
+// MARK: - CameraPickerView
+
+private struct CameraPickerView: UIViewControllerRepresentable {
+    let completion: (UIImage?) -> Void
+
+    func makeUIViewController(context: Context) -> UIImagePickerController {
+        let picker = UIImagePickerController()
+        picker.sourceType = .camera
+        picker.delegate = context.coordinator
+        return picker
+    }
+
+    func updateUIViewController(_ vc: UIImagePickerController, context: Context) {}
+
+    func makeCoordinator() -> Coordinator { Coordinator(completion: completion) }
+
+    class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+        let completion: (UIImage?) -> Void
+        init(completion: @escaping (UIImage?) -> Void) { self.completion = completion }
+
+        func imagePickerController(_ picker: UIImagePickerController,
+                                   didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
+            picker.dismiss(animated: true)
+            completion(info[.originalImage] as? UIImage)
+        }
+
+        func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+            picker.dismiss(animated: true)
+            completion(nil)
+        }
     }
 }

@@ -27,10 +27,14 @@ class CalculatedIngredientConverter: NSObject {
             coreData.temperature = NSNumber(floatLiteral: temperature.value)
         }
         coreData.weight = NSNumber(floatLiteral: ingredient.weight)
-        
+        if let extraAmount = ingredient.extraAmount {
+            coreData.extraAmount = NSNumber(floatLiteral: extraAmount)
+        }
+        coreData.extraUnit = ingredient.extraUnit
+
         return coreData
     }
-    
+
     func convertToExternal(ingredient: XCCalculatedIngredient) -> CalculatedIngredient {
         let name = ingredient.name!
         let percentage = ingredient.percentage!.doubleValue
@@ -41,7 +45,9 @@ class CalculatedIngredientConverter: NSObject {
             temperature = Temperature(value: temp, measurement: settings.preferredTemp())
         }
         let weight = ingredient.weight!.doubleValue
-        
-        return CalculatedIngredient(name: name, isFlour: isFlour, percentage: percentage, totalPercentage: totalPercentage, temperature: temperature, weight: weight)
+        let extraAmount = ingredient.extraAmount?.doubleValue
+        let extraUnit = ingredient.extraUnit
+
+        return CalculatedIngredient(name: name, isFlour: isFlour, percentage: percentage, totalPercentage: totalPercentage, temperature: temperature, weight: weight, extraAmount: extraAmount, extraUnit: extraUnit)
     }
 }

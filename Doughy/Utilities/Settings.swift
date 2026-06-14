@@ -55,10 +55,13 @@ class Settings: NSObject {
 extension Settings {
     
     func initializeDefaultRecipes() {
-        
-        if !userDefaults.bool(forKey: hasInitializedDefaultsKey) {
+        // UI tests run against a fresh in-memory store every launch, so always
+        // re-seed the default recipes without touching the persisted flag below.
+        let isUITesting = ProcessInfo.processInfo.arguments.contains("-UITesting")
+
+        if isUITesting || !userDefaults.bool(forKey: hasInitializedDefaultsKey) {
             setPreferredTemp(measurement: .fahrenheit)
-            
+
             defaultRecipeFactory.create().forEach {
                 do {
                     try recipeWriter.writeRecipe(recipe: $0)
@@ -66,7 +69,9 @@ extension Settings {
                     print("Failed to write default recipe: \(error)")
                 }
             }
-            userDefaults.set(true, forKey: hasInitializedDefaultsKey)
+            if !isUITesting {
+                userDefaults.set(true, forKey: hasInitializedDefaultsKey)
+            }
         }
     }
     

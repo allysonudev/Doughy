@@ -112,8 +112,13 @@
 		BBEA0CBA24345D8A00A708C7 /* IngredientCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = BBEA0CB924345D8A00A708C7 /* IngredientCell.xib */; };
 		BBEA0CBC24345DA400A708C7 /* IngredientWithPrefermentCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = BBEA0CBB24345DA400A708C7 /* IngredientWithPrefermentCell.xib */; };
 		BBEA0CBE24345DBB00A708C7 /* PrefermentCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = BBEA0CBD24345DBB00A708C7 /* PrefermentCell.xib */; };
+		CC1234567890ABCDEF000001 /* RecipeScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC1234567890ABCDEF000002 /* RecipeScanner.swift */; };
+		CC1234567890ABCDEF000003 /* IngredientConversionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC1234567890ABCDEF000004 /* IngredientConversionStore.swift */; };
+		CC1234567890ABCDEF000005 /* VolumeUnitFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC1234567890ABCDEF000006 /* VolumeUnitFormatter.swift */; };
 		DDA522364120C5B7AF1238D4 /* CreateRecipeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D3CD9D13F590A51EDD39033 /* CreateRecipeView.swift */; };
 		EAB3150D4BD26C22D891FC75 /* RecipeListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F3DC0F90C6416B3782E7EA1 /* RecipeListView.swift */; };
+		EE00000000000000000001 /* RecipeScannerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE00000000000000000002 /* RecipeScannerTests.swift */; };
+		EE00000000000000000003 /* Recipes in Resources */ = {isa = PBXBuildFile; fileRef = EE00000000000000000004 /* Recipes */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -248,6 +253,11 @@
 		BBEA0CB924345D8A00A708C7 /* IngredientCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = IngredientCell.xib; sourceTree = "<group>"; };
 		BBEA0CBB24345DA400A708C7 /* IngredientWithPrefermentCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = IngredientWithPrefermentCell.xib; sourceTree = "<group>"; };
 		BBEA0CBD24345DBB00A708C7 /* PrefermentCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = PrefermentCell.xib; sourceTree = "<group>"; };
+		CC1234567890ABCDEF000002 /* RecipeScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeScanner.swift; sourceTree = "<group>"; };
+		CC1234567890ABCDEF000004 /* IngredientConversionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IngredientConversionStore.swift; sourceTree = "<group>"; };
+		CC1234567890ABCDEF000006 /* VolumeUnitFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VolumeUnitFormatter.swift; sourceTree = "<group>"; };
+		EE00000000000000000002 /* RecipeScannerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeScannerTests.swift; sourceTree = "<group>"; };
+		EE00000000000000000004 /* Recipes */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Recipes; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -334,6 +344,8 @@
 			children = (
 				BB30DEE92425B83F00BFD472 /* Recipe_HelperTests.swift */,
 				DD0000000000000000000015 /* RecipeDiffTests.swift */,
+				EE00000000000000000002 /* RecipeScannerTests.swift */,
+				EE00000000000000000004 /* Recipes */,
 				BB30DEEB2425B83F00BFD472 /* Info.plist */,
 			);
 			path = "Doughy Tests";
@@ -390,6 +402,9 @@
 				BBD2643224314D6500DF8987 /* AlertViewHelper.swift */,
 				BBD264342431520500DF8987 /* RecipePredicates.swift */,
 				BBE2FF492439497D0091A485 /* AppInfo.swift */,
+				CC1234567890ABCDEF000002 /* RecipeScanner.swift */,
+				CC1234567890ABCDEF000004 /* IngredientConversionStore.swift */,
+				CC1234567890ABCDEF000006 /* VolumeUnitFormatter.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -740,6 +755,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EE00000000000000000003 /* Recipes in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -829,6 +845,9 @@
 				BBD2643124314CD500DF8987 /* CreateRecipeNavigationController.swift in Sources */,
 				BBD264372431536000DF8987 /* AddFlourViewController.swift in Sources */,
 				BBD2643324314D6500DF8987 /* AlertViewHelper.swift in Sources */,
+				CC1234567890ABCDEF000001 /* RecipeScanner.swift in Sources */,
+				CC1234567890ABCDEF000003 /* IngredientConversionStore.swift in Sources */,
+				CC1234567890ABCDEF000005 /* VolumeUnitFormatter.swift in Sources */,
 				BB30DED02425B83E00BFD472 /* AppDelegate.swift in Sources */,
 				BBD2642824313A9E00DF8987 /* TemperatureRow.swift in Sources */,
 				BB59156E2979247A00903D14 /* Color.swift in Sources */,
@@ -859,6 +878,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				BB30DEEA2425B83F00BFD472 /* Recipe_HelperTests.swift in Sources */,
+				EE00000000000000000001 /* RecipeScannerTests.swift in Sources */,
 				DD0000000000000000000016 /* RecipeDiffTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -160,28 +160,48 @@ class IngredientBuilder: IngredientBuilderBase {
     var percent: Double?
     var weight: Double?
     var mode: IngredientMeasurementMode = .percent
-    
+
+    /// Quantity for "extra" ingredients that aren't converted to grams (e.g. "2 tbsp" of
+    /// rosemary). When set (along with extraUnit), this builder produces an ingredient
+    /// with defaultPercentage 0 and the given extra quantity, ignoring percent/weight.
+    var extraAmount: Double?
+    var extraUnit: String?
+
     override init() { }
-    
+
     init(ingredient: Ingredient) {
         super.init()
         self.name = ingredient.name
         self.percent = ingredient.defaultPercentage
         self.temperature = ingredient.temperature
+        self.extraAmount = ingredient.extraAmount
+        self.extraUnit = ingredient.extraUnit
     }
-    
+
     override func isReady() -> Bool {
+        if extraAmount != nil && extraUnit != nil {
+            return name != nil
+        }
         let measurementReady = mode == .percent
             ? percent != nil
             : weight != nil
         return name != nil && measurementReady
     }
-    
+
     func build(totalFlourWeight: Double) throws -> Ingredient {
         guard let name = name else {
             throw RecipeBuilderError.invalidIngredients
         }
-        
+
+        if let extraAmount = extraAmount, let extraUnit = extraUnit {
+            return Ingredient(name: name,
+                              isFlour: false,
+                              defaultPercentage: 0,
+                              temperature: temperature,
+                              extraAmount: extraAmount,
+                              extraUnit: extraUnit)
+        }
+
         if mode == .percent {
             guard let defaultPercentage = percent else {
                 throw RecipeBuilderError.invalidIngredients
@@ -202,7 +222,7 @@ class IngredientBuilder: IngredientBuilderBase {
                               temperature: temperature)
         }
     }
-    
+
     override func copy() -> Any {
         let copy = IngredientBuilder()
         copy.name = self.name
@@ -210,51 +230,81 @@ class IngredientBuilder: IngredientBuilderBase {
         copy.temperature = self.temperature?.copy() as? Temperature
         copy.weight = self.weight
         copy.mode = self.mode
+        copy.extraAmount = self.extraAmount
+        copy.extraUnit = self.extraUnit
         return copy
     }
 }
 
 class PrefermentIngredientBuilder: IngredientBuilderBase {
     var weight: Double?
+    var percent: Double?  // baker's % relative to preferment flour; preferred over weight when set
     var isFlour: Bool
-    
+
+    /// Quantity for "extra" ingredients that aren't converted to grams (e.g. "2 tbsp" of
+    /// rosemary). When set (along with extraUnit), this builder produces an ingredient
+    /// with defaultPercentage 0 and the given extra quantity, ignoring percent/weight.
+    var extraAmount: Double?
+    var extraUnit: String?
+
     init(isFlour: Bool) {
         self.isFlour = isFlour
         super.init()
     }
-    
+
     init(ingredient: Ingredient, weight: Double) {
         self.isFlour = ingredient.isFlour
         super.init()
         self.name = ingredient.name
         self.weight = weight
         self.temperature = ingredient.temperature
+        self.extraAmount = ingredient.extraAmount
+        self.extraUnit = ingredient.extraUnit
     }
-    
+
     override func isReady() -> Bool {
-        let measurementReady = weight != nil
-        return name != nil && measurementReady
+        if extraAmount != nil && extraUnit != nil {
+            return name != nil
+        }
+        return name != nil && (percent != nil || weight != nil)
     }
-    
+
     func build(totalFlourWeight: Double) throws -> Ingredient {
         guard let name = name else {
             throw RecipeBuilderError.invalidIngredients
         }
-        guard let weight = weight else {
+
+        if let extraAmount = extraAmount, let extraUnit = extraUnit {
+            return Ingredient(name: name,
+                              isFlour: isFlour,
+                              defaultPercentage: 0,
+                              temperature: temperature,
+                              extraAmount: extraAmount,
+                              extraUnit: extraUnit)
+        }
+
+        let defaultPercent: Double
+        if let p = percent {
+            defaultPercent = p
+        } else if let w = weight {
+            defaultPercent = (w / totalFlourWeight) * 100
+        } else {
             throw RecipeBuilderError.invalidIngredients
         }
-        let defaultPercent = (weight / totalFlourWeight) * 100
         return Ingredient(name: name,
                           isFlour: isFlour,
                           defaultPercentage: defaultPercent,
                           temperature: temperature)
     }
-    
+
     override func copy() -> Any {
-        let copy = IngredientBuilder()
+        let copy = PrefermentIngredientBuilder(isFlour: isFlour)
         copy.name = self.name
         copy.temperature = self.temperature?.copy() as? Temperature
         copy.weight = self.weight
+        copy.percent = self.percent
+        copy.extraAmount = self.extraAmount
+        copy.extraUnit = self.extraUnit
         return copy
     }
 }
