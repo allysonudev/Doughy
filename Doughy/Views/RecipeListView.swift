@@ -36,6 +36,7 @@ struct RecipeListView: View {
                     Button { showingCreate = true } label: {
                         Image(systemName: "plus")
                     }
+                    .accessibilityIdentifier("addRecipeButton")
                 }
             }
             .navigationDestination(for: RecipeWrapper.self) { wrapper in

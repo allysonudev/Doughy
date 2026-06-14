@@ -1,0 +1,405 @@
+//
+//  UITestSupport.swift
+//  Doughy UI Tests
+//
+
+import XCTest
+
+class DoughyUITestCase: XCTestCase {
+    var app: XCUIApplication!
+
+    override func setUpWithError() throws {
+        continueAfterFailure = false
+        app = XCUIApplication()
+        app.launchArguments = ["-UITesting"]
+        app.launch()
+    }
+}
+
+extension String {
+    /// Parses a formatted weight/percent label (e.g. "1,234.5g" or "66.67%")
+    /// into its numeric value, stripping the unit suffix and grouping separators.
+    var parsedNumericValue: Double? {
+        let stripped = trimmingCharacters(in: CharacterSet(charactersIn: "g%"))
+            .replacingOccurrences(of: ",", with: "")
+        return Double(stripped)
+    }
+}
+
+extension XCUIElement {
+    /// Waits for the field to actually gain keyboard focus after a tap. On
+    /// loaded machines (e.g. running several simulators in parallel), the tap
+    /// can be processed before the field's focus/keyboard animation completes,
+    /// and `typeText` then fails with "Neither element nor any descendant has
+    /// keyboard focus." Polling `hasFocus` avoids that race.
+    func waitForKeyboardFocus(timeout: TimeInterval = 3) {
+        let deadline = Date().addingTimeInterval(timeout)
+        while !hasFocus && Date() < deadline {
+            RunLoop.current.run(until: Date().addingTimeInterval(0.05))
+        }
+    }
+
+    /// Taps the field, clears any existing text, then types `text`.
+    func clearAndType(_ text: String, app: XCUIApplication) {
+        app.scrollToElement(self)
+        tap()
+        waitForKeyboardFocus()
+        if let stringValue = value as? String, !stringValue.isEmpty, stringValue != placeholderValue {
+            let deleteString = String(repeating: XCUIKeyboardKey.delete.rawValue, count: stringValue.count)
+            typeText(deleteString)
+        }
+        typeText(text)
+    }
+
+    /// Taps the field (scrolling it into view first) and types `text`.
+    func enterText(_ text: String, app: XCUIApplication) {
+        app.scrollToElement(self)
+        tap()
+        waitForKeyboardFocus()
+        typeText(text)
+    }
+
+    /// Focuses the field, double-taps to select its entire current value (real
+    /// or placeholder), and types `text` to replace the selection. Unlike
+    /// `clearAndType`, this doesn't rely on cursor position or a backspace
+    /// count - a single tap can leave the cursor *before* an existing value
+    /// (e.g. a count field defaulting to "1"), so backspaces would be no-ops
+    /// and `text` would be prepended instead of replacing it. Double-tapping a
+    /// short numeric value selects it entirely, so the typed text replaces it
+    /// regardless of where the cursor landed.
+    func replaceNumericValue(_ text: String, app: XCUIApplication) {
+        app.scrollToElement(self)
+        tap()
+        waitForKeyboardFocus()
+        doubleTap()
+        typeText(text)
+    }
+}
+
+extension XCUIApplication {
+    /// Scrolls the screen until `element` is hittable, or gives up after a few attempts.
+    func scrollToElement(_ element: XCUIElement, maxSwipes: Int = 8) {
+        var attempts = 0
+        while !element.isHittable && attempts < maxSwipes {
+            swipeUp()
+            attempts += 1
+        }
+    }
+
+    /// Scrolls the screen until `element` exists in the accessibility tree (e.g. a List
+    /// row that hasn't been instantiated yet because it's off-screen), or gives up.
+    func scrollUntilExists(_ element: XCUIElement, maxSwipes: Int = 8) {
+        var attempts = 0
+        while !element.exists && attempts < maxSwipes {
+            swipeUp()
+            attempts += 1
+        }
+    }
+
+    // MARK: - Recipe list
+
+    func startCreateRecipe() {
+        let addButton = buttons["addRecipeButton"]
+        XCTAssertTrue(addButton.waitForExistence(timeout: 5), "Add recipe button not found")
+        addButton.tap()
+    }
+
+    /// Swipes a recipe row left and taps "Edit".
+    func editRecipe(named name: String) {
+        let cell = staticTexts[name]
+        scrollUntilExists(cell)
+        XCTAssertTrue(cell.waitForExistence(timeout: 5), "Recipe \"\(name)\" not found in list")
+        scrollToElement(cell)
+        cell.swipeLeft()
+        let editButton = buttons["Edit"]
+        XCTAssertTrue(editButton.waitForExistence(timeout: 5), "Edit button not found")
+        editButton.tap()
+    }
+
+    /// Taps a recipe row to open its calculator.
+    func openCalculator(for name: String) {
+        let cell = staticTexts[name]
+        scrollUntilExists(cell)
+        XCTAssertTrue(cell.waitForExistence(timeout: 5), "Recipe \"\(name)\" not found in list")
+        scrollToElement(cell)
+        cell.tap()
+    }
+
+    // MARK: - Calculator
+
+    func setDoughCount(_ count: String) {
+        let field = textFields["doughCountField"]
+        XCTAssertTrue(field.waitForExistence(timeout: 5), "Dough count field not found")
+        field.replaceNumericValue(count, app: self)
+    }
+
+    func setSingleDoughWeight(_ weight: String) {
+        let field = textFields["singleDoughWeightField"]
+        XCTAssertTrue(field.waitForExistence(timeout: 5), "Single dough weight field not found")
+        field.replaceNumericValue(weight, app: self)
+    }
+
+    /// Toggles "Adjust Dough Ingredients" to reveal per-ingredient percent fields.
+    func toggleAdjustIngredients() {
+        let toggle = switches["adjustIngredientsToggle"]
+        XCTAssertTrue(toggle.waitForExistence(timeout: 5), "Adjust Dough Ingredients toggle not found")
+        scrollToElement(toggle)
+        toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+    }
+
+    /// Sets the override percentage for the ingredient at `index` (its position
+    /// in the recipe's ingredient list). Only non-flour ingredients have an
+    /// editable percent field.
+    func setIngredientPercent(at index: Int, value: String) {
+        let field = textFields["ingredientPercentField_\(index)"]
+        XCTAssertTrue(field.waitForExistence(timeout: 5), "Ingredient percent field \(index) not found")
+        field.replaceNumericValue(value, app: self)
+    }
+
+    func tapCalculate() {
+        let button = buttons["calculateButton"]
+        XCTAssertTrue(button.waitForExistence(timeout: 5), "Calculate button not found")
+        scrollToElement(button)
+        button.tap()
+    }
+
+    /// Asserts the calculated dough's total weight on the results screen.
+    func assertDoughTotalWeight(_ weight: String, _ message: String = "") {
+        let weightText = staticTexts["doughTotalWeight"]
+        XCTAssertTrue(weightText.waitForExistence(timeout: 5), "Dough total weight not found. \(message)")
+        XCTAssertEqual(weightText.label, weight, "Dough total weight mismatch. \(message)")
+    }
+
+    /// Asserts a calculated ingredient's weight and percentage on the results screen.
+    func assertCalculatedIngredient(name: String, weight: String, percent: String, _ message: String = "") {
+        let weightText = staticTexts["ingredientWeight_\(name)"]
+        XCTAssertTrue(weightText.waitForExistence(timeout: 5), "Calculated weight for \(name) not found. \(message)")
+        XCTAssertEqual(weightText.label, weight, "Calculated weight for \(name) mismatch. \(message)")
+
+        let percentText = staticTexts["ingredientPercent_\(name)"]
+        XCTAssertTrue(percentText.waitForExistence(timeout: 5), "Calculated percent for \(name) not found. \(message)")
+        XCTAssertEqual(percentText.label, percent, "Calculated percent for \(name) mismatch. \(message)")
+    }
+
+    /// Asserts a calculated ingredient's weight and percentage on the results screen,
+    /// parsing the displayed (rounded) labels as numbers and comparing within
+    /// `weightAccuracy`/`percentAccuracy`. Use this for values with repeating decimals,
+    /// where the exact formatted string depends on rounding and isn't worth pinning down
+    /// to the digit - the goal is to catch precision-loss/floor/ceil bugs, not to
+    /// pin the formatter's rounding mode.
+    func assertCalculatedIngredient(
+        name: String,
+        weight: Double,
+        weightAccuracy: Double,
+        percent: Double,
+        percentAccuracy: Double,
+        _ message: String = ""
+    ) {
+        let weightText = staticTexts["ingredientWeight_\(name)"]
+        XCTAssertTrue(weightText.waitForExistence(timeout: 5), "Calculated weight for \(name) not found. \(message)")
+        let actualWeight = weightText.label.parsedNumericValue
+        XCTAssertNotNil(actualWeight, "Could not parse calculated weight \"\(weightText.label)\" for \(name). \(message)")
+        if let actualWeight {
+            XCTAssertEqual(actualWeight, weight, accuracy: weightAccuracy, "Calculated weight for \(name) mismatch. \(message)")
+        }
+
+        let percentText = staticTexts["ingredientPercent_\(name)"]
+        XCTAssertTrue(percentText.waitForExistence(timeout: 5), "Calculated percent for \(name) not found. \(message)")
+        let actualPercent = percentText.label.parsedNumericValue
+        XCTAssertNotNil(actualPercent, "Could not parse calculated percent \"\(percentText.label)\" for \(name). \(message)")
+        if let actualPercent {
+            XCTAssertEqual(actualPercent, percent, accuracy: percentAccuracy, "Calculated percent for \(name) mismatch. \(message)")
+        }
+    }
+
+    // MARK: - Mode selection
+
+    func chooseMode(byPercent: Bool) {
+        let card = buttons[byPercent ? "byPercentModeCard" : "byWeightModeCard"]
+        XCTAssertTrue(card.waitForExistence(timeout: 5), "Mode card not found")
+        card.tap()
+    }
+
+    // MARK: - Details step
+
+    func fillDetails(name: String, newCollection: String, defaultWeight: String? = nil, includePreferment: Bool = false) {
+        let nameField = textFields["recipeNameField"]
+        XCTAssertTrue(nameField.waitForExistence(timeout: 5), "Recipe name field not found")
+        nameField.enterText(name, app: self)
+
+        let newCollectionToggle = switches["newCollectionToggle"]
+        XCTAssertTrue(newCollectionToggle.waitForExistence(timeout: 5))
+        scrollToElement(newCollectionToggle)
+        // The accessibility identifier is on the whole row, but tapping its
+        // center misses the actual switch control on the right edge.
+        newCollectionToggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+
+        let collectionField = textFields["newCollectionNameField"]
+        XCTAssertTrue(collectionField.waitForExistence(timeout: 5), "New collection name field not found")
+        collectionField.enterText(newCollection, app: self)
+
+        if let defaultWeight {
+            let weightField = textFields["defaultWeightField"]
+            XCTAssertTrue(weightField.waitForExistence(timeout: 5), "Default weight field not found")
+            weightField.enterText(defaultWeight, app: self)
+        }
+
+        if includePreferment {
+            let prefermentToggle = switches["containsPrefermentToggle"]
+            XCTAssertTrue(prefermentToggle.waitForExistence(timeout: 5))
+            scrollToElement(prefermentToggle)
+            prefermentToggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        }
+
+        tapDetailsNext()
+    }
+
+    func tapDetailsNext() {
+        let next = buttons["detailsNextButton"]
+        XCTAssertTrue(next.waitForExistence(timeout: 5), "Details Next button not found")
+        scrollToElement(next)
+        next.tap()
+    }
+
+    // MARK: - Ingredients step
+
+    func fillFlour(at index: Int, name: String, value: String) {
+        let nameField = textFields["flourNameField_\(index)"]
+        XCTAssertTrue(nameField.waitForExistence(timeout: 5), "Flour name field \(index) not found")
+        nameField.enterText(name, app: self)
+
+        let valueField = textFields["flourValueField_\(index)"]
+        XCTAssertTrue(valueField.waitForExistence(timeout: 5), "Flour value field \(index) not found")
+        valueField.enterText(value, app: self)
+    }
+
+    func fillIngredient(at index: Int, name: String, value: String? = nil) {
+        let nameField = textFields["ingredientNameField_\(index)"]
+        XCTAssertTrue(nameField.waitForExistence(timeout: 5), "Ingredient name field \(index) not found")
+        nameField.enterText(name, app: self)
+
+        if let value {
+            let valueField = textFields["ingredientValueField_\(index)"]
+            XCTAssertTrue(valueField.waitForExistence(timeout: 5), "Ingredient value field \(index) not found")
+            valueField.enterText(value, app: self)
+        }
+    }
+
+    /// Taps "Add Flour" to append a new (empty) flour row.
+    func addFlour() {
+        let button = buttons["addFlourButton"]
+        XCTAssertTrue(button.waitForExistence(timeout: 5), "Add Flour button not found")
+        scrollToElement(button)
+        button.tap()
+    }
+
+    /// Taps "Add Ingredient" to append a new (empty) ingredient row.
+    func addIngredient() {
+        let button = buttons["addIngredientButton"]
+        XCTAssertTrue(button.waitForExistence(timeout: 5), "Add Ingredient button not found")
+        scrollToElement(button)
+        button.tap()
+    }
+
+    /// Swipes the flour row at `index` left and taps "Delete".
+    func deleteFlour(at index: Int) {
+        let nameField = textFields["flourNameField_\(index)"]
+        XCTAssertTrue(nameField.waitForExistence(timeout: 5), "Flour name field \(index) not found")
+        scrollToElement(nameField)
+        nameField.swipeLeft()
+        let deleteButton = buttons["Delete"]
+        XCTAssertTrue(deleteButton.waitForExistence(timeout: 5), "Delete button not found after swiping flour row \(index)")
+        deleteButton.tap()
+    }
+
+    /// Swipes the ingredient row at `index` left and taps "Delete".
+    func deleteIngredient(at index: Int) {
+        let nameField = textFields["ingredientNameField_\(index)"]
+        XCTAssertTrue(nameField.waitForExistence(timeout: 5), "Ingredient name field \(index) not found")
+        scrollToElement(nameField)
+        nameField.swipeLeft()
+        let deleteButton = buttons["Delete"]
+        XCTAssertTrue(deleteButton.waitForExistence(timeout: 5), "Delete button not found after swiping ingredient row \(index)")
+        deleteButton.tap()
+    }
+
+    /// Asserts the flour row at `index` has the given name and value.
+    func assertFlour(at index: Int, name: String, value: String, _ message: String = "") {
+        let nameField = textFields["flourNameField_\(index)"]
+        XCTAssertTrue(nameField.waitForExistence(timeout: 5), "Flour name field \(index) not found. \(message)")
+        XCTAssertEqual(nameField.value as? String, name, "Flour \(index) name mismatch. \(message)")
+
+        let valueField = textFields["flourValueField_\(index)"]
+        XCTAssertTrue(valueField.waitForExistence(timeout: 5), "Flour value field \(index) not found. \(message)")
+        XCTAssertEqual(valueField.value as? String, value, "Flour \(index) value mismatch. \(message)")
+    }
+
+    /// Asserts the ingredient row at `index` has the given name and value.
+    func assertIngredient(at index: Int, name: String, value: String, _ message: String = "") {
+        let nameField = textFields["ingredientNameField_\(index)"]
+        XCTAssertTrue(nameField.waitForExistence(timeout: 5), "Ingredient name field \(index) not found. \(message)")
+        XCTAssertEqual(nameField.value as? String, name, "Ingredient \(index) name mismatch. \(message)")
+
+        let valueField = textFields["ingredientValueField_\(index)"]
+        XCTAssertTrue(valueField.waitForExistence(timeout: 5), "Ingredient value field \(index) not found. \(message)")
+        XCTAssertEqual(valueField.value as? String, value, "Ingredient \(index) value mismatch. \(message)")
+    }
+
+    func tapIngredientsNext() {
+        let next = buttons["ingredientsNextButton"]
+        XCTAssertTrue(next.waitForExistence(timeout: 5), "Ingredients Next button not found")
+        scrollToElement(next)
+        next.tap()
+    }
+
+    // MARK: - Preferment step
+
+    func fillPrefermentDetails(name: String, flourPercent: String? = nil) {
+        let nameField = textFields["prefermentNameField"]
+        XCTAssertTrue(nameField.waitForExistence(timeout: 5), "Preferment name field not found")
+        nameField.enterText(name, app: self)
+
+        if let flourPercent {
+            let percentField = textFields["prefermentFlourPercentField"]
+            XCTAssertTrue(percentField.waitForExistence(timeout: 5), "Preferment flour percent field not found")
+            percentField.enterText(flourPercent, app: self)
+        }
+    }
+
+    func fillPrefermentFlour(at index: Int, name: String, value: String) {
+        let nameField = textFields["prefermentFlourNameField_\(index)"]
+        XCTAssertTrue(nameField.waitForExistence(timeout: 5), "Preferment flour name field \(index) not found")
+        nameField.enterText(name, app: self)
+
+        let valueField = textFields["prefermentFlourValueField_\(index)"]
+        XCTAssertTrue(valueField.waitForExistence(timeout: 5), "Preferment flour value field \(index) not found")
+        valueField.enterText(value, app: self)
+    }
+
+    func tapPrefermentNext() {
+        let next = buttons["prefermentNextButton"]
+        XCTAssertTrue(next.waitForExistence(timeout: 5), "Preferment Next button not found")
+        scrollToElement(next)
+        next.tap()
+    }
+
+    // MARK: - Discard confirmation
+
+    /// Dismisses the "discard unsaved changes" confirmation without discarding.
+    /// The dialog renders as a popover whose cancel-role ("Keep Editing") button
+    /// is omitted (per SwiftUI's popover behavior), so dismiss it by tapping outside.
+    func dismissDiscardConfirmation() {
+        let dismissRegion = otherElements["PopoverDismissRegion"]
+        XCTAssertTrue(dismissRegion.waitForExistence(timeout: 5))
+        dismissRegion.tap()
+    }
+
+    // MARK: - Preview / save
+
+    func saveRecipe() {
+        let save = buttons["saveRecipeButton"]
+        XCTAssertTrue(save.waitForExistence(timeout: 5), "Save button not found")
+        scrollToElement(save)
+        save.tap()
+    }
+}

@@ -21,6 +21,10 @@ class CoreDataGateway: NSObject {
     // Tries CloudKit first; falls back to a plain local store if CloudKit isn't
     // configured (no entitlements, simulator, etc.).
     private static func makeContainer() -> NSPersistentContainer {
+        if ProcessInfo.processInfo.arguments.contains("-UITesting") {
+            return makeInMemoryContainer()
+        }
+
         let cloudContainer = NSPersistentCloudKitContainer(name: "Doughy")
         if let desc = cloudContainer.persistentStoreDescriptions.first {
             desc.cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(
@@ -55,5 +59,20 @@ class CoreDataGateway: NSObject {
             localContainer.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
         }
         return localContainer
+    }
+
+    /// A fresh, in-memory store used for UI tests so each launch starts from a known
+    /// state with no data persisted between runs.
+    private static func makeInMemoryContainer() -> NSPersistentContainer {
+        let container = NSPersistentContainer(name: "Doughy")
+        let description = NSPersistentStoreDescription()
+        description.type = NSInMemoryStoreType
+        container.persistentStoreDescriptions = [description]
+        container.loadPersistentStores { _, error in
+            if let error = error {
+                fatalError("Failed to load in-memory CoreData store: \(error)")
+            }
+        }
+        return container
     }
 }

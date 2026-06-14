@@ -7,7 +7,7 @@
 //
 
 import XCTest
-@testable import Recipe_Helper
+@testable import Doughy
 
 class Recipe_HelperTests: XCTestCase {
 

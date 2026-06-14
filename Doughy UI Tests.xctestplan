@@ -1,0 +1,25 @@
+{
+  "configurations" : [
+    {
+      "id" : "9B1B8010-7235-4D08-ABF0-2912CD3AE390",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : true,
+      "target" : {
+        "containerPath" : "container:Doughy.xcodeproj",
+        "identifier" : "AA000000000000000000000A",
+        "name" : "Doughy UI Tests"
+      }
+    }
+  ],
+  "version" : 1
+}

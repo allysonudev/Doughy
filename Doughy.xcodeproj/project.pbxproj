@@ -11,6 +11,11 @@
 		6FFC277DF945E4E8632C1095 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36E8F59880EE98064C4AD020 /* SettingsView.swift */; };
 		73D001FFB0DEE3BBDB2BFEF3 /* RecipeStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39CC5426652CEF6C8DF863BB /* RecipeStore.swift */; };
 		7D5BAD3319FBC2BBE8A0812A /* CalculatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC478C29AFD50FC6F4F02412 /* CalculatorView.swift */; };
+		AA0000000000000000000006 /* UITestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000002 /* UITestSupport.swift */; };
+		AA0000000000000000000007 /* RecipeCreationUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000003 /* RecipeCreationUITests.swift */; };
+		AA0000000000000000000008 /* RecipeEditUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000004 /* RecipeEditUITests.swift */; };
+		AA0000000000000000000014 /* RecipeDataIntegrityUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000013 /* RecipeDataIntegrityUITests.swift */; };
+		AA0000000000000000000016 /* RecipeCalculatorUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000015 /* RecipeCalculatorUITests.swift */; };
 		BB06F1732425F5F0001A03AD /* ObjectFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB06F1722425F5F0001A03AD /* ObjectFactory.swift */; };
 		BB06F1752425F681001A03AD /* CoreDataGateway.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB06F1742425F681001A03AD /* CoreDataGateway.swift */; };
 		BB06F1772425FAE6001A03AD /* RecipeReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB06F1762425FAE6001A03AD /* RecipeReader.swift */; };
@@ -103,6 +108,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		AA000000000000000000000B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = BB30DEC42425B83D00BFD472 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = BB30DECB2425B83D00BFD472;
+			remoteInfo = Doughy;
+		};
 		BB30DEE62425B83F00BFD472 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = BB30DEC42425B83D00BFD472 /* Project object */;
@@ -118,6 +130,13 @@
 		4F3DC0F90C6416B3782E7EA1 /* RecipeListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeListView.swift; sourceTree = "<group>"; };
 		8D5DEA7121902BEE05D59CD2 /* Doughy.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Doughy.entitlements; sourceTree = "<group>"; };
 		9D3CD9D13F590A51EDD39033 /* CreateRecipeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateRecipeView.swift; sourceTree = "<group>"; };
+		AA0000000000000000000001 /* Doughy UI Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Doughy UI Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA0000000000000000000002 /* UITestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITestSupport.swift; sourceTree = "<group>"; };
+		AA0000000000000000000003 /* RecipeCreationUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeCreationUITests.swift; sourceTree = "<group>"; };
+		AA0000000000000000000004 /* RecipeEditUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeEditUITests.swift; sourceTree = "<group>"; };
+		AA0000000000000000000005 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		AA0000000000000000000013 /* RecipeDataIntegrityUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeDataIntegrityUITests.swift; sourceTree = "<group>"; };
+		AA0000000000000000000015 /* RecipeCalculatorUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeCalculatorUITests.swift; sourceTree = "<group>"; };
 		AC478C29AFD50FC6F4F02412 /* CalculatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalculatorView.swift; sourceTree = "<group>"; };
 		B31864D344883DD71A807B7C /* CalculatedRecipeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalculatedRecipeView.swift; sourceTree = "<group>"; };
 		BB06F1722425F5F0001A03AD /* ObjectFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjectFactory.swift; sourceTree = "<group>"; };
@@ -214,6 +233,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		AA000000000000000000000E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		BB30DEC92425B83D00BFD472 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -231,11 +257,25 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		AA0000000000000000000009 /* Doughy UI Tests */ = {
+			isa = PBXGroup;
+			children = (
+				AA0000000000000000000002 /* UITestSupport.swift */,
+				AA0000000000000000000003 /* RecipeCreationUITests.swift */,
+				AA0000000000000000000004 /* RecipeEditUITests.swift */,
+				AA0000000000000000000013 /* RecipeDataIntegrityUITests.swift */,
+				AA0000000000000000000015 /* RecipeCalculatorUITests.swift */,
+				AA0000000000000000000005 /* Info.plist */,
+			);
+			path = "Doughy UI Tests";
+			sourceTree = "<group>";
+		};
 		BB30DEC32425B83D00BFD472 = {
 			isa = PBXGroup;
 			children = (
 				BB30DECE2425B83D00BFD472 /* Doughy */,
 				BB30DEE82425B83F00BFD472 /* Doughy Tests */,
+				AA0000000000000000000009 /* Doughy UI Tests */,
 				BB30DECD2425B83D00BFD472 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -245,6 +285,7 @@
 			children = (
 				BB30DECC2425B83D00BFD472 /* Doughy.app */,
 				BB30DEE52425B83F00BFD472 /* Doughy Tests.xctest */,
+				AA0000000000000000000001 /* Doughy UI Tests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -546,6 +587,24 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		AA000000000000000000000A /* Doughy UI Tests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AA0000000000000000000012 /* Build configuration list for PBXNativeTarget "Doughy UI Tests" */;
+			buildPhases = (
+				AA000000000000000000000D /* Sources */,
+				AA000000000000000000000E /* Frameworks */,
+				AA000000000000000000000F /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				AA000000000000000000000C /* PBXTargetDependency */,
+			);
+			name = "Doughy UI Tests";
+			productName = "Doughy UI Tests";
+			productReference = AA0000000000000000000001 /* Doughy UI Tests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 		BB30DECB2425B83D00BFD472 /* Doughy */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = BB30DEEE2425B83F00BFD472 /* Build configuration list for PBXNativeTarget "Doughy" */;
@@ -591,6 +650,10 @@
 				LastUpgradeCheck = 1420;
 				ORGANIZATIONNAME = "George Urick";
 				TargetAttributes = {
+					AA000000000000000000000A = {
+						CreatedOnToolsVersion = 11.3.1;
+						TestTargetID = BB30DECB2425B83D00BFD472;
+					};
 					BB30DECB2425B83D00BFD472 = {
 						CreatedOnToolsVersion = 11.3.1;
 					};
@@ -615,11 +678,19 @@
 			targets = (
 				BB30DECB2425B83D00BFD472 /* Doughy */,
 				BB30DEE42425B83F00BFD472 /* Doughy Tests */,
+				AA000000000000000000000A /* Doughy UI Tests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		AA000000000000000000000F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		BB30DECA2425B83D00BFD472 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -648,6 +719,18 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		AA000000000000000000000D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA0000000000000000000006 /* UITestSupport.swift in Sources */,
+				AA0000000000000000000007 /* RecipeCreationUITests.swift in Sources */,
+				AA0000000000000000000008 /* RecipeEditUITests.swift in Sources */,
+				AA0000000000000000000014 /* RecipeDataIntegrityUITests.swift in Sources */,
+				AA0000000000000000000016 /* RecipeCalculatorUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		BB30DEC82425B83D00BFD472 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -747,6 +830,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		AA000000000000000000000C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = BB30DECB2425B83D00BFD472 /* Doughy */;
+			targetProxy = AA000000000000000000000B /* PBXContainerItemProxy */;
+		};
 		BB30DEE72425B83F00BFD472 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = BB30DECB2425B83D00BFD472 /* Doughy */;
@@ -774,6 +862,48 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		AA0000000000000000000010 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 66KJD3WYAH;
+				INFOPLIST_FILE = "Doughy UI Tests/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "org.georgie.Doughy-UI-Tests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Doughy;
+			};
+			name = Debug;
+		};
+		AA0000000000000000000011 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 66KJD3WYAH;
+				INFOPLIST_FILE = "Doughy UI Tests/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "org.georgie.Doughy-UI-Tests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Doughy;
+			};
+			name = Release;
+		};
 		BB30DEEC2425B83F00BFD472 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -977,6 +1107,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		AA0000000000000000000012 /* Build configuration list for PBXNativeTarget "Doughy UI Tests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA0000000000000000000010 /* Debug */,
+				AA0000000000000000000011 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		BB30DEC72425B83D00BFD472 /* Build configuration list for PBXProject "Doughy" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
