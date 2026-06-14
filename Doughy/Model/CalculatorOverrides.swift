@@ -15,6 +15,7 @@ struct CalculatorOverrides {
     let prefermentIngredientPercents: [Int: Double]
     let prefermentTotalPercent: Double?
     let singleDoughWeight: Double?
+    let extraIngredientAmounts: [Int: Double]
     let temperatureMeasurement: Temperature.Measurement
 
     /// Whether the user set any "Adjust" value, regardless of whether it
@@ -23,6 +24,7 @@ struct CalculatorOverrides {
         !ingredientPercents.isEmpty || !ingredientTemps.isEmpty
             || !prefermentIngredientPercents.isEmpty
             || prefermentTotalPercent != nil || singleDoughWeight != nil
+            || !extraIngredientAmounts.isEmpty
     }
 
     /// Applies these overrides on top of `recipe`'s current values, producing
@@ -40,6 +42,9 @@ struct CalculatorOverrides {
         for (index, temp) in ingredientTemps where snapshot.ingredients.indices.contains(index) {
             snapshot.ingredients[index].temperatureValue = temp
             snapshot.ingredients[index].temperatureMeasurement = temperatureMeasurement.rawValue
+        }
+        for (index, amount) in extraIngredientAmounts where snapshot.ingredients.indices.contains(index) {
+            snapshot.ingredients[index].extraAmount = amount
         }
 
         if var preferment = snapshot.preferment {

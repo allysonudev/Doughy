@@ -8,12 +8,13 @@ struct CalculatorView: View {
     let recipe: any RecipeProtocol
     @Environment(RecipeStore.self) private var store
 
-    @State private var doughCount: Int = 1
+    @State private var doughCount: Int?
     @State private var singleDoughWeight: Double?
     @State private var adjustIngredients = false
     @State private var adjustTemps = false
     @State private var adjustPreferment = false
     @State private var ingredientPercents: [Int: Double] = [:]
+    @State private var extraIngredientAmounts: [Int: Double] = [:]
     @State private var ingredientTemps: [Int: Double] = [:]
     @State private var prefermentIngredientPercents: [Int: Double] = [:]
     @State private var prefermentTotalPercent: Double?
@@ -40,7 +41,8 @@ struct CalculatorView: View {
     private var prefermentRecipe: PrefermentRecipe? { currentRecipe as? PrefermentRecipe }
     private var hasTemps: Bool { currentRecipe.containsVariableTemps() }
     private var effectiveWeight: Double { singleDoughWeight ?? currentRecipe.defaultWeight }
-    private var totalWeight: Double { effectiveWeight * Double(doughCount) }
+    private var effectiveDoughCount: Int { doughCount ?? 1 }
+    private var totalWeight: Double { effectiveWeight * Double(effectiveDoughCount) }
 
     var body: some View {
         Form {
@@ -146,10 +148,13 @@ struct CalculatorView: View {
 
     // MARK: - Ingredient adjustment section
 
+    @ViewBuilder
     private var ingredientAdjustSection: some View {
         Section("Ingredients") {
             ForEach(Array(currentRecipe.ingredients.enumerated()), id: \.offset) { index, ingredient in
-                if ingredient.isFlour {
+                if ingredient.extraAmount != nil {
+                    // Handled in additionalIngredientsSection.
+                } else if ingredient.isFlour {
                     HStack {
                         Text(ingredient.name)
                         Spacer()
@@ -176,6 +181,47 @@ struct CalculatorView: View {
                     }
                 }
             }
+        }
+
+        if hasAdditionalIngredients {
+            additionalIngredientsSection
+        }
+    }
+
+    private var hasAdditionalIngredients: Bool {
+        currentRecipe.ingredients.contains { $0.extraAmount != nil }
+    }
+
+    private var additionalIngredientsSection: some View {
+        Section {
+            ForEach(Array(currentRecipe.ingredients.enumerated()), id: \.offset) { index, ingredient in
+                if let amount = ingredient.extraAmount, let unit = ingredient.extraUnit {
+                    HStack {
+                        Text(ingredient.name)
+                            .lineLimit(1)
+                            .layoutPriority(1)
+                        Spacer()
+                        TextField(
+                            String(format: "%.4g", amount),
+                            value: Binding(
+                                get: { extraIngredientAmounts[index] },
+                                set: { extraIngredientAmounts[index] = $0 }
+                            ),
+                            format: .number
+                        )
+                        .multilineTextAlignment(.trailing)
+                        .keyboardType(.decimalPad)
+                        .frame(width: 50)
+                        .accessibilityIdentifier("extraIngredientAmountField_\(index)")
+                        Text(VolumeUnitFormatter.label(unit: unit, amount: extraIngredientAmounts[index] ?? amount))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+        } header: {
+            Text("Additional Ingredients")
+        } footer: {
+            Text("These ingredients aren't included in baker's percentages. Adjust the amount if you'd like to scale it for this batch.")
         }
     }
 
@@ -279,7 +325,7 @@ struct CalculatorView: View {
     // MARK: - Calculation
 
     private func calculate() {
-        let weight = effectiveWeight * Double(doughCount)
+        let weight = effectiveWeight * Double(effectiveDoughCount)
         let ingredients = buildMeasuredIngredients()
         let preferment = buildMeasuredPreferment()
 
@@ -307,6 +353,7 @@ struct CalculatorView: View {
             prefermentIngredientPercents: prefermentIngredientPercents,
             prefermentTotalPercent: prefermentTotalPercent,
             singleDoughWeight: singleDoughWeight,
+            extraIngredientAmounts: extraIngredientAmounts,
             temperatureMeasurement: settings.preferredTemp()
         )
     }
@@ -318,7 +365,7 @@ struct CalculatorView: View {
             if let rawTemp = ingredientTemps[index] {
                 temp = Temperature(value: rawTemp, measurement: settings.preferredTemp())
             }
-            return MeasuredIngredient(ingredient: ingredient, percent: percent, temperature: temp)
+            return MeasuredIngredient(ingredient: ingredient, percent: percent, temperature: temp, extraAmountOverride: extraIngredientAmounts[index])
         }
     }
 

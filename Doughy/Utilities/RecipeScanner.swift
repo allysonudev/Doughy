@@ -35,6 +35,31 @@ enum ParsedVolumeUnit: String, Sendable {
     case cup
     case ounce
     case milliliter
+    case egg
+}
+
+/// The size of an egg, used to convert an "X eggs" quantity (volumeUnit == .egg) to
+/// grams. Mirrors `EggSize` in IngredientDensityStore.swift (same raw values), plus
+/// `unspecified` for when the recipe gives no size word.
+@available(iOS 26, *)
+@Generable
+enum ParsedEggSize: String, Sendable {
+    case unspecified
+    case small
+    case medium
+    case large
+    case extraLarge
+    case jumbo
+}
+
+/// Which part of an egg a quantity refers to (volumeUnit == .egg). Mirrors `EggPart`
+/// in IngredientDensityStore.swift (same raw values).
+@available(iOS 26, *)
+@Generable
+enum ParsedEggPart: String, Sendable {
+    case whole
+    case white
+    case yolk
 }
 
 /// A closed set of common baking ingredients with known densities, used to convert
@@ -138,25 +163,42 @@ struct ParsedIngredient: Sendable {
         """)
     var weightGrams: Double
     @Guide(description: """
-        The cup/tablespoon/teaspoon/ounce/milliliter amount stated for this ingredient \
-        (e.g. "4 cups" -> 4, "2 to 3 teaspoons" -> 2.5 using the midpoint of the range, \
-        "8 1/2 ounces" -> 8.5, "250ml" -> 250). Extract this independently of \
-        weightGrams — both fields can be nonzero for the same ingredient (e.g. "4 cups \
-        (512 g) flour" has weightGrams: 512 AND volumeAmount: 4). Never put a gram value \
-        here — a number followed by "g" or "grams" always belongs in weightGrams instead, \
-        even if it's the only quantity given (e.g. "(455 g) lukewarm water" with no cup \
-        amount has weightGrams: 455 and volumeAmount: 0, NOT volumeAmount: 455). Set \
-        volumeAmount to 0 if the recipe gives no cup/tablespoon/teaspoon/ounce/milliliter \
-        amount for this ingredient (e.g. a count like "2 eggs" or "4 cloves garlic", or no \
-        measurable quantity at all such as "butter for greasing").
+        The cup/tablespoon/teaspoon/ounce/milliliter/egg amount stated for this \
+        ingredient (e.g. "4 cups" -> 4, "2 to 3 teaspoons" -> 2.5 using the midpoint of \
+        the range, "8 1/2 ounces" -> 8.5, "250ml" -> 250, "2 large eggs" -> 2). Extract \
+        this independently of weightGrams — both fields can be nonzero for the same \
+        ingredient (e.g. "4 cups (512 g) flour" has weightGrams: 512 AND volumeAmount: \
+        4). Never put a gram value here — a number followed by "g" or "grams" always \
+        belongs in weightGrams instead, even if it's the only quantity given (e.g. \
+        "(455 g) lukewarm water" with no cup amount has weightGrams: 455 and \
+        volumeAmount: 0, NOT volumeAmount: 455). Set volumeAmount to 0 if the recipe \
+        gives no cup/tablespoon/teaspoon/ounce/milliliter/egg amount for this ingredient \
+        (e.g. "4 cloves garlic", or no measurable quantity at all such as "butter for \
+        greasing").
         """)
     var volumeAmount: Double
     @Guide(description: """
         The unit that volumeAmount is measured in. Use "ounce" for weight given in \
         ounces (e.g. "4 ounces chocolate" -> 4, ounce — NOT a gram value). Use \
-        "milliliter" for "ml" amounts. Use "none" if volumeAmount is 0.
+        "milliliter" for "ml" amounts. Use "egg" when the quantity is a count of eggs, \
+        egg whites, or egg yolks (e.g. "2 large eggs" -> volumeAmount: 2, volumeUnit: \
+        egg). Use "none" if volumeAmount is 0.
         """)
     var volumeUnit: ParsedVolumeUnit
+    @Guide(description: """
+        The size of egg specified, only relevant when volumeUnit is "egg" (e.g. "2 \
+        large eggs" -> large, "3 extra-large egg whites" -> extraLarge). If the recipe \
+        gives an egg quantity with no size word (e.g. "3 eggs"), use "unspecified" — \
+        do not guess a size.
+        """)
+    var eggSize: ParsedEggSize
+    @Guide(description: """
+        Which part of the egg this quantity refers to, only relevant when volumeUnit \
+        is "egg". Use "white" for "egg whites"/"whites" (e.g. "3 egg whites" -> \
+        volumeAmount: 3, volumeUnit: egg, eggPart: white), "yolk" for "egg \
+        yolks"/"yolks", and "whole" for whole eggs (e.g. plain "2 eggs").
+        """)
+    var eggPart: ParsedEggPart
     @Guide(description: """
         True only if this ingredient IS a flour (bread flour, all-purpose flour, whole wheat \
         flour, rye flour, semolina, etc.). Water, salt, yeast, sugar, oil, butter, eggs, milk, \
@@ -253,62 +295,6 @@ struct RecipeScanner {
 
     // MARK: - Volume conversion
 
-    /// Approximate grams per US cup, by ingredient category.
-    private static let gramsPerCup: [ParsedIngredientCategory: Double] = [
-        .breadFlour: 127,
-        .allPurposeFlour: 125,
-        .cakeFlour: 114,
-        .wholeWheatFlour: 113,
-        .ryeFlour: 102,
-        .speltFlour: 105,
-        .semolinaFlour: 167,
-        .oatFlour: 92,
-        .cornmeal: 138,
-        .riceFlour: 158,
-        .almondFlour: 96,
-        .buckwheatFlour: 120,
-        .glutenFreeFlourBlend: 130,
-
-        .granulatedSugar: 200,
-        .brownSugar: 220,
-        .powderedSugar: 120,
-        .honey: 340,
-        .mapleSyrup: 322,
-        .molasses: 328,
-
-        .butter: 227,
-        .oliveOil: 216,
-        .vegetableOil: 218,
-        .coconutOil: 218,
-        .shortening: 205,
-
-        .milk: 240,
-        .buttermilk: 245,
-        .yogurt: 245,
-        .cream: 240,
-        .sourCream: 240,
-
-        .instantYeast: 150,
-        .activeDryYeast: 150,
-        .freshYeast: 180,
-        .sourdoughStarter: 240,
-        .bakingPowder: 192,
-        .bakingSoda: 220,
-
-        .tableSalt: 288,
-        .kosherSalt: 240,
-        .seaSalt: 240,
-
-        .water: 236,
-        .eggs: 240,
-        .seeds: 160,
-        .nuts: 120,
-        .spices: 100,
-        .cocoaPowder: 84,
-        .chocolateChips: 170,
-        .other: 120,
-    ]
-
     /// Grams per US fluid ounce of weight (1 oz = 28.3495 g). This is an exact mass
     /// conversion, independent of ingredient density, unlike cup/tablespoon/teaspoon.
     private static let gramsPerOunce = 28.3495
@@ -316,21 +302,31 @@ struct RecipeScanner {
     /// Volume per US cup, in milliliters, used to convert "ml" amounts via density.
     private static let millilitersPerCup = 236.588
 
-    private static func gramsForVolume(amount: Double, unit: ParsedVolumeUnit, category: ParsedIngredientCategory) -> Double {
-        let perCup = gramsPerCup[category] ?? 120
+    /// The grams-per-cup density to use for `category`, falling back to a generic
+    /// average for categories with no entry in `IngredientCategory` (e.g. "other").
+    private static func gramsPerCup(for category: ParsedIngredientCategory) -> Double {
+        IngredientCategory(rawValue: category.rawValue)
+            .map { IngredientDensityStore.shared.gramsPerCup(for: $0) } ?? 120
+    }
+
+    private static func gramsForVolume(amount: Double, unit: ParsedVolumeUnit, category: ParsedIngredientCategory, eggSize: ParsedEggSize, eggPart: ParsedEggPart) -> Double {
         switch unit {
         case .none:
             return 0
+        case .egg:
+            let size = EggSize(rawValue: eggSize.rawValue) ?? IngredientDensityStore.shared.defaultEggSize()
+            let part = EggPart(rawValue: eggPart.rawValue) ?? .whole
+            return amount * IngredientDensityStore.shared.gramsPerEgg(for: size, part: part)
         case .teaspoon:
-            return amount * perCup / 48
+            return amount * gramsPerCup(for: category) / 48
         case .tablespoon:
-            return amount * perCup / 16
+            return amount * gramsPerCup(for: category) / 16
         case .cup:
-            return amount * perCup
+            return amount * gramsPerCup(for: category)
         case .ounce:
             return amount * gramsPerOunce
         case .milliliter:
-            return amount * perCup / millilitersPerCup
+            return amount * gramsPerCup(for: category) / millilitersPerCup
         }
     }
 
@@ -418,7 +414,9 @@ struct RecipeScanner {
 
         return resolved(weightGrams: gramsForVolume(amount: ingredient.volumeAmount,
                                                       unit: ingredient.volumeUnit,
-                                                      category: ingredient.category))
+                                                      category: ingredient.category,
+                                                      eggSize: ingredient.eggSize,
+                                                      eggPart: ingredient.eggPart))
     }
 
     // MARK: - OCR

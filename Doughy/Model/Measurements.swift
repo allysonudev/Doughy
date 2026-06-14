@@ -12,11 +12,16 @@ class MeasuredIngredient {
     let ingredient: Ingredient
     let percent: Double
     let temperature: Temperature?
-    
-    init(ingredient: Ingredient, percent: Double, temperature: Temperature?) {
+    /// Overrides `ingredient.extraAmount` (at the recipe's default weight) when the
+    /// user has tweaked an "extra" ingredient's amount. Nil to use the ingredient's
+    /// own `extraAmount`.
+    let extraAmountOverride: Double?
+
+    init(ingredient: Ingredient, percent: Double, temperature: Temperature?, extraAmountOverride: Double? = nil) {
         self.ingredient = ingredient
         self.percent = percent
         self.temperature = temperature
+        self.extraAmountOverride = extraAmountOverride
     }
 }
 

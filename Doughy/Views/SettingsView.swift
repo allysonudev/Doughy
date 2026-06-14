@@ -35,6 +35,15 @@ struct SettingsView: View {
                     }
             }
 
+            Section {
+                NavigationLink("Ingredient Conversions") {
+                    IngredientConversionsView()
+                }
+                .accessibilityIdentifier("ingredientConversionsLink")
+            } footer: {
+                Text("Adjust the gram conversions Doughy uses for cup, tablespoon, and teaspoon measurements when scanning recipes.")
+            }
+
             Section("About") {
                 Link("Source Code on GitHub",
                      destination: URL(string: "https://github.com/georgie-codes/Doughy")!)

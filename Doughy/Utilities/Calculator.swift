@@ -26,7 +26,8 @@ class Calculator: NSObject {
         ingredients.forEach { ingredient in
             let actualPercent = ingredient.percent / totalPercent
             let weight = actualPercent * totalWeight
-            let scaledExtraAmount = ingredient.ingredient.extraAmount.map { $0 * extraScale }
+            let baseExtraAmount = ingredient.extraAmountOverride ?? ingredient.ingredient.extraAmount
+            let scaledExtraAmount = baseExtraAmount.map { $0 * extraScale }
             let calcIngredient = CalculatedIngredient(name: ingredient.ingredient.name, isFlour: ingredient.ingredient.isFlour, percentage: ingredient.percent, totalPercentage: ingredient.percent, temperature: ingredient.temperature, weight: weight, extraAmount: scaledExtraAmount, extraUnit: ingredient.ingredient.extraUnit)
             doughIngredients.append(calcIngredient)
         }

@@ -16,8 +16,15 @@ enum VolumeUnitFormatter {
         case "cup":        return plural ? "cups" : "cup"
         case "ounce":      return plural ? "ounces" : "ounce"
         case "milliliter": return "ml"
+        case "count":      return ""
         default:           return unit
         }
+    }
+
+    /// A display name for `unit` suitable for menus/pickers, where `label`'s
+    /// empty string for `"count"` would otherwise be confusing.
+    static func menuName(unit: String) -> String {
+        unit == "count" ? "Count" : label(unit: unit, amount: 2)
     }
 
     static func format(amount: Double, unit: String) -> String {
@@ -27,6 +34,7 @@ enum VolumeUnitFormatter {
         } else {
             amountString = String(format: "%.2g", amount)
         }
-        return "\(amountString) \(label(unit: unit, amount: amount))"
+        let unitLabel = label(unit: unit, amount: amount)
+        return unitLabel.isEmpty ? amountString : "\(amountString) \(unitLabel)"
     }
 }

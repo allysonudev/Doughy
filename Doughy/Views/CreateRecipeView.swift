@@ -178,6 +178,7 @@ struct CreateRecipeView: View {
     @State private var flours: [FlourRow] = [FlourRow()]
     @State private var ingredients: [IngredientRow] = [IngredientRow()]
     @State private var extraIngredients: [ExtraIngredientRow] = []
+    @State private var showingAddIngredientDialog = false
 
     // Conversion prompts for scanned "extra" ingredients
     @State private var pendingConversions: [PendingConversion] = []
@@ -218,13 +219,16 @@ struct CreateRecipeView: View {
 
         let flourRows = recipe.ingredients.filter(\.isFlour)
             .map { FlourRow(name: $0.name, value: $0.defaultPercentage) }
-        let ingRows = recipe.ingredients.filter { !$0.isFlour }
+        let nonFlour = recipe.ingredients.filter { !$0.isFlour }
+        let ingRows = nonFlour.filter { $0.extraAmount == nil }
             .map { IngredientRow(name: $0.name, value: $0.defaultPercentage, tempValue: $0.temperature?.value) }
+        let mainExtra = nonFlour.filter { $0.extraAmount != nil }
 
         var prefName = ""
         var prefFlourPercent: Double? = nil
         var prefFlours = [FlourRow()]
         var prefIngRows: [IngredientRow] = [IngredientRow()]
+        var prefExtra: [Ingredient] = []
         var finalFlours: [FlourRow]
         var finalIngredients: [IngredientRow]
         let hasPreferment: Bool
@@ -239,9 +243,11 @@ struct CreateRecipeView: View {
                 .map { FlourRow(name: $0.name, value: $0.defaultPercentage) }
             prefFlours = prefFlourRows.isEmpty ? [FlourRow()] : prefFlourRows
 
-            let prefIngredientRows = pref.ingredients.filter { !$0.isFlour }
+            let prefNonFlour = pref.ingredients.filter { !$0.isFlour }
+            let prefIngredientRows = prefNonFlour.filter { $0.extraAmount == nil }
                 .map { IngredientRow(name: $0.name, value: $0.defaultPercentage, tempValue: $0.temperature?.value) }
             prefIngRows = prefIngredientRows.isEmpty ? [IngredientRow()] : prefIngredientRows
+            prefExtra = prefNonFlour.filter { $0.extraAmount != nil }
 
             // `flourRows`/`ingRows` hold recipe-wide totals; the "Main Dough" step only
             // collects the *additional* amounts on top of the preferment's contribution.
@@ -266,6 +272,14 @@ struct CreateRecipeView: View {
             finalIngredients = ingRows.isEmpty ? [IngredientRow()] : ingRows
         }
 
+        let prefExtraNames = Set(prefExtra.map { $0.name.lowercased() })
+        var extraRows = prefExtra.map {
+            ExtraIngredientRow(name: $0.name, amount: $0.extraAmount ?? 0, unit: $0.extraUnit ?? "tablespoon", isPreferment: true)
+        }
+        extraRows += mainExtra.filter { !prefExtraNames.contains($0.name.lowercased()) }.map {
+            ExtraIngredientRow(name: $0.name, amount: $0.extraAmount ?? 0, unit: $0.extraUnit ?? "tablespoon", isPreferment: false)
+        }
+
         _containsPreferment = State(initialValue: hasPreferment)
         _prefermentName = State(initialValue: prefName)
         _prefermentFlourPercent = State(initialValue: prefFlourPercent)
@@ -273,6 +287,7 @@ struct CreateRecipeView: View {
         _prefermentIngredientRows = State(initialValue: prefIngRows)
         _flours = State(initialValue: finalFlours)
         _ingredients = State(initialValue: finalIngredients)
+        _extraIngredients = State(initialValue: extraRows)
 
         _initialSnapshot = State(initialValue: DraftSnapshot(
             recipeName: recipe.name,
@@ -283,7 +298,7 @@ struct CreateRecipeView: View {
             containsPreferment: hasPreferment,
             flours: finalFlours,
             ingredients: finalIngredients,
-            extraIngredients: [],
+            extraIngredients: extraRows,
             prefermentName: prefName,
             prefermentFlourPercent: prefFlourPercent,
             prefermentFlours: prefFlours,
@@ -616,6 +631,10 @@ struct CreateRecipeView: View {
 
     // MARK: - Step 2: Ingredients (flours + other, combined)
 
+    /// Units offered when switching the unit of an "extra" ingredient (one that's
+    /// measured by volume/count rather than converted to grams).
+    private let extraIngredientUnits = ["teaspoon", "tablespoon", "cup", "ounce", "milliliter", "count"]
+
     private var ingredientsForm: some View {
         let useCelsius = Settings.shared.preferredTemp() == .celsius
         let isPercent = inputMode == .byPercent
@@ -703,7 +722,7 @@ struct CreateRecipeView: View {
                     }
                 }
                 .onDelete { ingredients.remove(atOffsets: $0) }
-                Button { ingredients.append(IngredientRow()) } label: {
+                Button { showingAddIngredientDialog = true } label: {
                     Label("Add Ingredient", systemImage: "plus.circle")
                 }
                 .accessibilityIdentifier("addIngredientButton")
@@ -718,19 +737,53 @@ struct CreateRecipeView: View {
 
             if !extraIngredients.isEmpty {
                 Section {
-                    ForEach(extraIngredients) { extra in
-                        LabeledContent(extra.name, value: VolumeUnitFormatter.format(amount: extra.amount, unit: extra.unit))
+                    ForEach(Array(extraIngredients.enumerated()), id: \.element.id) { index, extra in
+                        HStack {
+                            TextField("Ingredient Name", text: $extraIngredients[index].name)
+                                .autocorrectionDisabled()
+                                .accessibilityIdentifier("extraIngredientNameField_\(index)")
+                            Spacer()
+                            TextField("0", value: $extraIngredients[index].amount, format: .number)
+                                .multilineTextAlignment(.trailing)
+                                .keyboardType(.decimalPad)
+                                .frame(width: 50)
+                                .accessibilityIdentifier("extraIngredientAmountField_\(index)")
+                            Menu {
+                                ForEach(extraIngredientUnits, id: \.self) { unit in
+                                    Button(VolumeUnitFormatter.menuName(unit: unit)) {
+                                        extraIngredients[index].unit = unit
+                                    }
+                                }
+                            } label: {
+                                Text(VolumeUnitFormatter.menuName(unit: extra.unit))
+                            }
+                            .accessibilityIdentifier("extraIngredientUnitMenu_\(index)")
+                        }
                     }
                     .onDelete { extraIngredients.remove(atOffsets: $0) }
                 } header: {
                     Text("Additional Ingredients")
                 } footer: {
-                    Text("These ingredients couldn't be converted to grams, so they're kept in their original units and scaled with the recipe.")
+                    Text("These ingredients aren't converted to grams, so they're kept in their original units and scaled with the recipe.")
                 }
             }
         }
         .navigationTitle(containsPreferment ? "Main Dough" : "Ingredients")
         .navigationBarTitleDisplayMode(.inline)
+        .confirmationDialog("Add Ingredient", isPresented: $showingAddIngredientDialog, titleVisibility: .visible) {
+            Button(isPercent ? "By Percentage" : "By Weight") {
+                ingredients.append(IngredientRow())
+            }
+            Button("Volume") {
+                extraIngredients.append(ExtraIngredientRow(name: "", amount: 0, unit: "tablespoon", isPreferment: false))
+            }
+            Button("Count") {
+                extraIngredients.append(ExtraIngredientRow(name: "", amount: 1, unit: "count", isPreferment: false))
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("How is this ingredient measured?")
+        }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Next") { navPath.append(.preview) }
@@ -1401,7 +1454,7 @@ struct CreateRecipeView: View {
             }
         }
 
-        for extra in extraIngredients where !extra.isPreferment {
+        for extra in extraIngredients where !extra.isPreferment && !extra.name.trimmingCharacters(in: .whitespaces).isEmpty {
             let ib = IngredientBuilder()
             ib.name = extra.name.trimmingCharacters(in: .whitespaces)
             ib.extraAmount = extra.amount
@@ -1447,7 +1500,7 @@ struct CreateRecipeView: View {
                 builder.prefermentBuilder.ingredientBuilders.append(pb)
             }
 
-            for extra in extraIngredients where extra.isPreferment {
+            for extra in extraIngredients where extra.isPreferment && !extra.name.trimmingCharacters(in: .whitespaces).isEmpty {
                 let pb = PrefermentIngredientBuilder(isFlour: false)
                 pb.name = extra.name.trimmingCharacters(in: .whitespaces)
                 pb.extraAmount = extra.amount
@@ -1463,7 +1516,7 @@ struct CreateRecipeView: View {
                 builder.mainDoughBuilder.ingredientBuilders.append(ib)
             }
         } else {
-            for extra in extraIngredients where extra.isPreferment {
+            for extra in extraIngredients where extra.isPreferment && !extra.name.trimmingCharacters(in: .whitespaces).isEmpty {
                 let ib = IngredientBuilder()
                 ib.name = extra.name.trimmingCharacters(in: .whitespaces)
                 ib.extraAmount = extra.amount
