@@ -16,6 +16,7 @@
 		DD0000000000000000000014 /* RecipeHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000000000000000000013 /* RecipeHistoryView.swift */; };
 		DD0000000000000000000016 /* RecipeDiffTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000000000000000000015 /* RecipeDiffTests.swift */; };
 		DD0000000000000000000018 /* RecipeHistoryUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000000000000000000017 /* RecipeHistoryUITests.swift */; };
+		DD0000000000000000000020 /* CoreDataMigrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000000000000000000019 /* CoreDataMigrationTests.swift */; };
 		3FD1800DB04184845AC60A3F /* CalculatedRecipeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B31864D344883DD71A807B7C /* CalculatedRecipeView.swift */; };
 		6FFC277DF945E4E8632C1095 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36E8F59880EE98064C4AD020 /* SettingsView.swift */; };
 		73D001FFB0DEE3BBDB2BFEF3 /* RecipeStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39CC5426652CEF6C8DF863BB /* RecipeStore.swift */; };
@@ -150,6 +151,7 @@
 		DD0000000000000000000013 /* RecipeHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeHistoryView.swift; sourceTree = "<group>"; };
 		DD0000000000000000000015 /* RecipeDiffTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeDiffTests.swift; sourceTree = "<group>"; };
 		DD0000000000000000000017 /* RecipeHistoryUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeHistoryUITests.swift; sourceTree = "<group>"; };
+		DD0000000000000000000019 /* CoreDataMigrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataMigrationTests.swift; sourceTree = "<group>"; };
 		36E8F59880EE98064C4AD020 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		39CC5426652CEF6C8DF863BB /* RecipeStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeStore.swift; sourceTree = "<group>"; };
 		4F3DC0F90C6416B3782E7EA1 /* RecipeListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeListView.swift; sourceTree = "<group>"; };
@@ -348,6 +350,7 @@
 			children = (
 				BB30DEE92425B83F00BFD472 /* Recipe_HelperTests.swift */,
 				DD0000000000000000000015 /* RecipeDiffTests.swift */,
+				DD0000000000000000000019 /* CoreDataMigrationTests.swift */,
 				EE00000000000000000002 /* RecipeScannerTests.swift */,
 				EE00000000000000000004 /* Recipes */,
 				BB30DEEB2425B83F00BFD472 /* Info.plist */,
@@ -660,6 +663,7 @@
 				BB30DEC82425B83D00BFD472 /* Sources */,
 				BB30DEC92425B83D00BFD472 /* Frameworks */,
 				BB30DECA2425B83D00BFD472 /* Resources */,
+				DD0000000000000000000021 /* Set Build Number from Git Commit Count */,
 			);
 			buildRules = (
 			);
@@ -766,6 +770,23 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		DD0000000000000000000021 /* Set Build Number from Git Commit Count */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Set Build Number from Git Commit Count";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "buildNumber=$(git -C \"${SRCROOT}\" rev-list --count HEAD)\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion ${buildNumber}\" \"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		AA000000000000000000000D /* Sources */ = {
@@ -888,6 +909,7 @@
 				BB30DEEA2425B83F00BFD472 /* Recipe_HelperTests.swift in Sources */,
 				EE00000000000000000001 /* RecipeScannerTests.swift in Sources */,
 				DD0000000000000000000016 /* RecipeDiffTests.swift in Sources */,
+				DD0000000000000000000020 /* CoreDataMigrationTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
