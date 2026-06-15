@@ -47,6 +47,14 @@ struct SettingsView: View {
             Section("About") {
                 Link("Source Code on GitHub",
                      destination: URL(string: "https://github.com/georgie-codes/Doughy")!)
+                Link(destination: URL(string: "https://www.feedingamerica.org/find-your-local-foodbank")!) {
+                    VStack(alignment: .leading) {
+                        Text("Donate to your local food bank.")
+                        Text("Go to feedingamerica.org")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
                 Link("Send Feedback",
                      destination: URL(string: "mailto:doughyapp@icloud.com")!)
                 HStack {

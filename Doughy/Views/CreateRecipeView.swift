@@ -50,6 +50,26 @@ private struct ExtraIngredientRow: Identifiable, Equatable {
     }
 }
 
+/// A suggestion to convert an "additional ingredient" (e.g. "2 large eggs") to a
+/// weight-based ingredient, presented to the user with a toggle before continuing
+/// past the Ingredients step.
+private struct ExtraIngredientConversionCandidate: Identifiable {
+    var id = UUID()
+    var extraIndex: Int
+    var name: String
+    var grams: Double
+    var description: String
+    var convertToWeight = true
+}
+
+/// Wraps the candidates for `extraIngredientConversionSheet` so it can be presented
+/// with `.sheet(item:)`, which (unlike `.sheet(isPresented:)`) guarantees the sheet's
+/// content is built from this data rather than a stale snapshot from before it was set.
+private struct ExtraIngredientConversionSheetData: Identifiable {
+    let id = UUID()
+    var candidates: [ExtraIngredientConversionCandidate]
+}
+
 /// A scanned ingredient with no gram conversion, awaiting the user's input on whether
 /// they know a gram conversion for it.
 private struct PendingConversion: Identifiable {
@@ -58,6 +78,25 @@ private struct PendingConversion: Identifiable {
     var amount: Double
     var unit: String
     var isPreferment: Bool
+}
+
+/// Which of the four scanned-ingredient arrays a row belongs to, so a queued name
+/// choice can locate and update the right row after the user picks.
+private enum IngredientRowKind {
+    case flour
+    case ingredient
+    case prefermentFlour
+    case prefermentIngredient
+}
+
+/// A scanned ingredient that listed two alternative names (e.g. "all-purpose flour or
+/// bread flour"), awaiting the user's choice of which one to use for that row.
+private struct PendingNameChoice: Identifiable {
+    var id = UUID()
+    var rowID: UUID
+    var kind: IngredientRowKind
+    var primaryName: String
+    var alternativeName: String
 }
 
 private enum CreateStep: Hashable {
@@ -99,6 +138,7 @@ private struct ScanDiagnostics: Codable {
 
     struct DiagIngredient: Codable {
         var name: String
+        var alternativeName: String?
         var category: String
         var weightGrams: Double
         var volumeAmount: Double
@@ -180,9 +220,15 @@ struct CreateRecipeView: View {
     @State private var extraIngredients: [ExtraIngredientRow] = []
     @State private var showingAddIngredientDialog = false
 
+    // Convert-to-weight suggestions for additional ingredients, shown on "Next"
+    @State private var conversionSheetData: ExtraIngredientConversionSheetData?
+
     // Conversion prompts for scanned "extra" ingredients
     @State private var pendingConversions: [PendingConversion] = []
     @State private var conversionGramsText: String = ""
+
+    // Name-alternative prompts for scanned ingredients with two listed options
+    @State private var pendingNameChoices: [PendingNameChoice] = []
     @State private var lastTotalFlourWeight: Double = 0
     @State private var lastTotalPrefFlourWeight: Double = 0
 
@@ -392,6 +438,19 @@ struct CreateRecipeView: View {
                     Text("We don't have a gram conversion for \"\(pending.name)\" (\(VolumeUnitFormatter.format(amount: pending.amount, unit: pending.unit))). If you know how many grams are in one \(VolumeUnitFormatter.label(unit: pending.unit, amount: 1)), enter it to use it now and remember it for future scans.")
                 }
             }
+            .alert("Ingredient Has an Alternative", isPresented: Binding(
+                get: { pendingConversions.isEmpty && pendingNameChoices.first != nil },
+                set: { _ in }
+            )) {
+                if let pending = pendingNameChoices.first {
+                    Button(pending.primaryName) { resolveNameChoice(useAlternative: false) }
+                    Button(pending.alternativeName) { resolveNameChoice(useAlternative: true) }
+                }
+            } message: {
+                if let pending = pendingNameChoices.first {
+                    Text("This recipe lists \"\(pending.primaryName)\" or \"\(pending.alternativeName)\" — which would you like to use?")
+                }
+            }
             .confirmationDialog("Are you sure? You will lose unsaved changes", isPresented: $showDiscardConfirmation, titleVisibility: .visible) {
                 Button("Discard", role: .destructive) { dismiss() }
                     .accessibilityIdentifier("discardChangesButton")
@@ -459,6 +518,10 @@ struct CreateRecipeView: View {
                 Text("Scanning recipe…")
                     .foregroundStyle(.white)
                     .font(.headline)
+                Text("AI can make mistakes — review the result and edit anything that doesn't look right.")
+                    .foregroundStyle(.white.opacity(0.8))
+                    .font(.footnote)
+                    .multilineTextAlignment(.center)
             }
             .padding(32)
             .background(.ultraThinMaterial)
@@ -523,7 +586,7 @@ struct CreateRecipeView: View {
             ModeCard(
                 icon: "camera.viewfinder",
                 title: "Scan a Recipe",
-                description: "Use Apple Intelligence to read a recipe from a photo or screenshot"
+                description: "Use Apple Intelligence to read a recipe from a photo or screenshot, entirely on-device and offline"
             ) {
                 showScanOptions = true
             }
@@ -786,9 +849,148 @@ struct CreateRecipeView: View {
         }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Button("Next") { navPath.append(.preview) }
-                    .disabled(!ingredientsReady)
-                    .accessibilityIdentifier("ingredientsNextButton")
+                Button("Next") {
+                    let candidates = scanExtraIngredientConversions()
+                    if candidates.isEmpty {
+                        navPath.append(.preview)
+                    } else {
+                        conversionSheetData = ExtraIngredientConversionSheetData(candidates: candidates)
+                    }
+                }
+                .disabled(!ingredientsReady)
+                .accessibilityIdentifier("ingredientsNextButton")
+            }
+        }
+        .sheet(item: $conversionSheetData) { data in
+            extraIngredientConversionSheet(for: data)
+        }
+    }
+
+    // MARK: - Convert additional ingredients to weight
+
+    /// Scans `extraIngredients` for ones that match a known gram conversion (eggs,
+    /// ounces, or volume ingredients with a recognized `IngredientCategory`), so the
+    /// user can choose to fold them into the weight-based ingredients.
+    private func scanExtraIngredientConversions() -> [ExtraIngredientConversionCandidate] {
+        extraIngredients.enumerated().compactMap { index, extra in
+            guard let suggestion = ExtraIngredientConversion.suggest(name: extra.name, amount: extra.amount, unit: extra.unit) else {
+                return nil
+            }
+            return ExtraIngredientConversionCandidate(extraIndex: index, name: extra.name,
+                                                        grams: suggestion.grams, description: suggestion.description)
+        }
+    }
+
+    private func extraIngredientConversionSheet(for data: ExtraIngredientConversionSheetData) -> some View {
+        NavigationStack {
+            Form {
+                Section {
+                    ForEach(data.candidates.indices, id: \.self) { index in
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(data.candidates[index].name)
+                            Text(data.candidates[index].description)
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                            Toggle("Convert to weight", isOn: Binding(
+                                get: { conversionSheetData?.candidates[index].convertToWeight ?? data.candidates[index].convertToWeight },
+                                set: { conversionSheetData?.candidates[index].convertToWeight = $0 }
+                            ))
+                        }
+                    }
+                } header: {
+                    Text("Convert to Weight?")
+                } footer: {
+                    Text("These additional ingredients can be converted to grams so they count toward the dough's total weight.")
+                }
+            }
+            .navigationTitle("Additional Ingredients")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Continue") {
+                        applyExtraIngredientConversions()
+                        conversionSheetData = nil
+                        navPath.append(.preview)
+                    }
+                }
+            }
+        }
+    }
+
+    /// Applies the user's choices from `extraIngredientConversionSheet`: converted
+    /// ingredients are removed from `extraIngredients` and added to `ingredients`/
+    /// `prefermentIngredientRows` with a weight (in `.byWeight` mode) or an equivalent
+    /// percentage (in `.byPercent` mode).
+    private func applyExtraIngredientConversions() {
+        let toConvert = (conversionSheetData?.candidates ?? [])
+            .filter(\.convertToWeight)
+            .sorted { $0.extraIndex > $1.extraIndex }
+
+        for candidate in toConvert {
+            let extra = extraIngredients[candidate.extraIndex]
+            guard let value = convertedValue(grams: candidate.grams, isPreferment: extra.isPreferment) else { continue }
+            addConvertedIngredient(name: candidate.name, value: value, isPreferment: extra.isPreferment)
+            extraIngredients.remove(at: candidate.extraIndex)
+        }
+    }
+
+    /// Converts `grams` to the value an `IngredientRow` should hold: the gram amount
+    /// directly in `.byWeight` mode, or an equivalent baker's percentage in
+    /// `.byPercent` mode. Returns `nil` if a percentage can't be computed (e.g. the
+    /// converted weight would exceed the relevant total).
+    private func convertedValue(grams: Double, isPreferment: Bool) -> Double? {
+        if inputMode == .byWeight { return grams }
+        guard let (totalPercent, totalWeight) = percentBasis(isPreferment: isPreferment), totalWeight > grams else {
+            return nil
+        }
+        return grams * totalPercent / (totalWeight - grams)
+    }
+
+    /// The total baker's percentage and corresponding weight that a new ingredient's
+    /// percentage should be computed against: the whole recipe for main-dough
+    /// ingredients, or just the preferment for preferment ingredients.
+    private func percentBasis(isPreferment: Bool) -> (totalPercent: Double, totalWeight: Double)? {
+        guard let defaultWeight, defaultWeight > 0 else { return nil }
+
+        if !isPreferment {
+            let useFlours = containsPreferment ? combinedFlours : flours
+            let useIngredients = containsPreferment ? combinedIngredients : ingredients
+            let totalPercent = useFlours.compactMap(\.value).reduce(0, +) + useIngredients.compactMap(\.value).reduce(0, +)
+            guard totalPercent > 0 else { return nil }
+            return (totalPercent, defaultWeight)
+        }
+
+        guard let prefermentFlourPercent, prefermentFlourPercent > 0 else { return nil }
+        let overallFlourPercent = combinedFlours.compactMap(\.value).reduce(0, +)
+        let overallTotalPercent = overallFlourPercent + combinedIngredients.compactMap(\.value).reduce(0, +)
+        guard overallTotalPercent > 0 else { return nil }
+
+        let overallFlourWeight = (overallFlourPercent / overallTotalPercent) * defaultWeight
+        let prefermentFlourWeight = (prefermentFlourPercent / 100) * overallFlourWeight
+        let prefermentTotalPercent = prefermentFlours.compactMap(\.value).reduce(0, +)
+            + prefermentIngredientRows.compactMap(\.value).reduce(0, +)
+        guard prefermentTotalPercent > 0 else { return nil }
+        let prefermentWeight = prefermentFlourWeight * (prefermentTotalPercent / 100)
+        guard prefermentWeight > 0 else { return nil }
+
+        return (prefermentTotalPercent, prefermentWeight)
+    }
+
+    /// Adds a converted ingredient to `ingredients` or `prefermentIngredientRows`,
+    /// reusing the first row if it's still empty (matching how rows are added
+    /// elsewhere in this step).
+    private func addConvertedIngredient(name: String, value: Double, isPreferment: Bool) {
+        if isPreferment {
+            if prefermentIngredientRows.count == 1, prefermentIngredientRows[0].name.trimmingCharacters(in: .whitespaces).isEmpty {
+                prefermentIngredientRows[0] = IngredientRow(name: name, value: value)
+            } else {
+                prefermentIngredientRows.append(IngredientRow(name: name, value: value))
+            }
+        } else {
+            if ingredients.count == 1, ingredients[0].name.trimmingCharacters(in: .whitespaces).isEmpty {
+                ingredients[0] = IngredientRow(name: name, value: value)
+            } else {
+                ingredients.append(IngredientRow(name: name, value: value))
             }
         }
     }
@@ -1197,14 +1399,18 @@ struct CreateRecipeView: View {
         recipeName = parsed.name
         defaultWeight = valid.reduce(0) { $0 + $1.weightGrams }
 
+        pendingNameChoices = []
+
         flours = mainFlours.map {
-            FlourRow(name: $0.name, value: $0.weightGrams / totalFlourWeight * 100)
+            FlourRow(name: $0.name, value: $0.weightGrams)
         }
+        queueNameChoices(source: mainFlours, rows: flours, kind: .flour)
         if flours.isEmpty { flours = [FlourRow()] }
 
         ingredients = mainOthers.map {
-            IngredientRow(name: $0.name, value: $0.weightGrams / totalFlourWeight * 100)
+            IngredientRow(name: $0.name, value: $0.weightGrams, tempValue: scannedTempValue(for: $0))
         }
+        queueNameChoices(source: mainOthers, rows: ingredients, kind: .ingredient)
         if ingredients.isEmpty { ingredients = [IngredientRow()] }
 
         instructions = parsed.instructions
@@ -1216,13 +1422,15 @@ struct CreateRecipeView: View {
             prefermentFlourPercent = totalPrefFlourWeight / totalFlourWeight * 100
 
             let prefFlourRows = prefFlours.map {
-                FlourRow(name: $0.name, value: $0.weightGrams / totalPrefFlourWeight * 100)
+                FlourRow(name: $0.name, value: $0.weightGrams)
             }
+            queueNameChoices(source: prefFlours, rows: prefFlourRows, kind: .prefermentFlour)
             prefermentFlours = prefFlourRows.isEmpty ? [FlourRow()] : prefFlourRows
 
             let prefIngRows = prefOthers.map {
-                IngredientRow(name: $0.name, value: $0.weightGrams / totalPrefFlourWeight * 100)
+                IngredientRow(name: $0.name, value: $0.weightGrams, tempValue: scannedTempValue(for: $0))
             }
+            queueNameChoices(source: prefOthers, rows: prefIngRows, kind: .prefermentIngredient)
             prefermentIngredientRows = prefIngRows.isEmpty ? [IngredientRow()] : prefIngRows
 
             // Pre-seed the "Main Dough" step with any preferment ingredient names not
@@ -1265,8 +1473,30 @@ struct CreateRecipeView: View {
             preferment: diagPreferment
         )
 
-        inputMode = .byPercent
+        inputMode = .byWeight
         navPath.append(.details)
+    }
+
+    /// Converts a resolved ingredient's water-temperature descriptor (e.g. "lukewarm"),
+    /// if any, to the user's preferred temperature unit for the "Temperature (optional)"
+    /// field.
+    @available(iOS 26, *)
+    private func scannedTempValue(for ingredient: ResolvedIngredient) -> Double? {
+        guard let fahrenheit = ingredient.temperatureFahrenheit else { return nil }
+        return TemperatureConverter.shared.convert(temperature: fahrenheit, source: .fahrenheit,
+                                                     target: Settings.shared.preferredTemp())
+    }
+
+    /// Queues a `PendingNameChoice` for each row whose source ingredient had a non-nil
+    /// `alternativeName`. `source` and `rows` must correspond 1:1 in the same order (true
+    /// for the `.map` calls that build `rows` from `source`).
+    @available(iOS 26, *)
+    private func queueNameChoices<Row: Identifiable>(source: [ResolvedIngredient], rows: [Row], kind: IngredientRowKind) where Row.ID == UUID {
+        for (resolved, row) in zip(source, rows) {
+            guard let alt = resolved.alternativeName, !alt.isEmpty else { continue }
+            pendingNameChoices.append(PendingNameChoice(rowID: row.id, kind: kind,
+                                                          primaryName: resolved.name, alternativeName: alt))
+        }
     }
 
     @available(iOS 26, *)
@@ -1278,6 +1508,7 @@ struct CreateRecipeView: View {
                                       preferment: ScanDiagnostics.DiagFinalRecipe.DiagPreferment?) -> String {
         let rawIngredients = result.rawRecipe.ingredients.map {
             ScanDiagnostics.DiagIngredient(name: $0.name,
+                                            alternativeName: $0.alternativeName.isEmpty ? nil : $0.alternativeName,
                                             category: $0.category.rawValue,
                                             weightGrams: $0.weightGrams,
                                             volumeAmount: $0.volumeAmount,
@@ -1288,6 +1519,7 @@ struct CreateRecipeView: View {
         }
         let resolvedIngredients = result.resolvedRecipe.ingredients.map {
             ScanDiagnostics.DiagIngredient(name: $0.name,
+                                            alternativeName: $0.alternativeName,
                                             category: $0.category.rawValue,
                                             weightGrams: $0.weightGrams,
                                             volumeAmount: $0.extraAmount,
@@ -1352,6 +1584,34 @@ struct CreateRecipeView: View {
             IngredientConversionStore.shared.markAsExtra(name: pending.name, unit: pending.unit)
             extraIngredients.append(ExtraIngredientRow(name: pending.name, amount: pending.amount,
                                                          unit: pending.unit, isPreferment: pending.isPreferment))
+        }
+    }
+
+    /// Handles the user's response to an "ingredient has an alternative" prompt: updates
+    /// the corresponding row's name to whichever option the user picked (no-op if they kept
+    /// the primary name, since that's already what's in the row).
+    private func resolveNameChoice(useAlternative: Bool) {
+        guard let pending = pendingNameChoices.first else { return }
+        pendingNameChoices.removeFirst()
+        guard useAlternative else { return }
+
+        switch pending.kind {
+        case .flour:
+            if let index = flours.firstIndex(where: { $0.id == pending.rowID }) {
+                flours[index].name = pending.alternativeName
+            }
+        case .ingredient:
+            if let index = ingredients.firstIndex(where: { $0.id == pending.rowID }) {
+                ingredients[index].name = pending.alternativeName
+            }
+        case .prefermentFlour:
+            if let index = prefermentFlours.firstIndex(where: { $0.id == pending.rowID }) {
+                prefermentFlours[index].name = pending.alternativeName
+            }
+        case .prefermentIngredient:
+            if let index = prefermentIngredientRows.firstIndex(where: { $0.id == pending.rowID }) {
+                prefermentIngredientRows[index].name = pending.alternativeName
+            }
         }
     }
 

@@ -134,9 +134,20 @@ enum ParsedIngredientCategory: String, Sendable {
 @available(iOS 26, *)
 @Generable
 struct ParsedIngredient: Sendable {
-    /// Ingredient name, without quantity, exactly as written in the recipe \
-    /// (e.g. "Wholemeal flour", not "4 cups (512 g) bread flour").
+    @Guide(description: """
+        Ingredient name, without quantity, exactly as written (e.g. "Wholemeal flour", \
+        not "4 cups (512 g) bread flour"). If the recipe offers a choice of two \
+        ingredients, put only the primary/recommended one here with notes stripped, and \
+        the other in alternativeName. E.g. "4 cups (512 g) all-purpose flour or bread \
+        flour, see notes above" -> name: "All-purpose flour", alternativeName: "Bread \
+        flour".
+        """)
     var name: String
+    @Guide(description: """
+        The other option if name is a choice between two ingredients (e.g. name: \
+        "All-purpose flour", alternativeName: "Bread flour"). Empty string if none.
+        """)
+    var alternativeName: String
     @Guide(description: """
         The closest matching category for this ingredient from the fixed list, based on \
         its name and likely density. Map common synonyms and variants to their closest \
@@ -242,6 +253,10 @@ enum ScanError: LocalizedError {
 @available(iOS 26, *)
 struct ResolvedIngredient: Sendable {
     var name: String
+    /// The alternative ingredient name when the recipe presents this ingredient as a
+    /// choice between two options (e.g. "all-purpose flour or bread flour"). Title-cased
+    /// the same way as `name`. `nil` if the recipe gave only one name.
+    var alternativeName: String?
     var category: ParsedIngredientCategory
     var weightGrams: Double
     var isFlour: Bool
@@ -249,6 +264,10 @@ struct ResolvedIngredient: Sendable {
     var isExtra: Bool
     var extraAmount: Double
     var extraUnit: ParsedVolumeUnit
+    /// The water temperature implied by a descriptor in the original ingredient name
+    /// (e.g. "lukewarm water"), in Fahrenheit. Only set for `.water` ingredients whose
+    /// name matched a known descriptor; that descriptor is stripped from `name`.
+    var temperatureFahrenheit: Double?
 }
 
 @available(iOS 26, *)
@@ -345,6 +364,41 @@ struct RecipeScanner {
         .teaspoon, .tablespoon, .cup, .milliliter,
     ]
 
+    /// Descriptors for water temperature commonly found in ingredient names (e.g.
+    /// "lukewarm water" or "ice-cold water"), mapped to an approximate Fahrenheit value.
+    /// Checked longest-first so e.g. "ice cold" matches before "cold" would.
+    private static let waterTemperatureDescriptorsFahrenheit: [(String, Double)] = [
+        ("ice cold", 35), ("ice-cold", 35),
+        ("room temperature", 70), ("room-temperature", 70),
+        ("lukewarm", 100),
+        ("warm", 105),
+        ("cold", 50),
+        ("hot", 120),
+    ]
+
+    /// Title-cases an ingredient name as scanned (recipe text is often all-lowercase),
+    /// and — for water — strips a temperature descriptor (e.g. "lukewarm") into a
+    /// separate Fahrenheit value so it can be applied to the ingredient's temperature
+    /// field instead of left in the name.
+    private static func formatName(_ rawName: String, category: ParsedIngredientCategory, applyTemperatureHandling: Bool = true) -> (name: String, temperatureFahrenheit: Double?) {
+        var name = rawName.trimmingCharacters(in: .whitespaces)
+        var temperatureFahrenheit: Double?
+
+        if applyTemperatureHandling && category == .water {
+            for (descriptor, fahrenheit) in waterTemperatureDescriptorsFahrenheit {
+                if let range = name.range(of: descriptor, options: .caseInsensitive) {
+                    name.removeSubrange(range)
+                    temperatureFahrenheit = fahrenheit
+                    break
+                }
+            }
+            name = name.trimmingCharacters(in: .whitespaces)
+            if name.isEmpty { name = "water" }
+        }
+
+        return (name.capitalized, temperatureFahrenheit)
+    }
+
     /// Resolves a parsed ingredient's quantity into either a gram weight or, for
     /// low-confidence ingredients with no gram amount and no learned conversion, an
     /// "extra" quantity left in its original unit.
@@ -353,16 +407,25 @@ struct RecipeScanner {
     /// present, since it's the recipe author's own measurement. volumeAmount/volumeUnit
     /// is only used as a fallback when no gram amount was given.
     private static func resolve(_ ingredient: ParsedIngredient) -> ResolvedIngredient {
+        let (name, temperatureFahrenheit) = formatName(ingredient.name, category: ingredient.category)
+
+        let trimmedAlt = ingredient.alternativeName.trimmingCharacters(in: .whitespaces)
+        let alternativeName: String? = trimmedAlt.isEmpty
+            ? nil
+            : formatName(trimmedAlt, category: ingredient.category, applyTemperatureHandling: false).name
+
         func resolved(weightGrams: Double, isExtra: Bool = false,
                        extraAmount: Double = 0, extraUnit: ParsedVolumeUnit = .none) -> ResolvedIngredient {
-            ResolvedIngredient(name: ingredient.name,
+            ResolvedIngredient(name: name,
+                                alternativeName: alternativeName,
                                 category: ingredient.category,
                                 weightGrams: weightGrams,
                                 isFlour: ingredient.isFlour,
                                 isPreferment: ingredient.isPreferment,
                                 isExtra: isExtra,
                                 extraAmount: extraAmount,
-                                extraUnit: extraUnit)
+                                extraUnit: extraUnit,
+                                temperatureFahrenheit: temperatureFahrenheit)
         }
 
         let hasVolume = ingredient.volumeAmount > 0 && ingredient.volumeUnit != .none

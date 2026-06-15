@@ -10,6 +10,9 @@ struct RecipeListView: View {
     @State private var editingRecipe: RecipeWrapper?
     @State private var deletionError: String?
 
+    // Collections are expanded by default; collapsing one adds its name here.
+    @State private var collapsedCollections: Set<String> = []
+
     var body: some View {
         NavigationStack {
             Group {
@@ -64,7 +67,7 @@ struct RecipeListView: View {
     private var recipeList: some View {
         List {
             ForEach(store.collections, id: \.name) { collection in
-                Section(collection.name) {
+                DisclosureGroup(isExpanded: isExpandedBinding(for: collection.name)) {
                     ForEach(collection.recipes, id: \.name) { recipe in
                         NavigationLink(value: RecipeWrapper(recipe: recipe)) {
                             Text(recipe.name)
@@ -83,9 +86,26 @@ struct RecipeListView: View {
                             .tint(.blue)
                         }
                     }
+                } label: {
+                    Text(collection.name)
+                        .font(.headline)
+                        .fontWeight(.medium)
                 }
             }
         }
+    }
+
+    private func isExpandedBinding(for collectionName: String) -> Binding<Bool> {
+        Binding(
+            get: { !collapsedCollections.contains(collectionName) },
+            set: { isExpanded in
+                if isExpanded {
+                    collapsedCollections.remove(collectionName)
+                } else {
+                    collapsedCollections.insert(collectionName)
+                }
+            }
+        )
     }
 }
 
