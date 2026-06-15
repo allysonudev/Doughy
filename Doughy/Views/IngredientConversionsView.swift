@@ -117,7 +117,7 @@ struct IngredientConversionsView: View {
         } header: {
             Text("Eggs")
         } footer: {
-            Text("Eggs are measured by count rather than volume. Doughy uses these weights to convert ingredients like \"2 large eggs\" or \"3 large egg whites\" to grams. Whole-egg weights include the shell; white and yolk weights are for the separated portions and vary more by egg. If a recipe doesn't specify a size, Doughy assumes the default size selected above.")
+            Text("Eggs are measured by count rather than volume. These weights convert quantities like “2 large eggs” or “3 large egg whites” to grams. Whole-egg weights are for the egg out of its shell (white plus yolk); separated white and yolk weights vary more. If a recipe doesn’t specify a size, the default size above is assumed.")
         }
     }
 

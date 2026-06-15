@@ -78,21 +78,21 @@ enum EggSize: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
-    /// Approximate weight of one whole egg in its shell, in grams.
+    /// Approximate weight of one whole egg out of its shell (white plus yolk), in grams — the
+    /// usable weight a recipe actually calls for.
     var gramsPerEgg: Double {
         switch self {
-        case .small: return 43
-        case .medium: return 50
-        case .large: return 57
-        case .extraLarge: return 64
-        case .jumbo: return 71
+        case .small: return 38
+        case .medium: return 44
+        case .large: return 50
+        case .extraLarge: return 56
+        case .jumbo: return 62
         }
     }
 
-    /// Approximate weight of one separated egg white, in grams. Scaled from the
-    /// whole-egg weight using the rough USDA breakdown for a large egg (white is
-    /// about 58% of the whole egg's weight in-shell) — actual white/yolk weights vary
-    /// more than whole-egg weights, since separating an egg isn't an exact science.
+    /// Approximate weight of one separated egg white, in grams — roughly two-thirds of the egg's
+    /// out-of-shell weight. Actual white/yolk weights vary more than whole-egg weights, since
+    /// separating an egg isn't an exact science.
     var gramsPerEggWhite: Double {
         switch self {
         case .small: return 25
@@ -103,9 +103,8 @@ enum EggSize: String, CaseIterable, Identifiable {
         }
     }
 
-    /// Approximate weight of one separated egg yolk, in grams. Scaled from the
-    /// whole-egg weight using the rough USDA breakdown for a large egg (yolk is
-    /// about 30% of the whole egg's weight in-shell).
+    /// Approximate weight of one separated egg yolk, in grams — roughly a third of the egg's
+    /// out-of-shell weight.
     var gramsPerEggYolk: Double {
         switch self {
         case .small: return 13
