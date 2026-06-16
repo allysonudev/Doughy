@@ -9,9 +9,9 @@ struct RecipeListView: View {
     @State private var showingCreate = false
     @State private var editingRecipe: RecipeWrapper?
     @State private var deletionError: String?
-
-    // Collections are expanded by default; collapsing one adds its name here.
-    @State private var collapsedCollections: Set<String> = []
+    @State private var collapsedCollections: Set<String> = {
+        Set(UserDefaults.standard.array(forKey: "collapsedCollections") as? [String] ?? [])
+    }()
 
     var body: some View {
         NavigationStack {
@@ -67,45 +67,51 @@ struct RecipeListView: View {
     private var recipeList: some View {
         List {
             ForEach(store.collections, id: \.name) { collection in
-                DisclosureGroup(isExpanded: isExpandedBinding(for: collection.name)) {
-                    ForEach(collection.recipes, id: \.name) { recipe in
-                        NavigationLink(value: RecipeWrapper(recipe: recipe)) {
-                            Text(recipe.name)
-                        }
-                        .swipeActions(edge: .trailing) {
-                            Button("Delete", role: .destructive) {
-                                do {
-                                    try store.delete(recipe: recipe)
-                                } catch {
-                                    deletionError = "Could not delete \"\(recipe.name)\"."
+                let isCollapsed = collapsedCollections.contains(collection.name)
+                Section {
+                    if !isCollapsed {
+                        ForEach(collection.recipes, id: \.name) { recipe in
+                            NavigationLink(value: RecipeWrapper(recipe: recipe)) {
+                                Text(recipe.name)
+                            }
+                            .swipeActions(edge: .trailing) {
+                                Button("Delete", role: .destructive) {
+                                    do {
+                                        try store.delete(recipe: recipe)
+                                    } catch {
+                                        deletionError = "Could not delete \"\(recipe.name)\"."
+                                    }
                                 }
+                                Button("Edit") {
+                                    editingRecipe = RecipeWrapper(recipe: recipe)
+                                }
+                                .tint(.blue)
                             }
-                            Button("Edit") {
-                                editingRecipe = RecipeWrapper(recipe: recipe)
-                            }
-                            .tint(.blue)
                         }
                     }
-                } label: {
-                    Text(collection.name)
-                        .font(.headline)
-                        .fontWeight(.medium)
+                } header: {
+                    Button {
+                        withAnimation {
+                            if isCollapsed {
+                                collapsedCollections.remove(collection.name)
+                            } else {
+                                collapsedCollections.insert(collection.name)
+                            }
+                            UserDefaults.standard.set(Array(collapsedCollections), forKey: "collapsedCollections")
+                        }
+                    } label: {
+                        HStack {
+                            Text(collection.name)
+                            Spacer()
+                            Image(systemName: "chevron.down")
+                                .rotationEffect(.degrees(isCollapsed ? -90 : 0))
+                        }
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
                 }
             }
         }
-    }
-
-    private func isExpandedBinding(for collectionName: String) -> Binding<Bool> {
-        Binding(
-            get: { !collapsedCollections.contains(collectionName) },
-            set: { isExpanded in
-                if isExpanded {
-                    collapsedCollections.remove(collectionName)
-                } else {
-                    collapsedCollections.insert(collectionName)
-                }
-            }
-        )
     }
 }
 

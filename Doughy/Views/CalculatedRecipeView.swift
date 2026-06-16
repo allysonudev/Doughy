@@ -264,7 +264,8 @@ struct CalculatedRecipeView: View {
         }
         let amount = grams / gramsPerUnit
         let (formatted, snapped) = formatVolumeAmount(amount)
-        return formatted + " " + VolumeUnitFormatter.label(unit: unit, amount: snapped <= 1.0 ? 1.0 : 2.0)
+        let prefix = abs(amount - snapped) > 0.001 ? "~" : ""
+        return prefix + formatted + " " + VolumeUnitFormatter.label(unit: unit, amount: snapped <= 1.0 ? 1.0 : 2.0)
     }
 
     /// Formats a volume amount using baker-friendly fractions (1/8 resolution + 1/3, 2/3).
