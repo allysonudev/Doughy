@@ -6,7 +6,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @Environment(RecipeStore.self) private var store
-    @State private var prefersCelsius: Bool = Settings.shared.preferredTemp() == .celsius
+    @State private var selectedTemp: Temperature.Measurement = Settings.shared.preferredTemp()
     @State private var tempUpdateError: String?
 
     private let appVersion: String = {
@@ -17,22 +17,23 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
-            Section("Temperature Unit") {
-                Toggle("Use Celsius", isOn: $prefersCelsius)
-                    .onChange(of: prefersCelsius) { _, newValue in
-                        let current = Settings.shared.preferredTemp()
-                        let target: Temperature.Measurement = newValue ? .celsius : .fahrenheit
-                        if current != target {
-                            Settings.shared.setPreferredTemp(measurement: target)
-                            do {
-                                try Settings.shared.updateRecipeTemps(original: current, target: target)
-                                store.refresh()
-                            } catch {
-                                tempUpdateError = "Could not convert recipe temperatures."
-                                prefersCelsius = !newValue
-                            }
+            Section {
+                Picker("Temperature Unit", selection: $selectedTemp) {
+                    Text("Fahrenheit").tag(Temperature.Measurement.fahrenheit)
+                    Text("Celsius").tag(Temperature.Measurement.celsius)
+                }
+                .onChange(of: selectedTemp) { old, new in
+                    if old != new {
+                        Settings.shared.setPreferredTemp(measurement: new)
+                        do {
+                            try Settings.shared.updateRecipeTemps(original: old, target: new)
+                            store.refresh()
+                        } catch {
+                            tempUpdateError = "Could not convert recipe temperatures."
+                            selectedTemp = old
                         }
                     }
+                }
             }
 
             Section {
