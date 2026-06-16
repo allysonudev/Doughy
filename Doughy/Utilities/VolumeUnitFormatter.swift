@@ -29,12 +29,16 @@ enum VolumeUnitFormatter {
 
     static func format(amount: Double, unit: String) -> String {
         let amountString: String
+        let displayAmount: Double
         if amount == amount.rounded() {
             amountString = String(Int(amount))
+            displayAmount = amount
         } else {
             amountString = String(format: "%.2g", amount)
+            // Use the rounded display value for pluralization so "1.004" shown as "1" is singular.
+            displayAmount = Double(amountString) ?? amount
         }
-        let unitLabel = label(unit: unit, amount: amount)
+        let unitLabel = label(unit: unit, amount: displayAmount)
         return unitLabel.isEmpty ? amountString : "\(amountString) \(unitLabel)"
     }
 }

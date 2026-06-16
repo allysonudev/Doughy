@@ -86,6 +86,13 @@ enum ExtraIngredientConversion {
         return nil
     }
 
+    /// Returns the `IngredientCategory` for the given ingredient display name, or `nil`
+    /// if it doesn't match any known density category. Used by the result view to offer
+    /// volume-unit alternatives for gram-based ingredients.
+    static func ingredientCategory(forName name: String) -> IngredientCategory? {
+        category(forName: name.lowercased())
+    }
+
     /// Maps common ingredient-name keywords to an `IngredientCategory` for
     /// density-based volume conversions. Order matters - more specific keywords are
     /// checked before their more general fallbacks (e.g. "brown sugar" before "sugar").

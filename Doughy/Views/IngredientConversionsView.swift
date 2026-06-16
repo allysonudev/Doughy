@@ -10,12 +10,24 @@ import SwiftUI
 /// users can tweak individual ingredients or reset back to the defaults.
 struct IngredientConversionsView: View {
     private let store = IngredientDensityStore.shared
+    private let conversionStore = IngredientConversionStore.shared
 
     @State private var values: [IngredientCategory: Double] = [:]
     @State private var displayUnits: [IngredientCategory: DensityUnit] = [:]
     @State private var eggValues: [EggSize: [EggPart: Double]] = [:]
     @State private var defaultEggSize: EggSize = .large
     @State private var showingResetAllConfirmation = false
+    @State private var showingAddConversion = false
+    @State private var addingToGroup: IngredientCategoryGroup? = nil
+    @State private var customEntries: [IngredientConversionStore.ConversionEntry] = []
+
+    private func customEntries(for group: IngredientCategoryGroup) -> [IngredientConversionStore.ConversionEntry] {
+        customEntries.filter { $0.group == group }
+    }
+
+    private var ungroupedCustomEntries: [IngredientConversionStore.ConversionEntry] {
+        customEntries.filter { $0.group == nil }
+    }
 
     var body: some View {
         Form {
@@ -24,9 +36,26 @@ struct IngredientConversionsView: View {
                     ForEach(categories(in: group)) { category in
                         row(for: category)
                     }
+                    ForEach(customEntries(for: group)) { entry in
+                        customEntryRow(entry)
+                    }
+                    Button {
+                        addingToGroup = group
+                        showingAddConversion = true
+                    } label: {
+                        Label("Add Ingredient", systemImage: "plus.circle")
+                    }
                 }
                 if group == .salts {
                     eggsSection
+                }
+            }
+
+            if !ungroupedCustomEntries.isEmpty {
+                Section("Custom Ingredients") {
+                    ForEach(ungroupedCustomEntries) { entry in
+                        customEntryRow(entry)
+                    }
                 }
             }
 
@@ -42,6 +71,15 @@ struct IngredientConversionsView: View {
         .navigationTitle("Ingredient Conversions")
         .onAppear {
             loadValues()
+            customEntries = conversionStore.allEntries()
+        }
+        .sheet(isPresented: $showingAddConversion) {
+            if let group = addingToGroup {
+                AddConversionSheet { name, unit, grams in
+                    conversionStore.save(name: name, unit: unit, gramsPerUnit: grams, group: group)
+                    customEntries = conversionStore.allEntries()
+                }
+            }
         }
         .confirmationDialog("Reset All to Defaults?", isPresented: $showingResetAllConfirmation, titleVisibility: .visible) {
             Button("Reset All to Defaults", role: .destructive) {
@@ -51,6 +89,22 @@ struct IngredientConversionsView: View {
             Button("Cancel", role: .cancel) { }
         } message: {
             Text("This replaces every value below with Doughy's default for that ingredient.")
+        }
+    }
+
+    @ViewBuilder
+    private func customEntryRow(_ entry: IngredientConversionStore.ConversionEntry) -> some View {
+        HStack {
+            Text(entry.name.capitalized)
+            Spacer()
+            Text("\(entry.gramsPerUnit.formatted(.number.precision(.fractionLength(0...1)))) g / \(VolumeUnitFormatter.label(unit: entry.unit, amount: 1))")
+                .foregroundStyle(.secondary)
+        }
+        .swipeActions(edge: .trailing) {
+            Button("Delete", role: .destructive) {
+                conversionStore.delete(name: entry.name, unit: entry.unit)
+                customEntries = conversionStore.allEntries()
+            }
         }
     }
 
@@ -187,5 +241,70 @@ struct IngredientConversionsView: View {
             }))
         })
         defaultEggSize = store.defaultEggSize()
+    }
+}
+
+private struct AddConversionSheet: View {
+    let onSave: (String, String, Double) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var name = ""
+    @State private var unit = "tablespoon"
+    @State private var gramsPerUnit: Double? = nil
+    @FocusState private var isNameFocused: Bool
+
+    private let units = ["teaspoon", "tablespoon", "cup", "ounce", "milliliter"]
+
+    private var isValid: Bool {
+        !name.trimmingCharacters(in: .whitespaces).isEmpty && (gramsPerUnit ?? 0) > 0
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Ingredient") {
+                    TextField("Name (e.g. Rosemary Leaves)", text: $name)
+                        .autocorrectionDisabled()
+                        .focused($isNameFocused)
+                }
+                Section {
+                    Picker("Unit", selection: $unit) {
+                        ForEach(units, id: \.self) { u in
+                            Text(VolumeUnitFormatter.label(unit: u, amount: 1).capitalized).tag(u)
+                        }
+                    }
+                    HStack {
+                        Text("Grams per \(VolumeUnitFormatter.label(unit: unit, amount: 1))")
+                        Spacer()
+                        TextField("0", value: $gramsPerUnit, format: .number)
+                            .multilineTextAlignment(.trailing)
+                            .keyboardType(.decimalPad)
+                            .frame(width: 70)
+                        Text("g").foregroundStyle(.secondary)
+                    }
+                } header: {
+                    Text("Conversion")
+                } footer: {
+                    Text("Enter how many grams are in one \(VolumeUnitFormatter.label(unit: unit, amount: 1)) of this ingredient.")
+                }
+            }
+            .navigationTitle("Add Ingredient")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Save") {
+                        if let g = gramsPerUnit, isValid {
+                            onSave(name.trimmingCharacters(in: .whitespaces), unit, g)
+                            dismiss()
+                        }
+                    }
+                    .disabled(!isValid)
+                }
+            }
+            .onAppear { isNameFocused = true }
+        }
     }
 }

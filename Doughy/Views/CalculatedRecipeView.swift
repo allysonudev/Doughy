@@ -19,6 +19,12 @@ struct CalculatedRecipeView: View {
     private let weightFormatter = WeightFormatter.shared
     private let percentFormatter = PercentFormatter.shared
     private let tempFormatter = TemperatureFormatter.shared
+    private let densityStore = IngredientDensityStore.shared
+    private let conversionStore = IngredientConversionStore.shared
+
+    /// Tracks the currently selected display unit for each ingredient by name.
+    /// Absent entries default to "grams".
+    @State private var ingredientDisplayUnits: [String: String] = [:]
 
     private var prefermentRecipe: CalculatedPrefermentRecipe? { calculatedRecipe as? CalculatedPrefermentRecipe }
 
@@ -192,8 +198,113 @@ struct CalculatedRecipeView: View {
         }
     }
 
+    // MARK: - Volume unit cycling
+
+    /// Resolves an ingredient name to a density category. Prefers an exact match against
+    /// `IngredientCategory.displayName` (reliable for stored recipe ingredients) and falls
+    /// back to keyword matching for partial or variant names from scanning.
+    private func densityCategory(for lowerName: String) -> IngredientCategory? {
+        IngredientCategory.allCases.first { $0.displayName.lowercased() == lowerName }
+            ?? ExtraIngredientConversion.ingredientCategory(forName: lowerName)
+    }
+
+    /// Returns the ordered list of units available for `name` at `grams`, starting with
+    /// "grams". Units whose converted amount falls outside a practical range are skipped.
+    /// Returns `nil` when no volume conversion exists for the ingredient.
+    private func cycleUnits(for name: String, grams: Double) -> [String]? {
+        var units: [String] = ["grams"]
+        let lowerName = name.lowercased()
+
+        if let category = densityCategory(for: lowerName) {
+            let gramsPerCup = densityStore.gramsPerCup(for: category)
+            let primary = category.defaultDisplayUnit
+            let volumeUnits: [DensityUnit] = [primary] + [.cup, .tablespoon, .teaspoon].filter { $0 != primary }
+            // The primary unit is always included — it's always the most natural unit for
+            // this ingredient and should be available even for very small amounts.
+            // Secondary units are filtered to practical ranges to avoid e.g. "66 tablespoons of flour".
+            let secondaryLimits: [DensityUnit: (min: Double, max: Double)] = [
+                .cup: (0.0625, 20), .tablespoon: (0.0625, 32), .teaspoon: (0.0625, 48)
+            ]
+            for unit in volumeUnits {
+                let amount = grams / (gramsPerCup / unit.unitsPerCup)
+                if unit == primary || secondaryLimits[unit].map({ amount >= $0.min && amount <= $0.max }) == true {
+                    units.append(unit.rawValue)
+                }
+            }
+        }
+
+        // User-saved conversions for this ingredient name.
+        for entry in conversionStore.allEntries() where entry.name.lowercased() == lowerName && !units.contains(entry.unit) {
+            units.append(entry.unit)
+        }
+
+        return units.count > 1 ? units : nil
+    }
+
+    private func advanceUnit(key: String, name: String, grams: Double) {
+        guard let units = cycleUnits(for: name, grams: grams) else { return }
+        let current = ingredientDisplayUnits[key] ?? "grams"
+        let idx = units.firstIndex(of: current) ?? 0
+        ingredientDisplayUnits[key] = units[(idx + 1) % units.count]
+    }
+
+    /// Formats `grams` expressed in `unit` for the named ingredient.
+    private func weightDisplay(grams: Double, unit: String, for name: String) -> String {
+        guard unit != "grams" else { return weightFormatter.format(weight: grams) }
+        let lowerName = name.lowercased()
+        let gramsPerUnit: Double
+        if let densityUnit = DensityUnit(rawValue: unit),
+           let category = densityCategory(for: lowerName) {
+            let gramsPerCup = densityStore.gramsPerCup(for: category)
+            gramsPerUnit = gramsPerCup / densityUnit.unitsPerCup
+        } else if let g = conversionStore.gramsPerUnit(name: lowerName, unit: unit) {
+            gramsPerUnit = g
+        } else {
+            return weightFormatter.format(weight: grams)
+        }
+        let amount = grams / gramsPerUnit
+        let (formatted, snapped) = formatVolumeAmount(amount)
+        return formatted + " " + VolumeUnitFormatter.label(unit: unit, amount: snapped <= 1.0 ? 1.0 : 2.0)
+    }
+
+    /// Formats a volume amount using baker-friendly fractions (1/8 resolution + 1/3, 2/3).
+    /// Returns both the display string and the snapped numeric value so callers can base
+    /// pluralization on the displayed quantity rather than the raw floating-point amount.
+    /// Values below 1/8 are shown as decimals to avoid snapping to "0".
+    private func formatVolumeAmount(_ value: Double) -> (display: String, snapped: Double) {
+        if value >= 10 {
+            return (value.formatted(.number.precision(.fractionLength(0...1))), value)
+        }
+        if value < 0.125 {
+            return (value.formatted(.number.precision(.fractionLength(2...2))), value)
+        }
+        let whole = Int(value)
+        let frac = value - Double(whole)
+        let candidates: [(Double, String)] = [
+            (0, ""), (1/8, "1/8"), (1/4, "1/4"), (1/3, "1/3"),
+            (3/8, "3/8"), (1/2, "1/2"), (5/8, "5/8"), (2/3, "2/3"),
+            (3/4, "3/4"), (7/8, "7/8"), (1, "")
+        ]
+        guard let (nearVal, nearLabel) = candidates.min(by: { abs($0.0 - frac) < abs($1.0 - frac) }) else {
+            return (value.formatted(.number.precision(.fractionLength(0...2))), value)
+        }
+        let adjustedWhole = nearVal == 1 ? whole + 1 : whole
+        let snapped = Double(adjustedWhole) + (nearVal == 1 ? 0 : nearVal)
+        let display: String
+        if nearLabel.isEmpty {
+            display = "\(adjustedWhole)"
+        } else {
+            display = adjustedWhole == 0 ? nearLabel : "\(adjustedWhole) \(nearLabel)"
+        }
+        return (display, snapped)
+    }
+
     @ViewBuilder
     private func ingredientRow(_ ingredient: CalculatedIngredient) -> some View {
+        let key = "preferment:\(ingredient.name)"
+        let units = cycleUnits(for: ingredient.name, grams: ingredient.weight)
+        let currentUnit = ingredientDisplayUnits[key] ?? "grams"
+        let weightText = weightDisplay(grams: ingredient.weight, unit: currentUnit, for: ingredient.name)
         HStack {
             VStack(alignment: .leading, spacing: 2) {
                 Text(ingredient.name)
@@ -205,11 +316,17 @@ struct CalculatedRecipeView: View {
             }
             Spacer()
             VStack(alignment: .trailing, spacing: 2) {
-                Text(weightFormatter.format(weight: ingredient.weight))
+                Text(weightText)
+                    .foregroundStyle(units != nil ? Color.blue : Color.primary)
                 Text(percentFormatter.format(percent: ingredient.percentage))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            guard units != nil else { return }
+            advanceUnit(key: key, name: ingredient.name, grams: ingredient.weight)
         }
     }
 
@@ -236,6 +353,10 @@ struct CalculatedRecipeView: View {
         let prefermentWeight = prefermentRecipe?.preferment.ingredients
             .first(where: { $0.name == ingredient.name })?.weight ?? 0
         let doughWeight = ingredient.weight - prefermentWeight
+        let key = "dough:\(ingredient.name)"
+        let units = cycleUnits(for: ingredient.name, grams: ingredient.weight)
+        let currentUnit = ingredientDisplayUnits[key] ?? "grams"
+        let weightText = weightDisplay(grams: doughWeight, unit: currentUnit, for: ingredient.name)
 
         HStack {
             VStack(alignment: .leading, spacing: 2) {
@@ -253,13 +374,19 @@ struct CalculatedRecipeView: View {
             }
             Spacer()
             VStack(alignment: .trailing, spacing: 2) {
-                Text(weightFormatter.format(weight: doughWeight))
+                Text(weightText)
+                    .foregroundStyle(units != nil ? Color.blue : Color.primary)
                     .accessibilityIdentifier("ingredientWeight_\(ingredient.name)")
                 Text(percentFormatter.format(percent: ingredient.percentage))
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .accessibilityIdentifier("ingredientPercent_\(ingredient.name)")
             }
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            guard units != nil else { return }
+            advanceUnit(key: key, name: ingredient.name, grams: ingredient.weight)
         }
     }
 }

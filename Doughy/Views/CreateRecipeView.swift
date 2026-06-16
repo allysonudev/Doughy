@@ -50,6 +50,72 @@ private struct ExtraIngredientRow: Identifiable, Equatable {
     }
 }
 
+/// A name text field that shows previously-used ingredient names as tappable chips
+/// below the field while it is focused, filtered to those containing the current text.
+private struct IngredientNameField: View {
+    let placeholder: String
+    @Binding var text: String
+    let suggestions: [String]
+    var accessibilityID: String = ""
+    /// The stable UUID of the row this field belongs to, used with `focusedRowID`
+    /// to trigger focus when a new row is added.
+    var rowID: UUID = UUID()
+    /// When set to `rowID`, this field becomes focused and clears the binding.
+    var focusedRowID: Binding<UUID?> = .constant(nil)
+    /// When a suggestion is tapped, written to `rowID` so the parent can drive focus
+    /// onto the paired value field via a separate `@FocusState`.
+    var pendingValueRowID: Binding<UUID?> = .constant(nil)
+    /// Names already in use by other rows of the same type; filtered out of suggestions.
+    var exclude: Set<String> = []
+
+    @FocusState private var isFocused: Bool
+
+    private var filtered: [String] {
+        let q = text.trimmingCharacters(in: .whitespaces)
+        let available = suggestions.filter { !exclude.contains($0.lowercased()) }
+        if q.isEmpty {
+            return Array(available.prefix(5))
+        }
+        return available
+            .filter { $0.localizedCaseInsensitiveContains(q) && $0.localizedCaseInsensitiveCompare(q) != .orderedSame }
+            .prefix(8)
+            .map { $0 }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            TextField(placeholder, text: $text)
+                .autocorrectionDisabled()
+                .focused($isFocused)
+                .accessibilityIdentifier(accessibilityID)
+                .onAppear {
+                    if focusedRowID.wrappedValue == rowID {
+                        isFocused = true
+                        focusedRowID.wrappedValue = nil
+                    }
+                }
+
+            if isFocused && !filtered.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        ForEach(filtered, id: \.self) { name in
+                            Button(name) {
+                                text = name
+                                isFocused = false
+                                pendingValueRowID.wrappedValue = rowID
+                            }
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
+                            .tint(.secondary)
+                        }
+                    }
+                    .padding(.vertical, 2)
+                }
+            }
+        }
+    }
+}
+
 /// A suggestion to convert an "additional ingredient" (e.g. "2 large eggs") to a
 /// weight-based ingredient, presented to the user with a toggle before continuing
 /// past the Ingredients step.
@@ -219,6 +285,16 @@ struct CreateRecipeView: View {
     @State private var ingredients: [IngredientRow] = [IngredientRow()]
     @State private var extraIngredients: [ExtraIngredientRow] = []
     @State private var showingAddIngredientDialog = false
+    @State private var focusedRowID: UUID? = nil
+
+    @FocusState private var isRecipeNameFocused: Bool
+    @FocusState private var isNewCollectionFocused: Bool
+    @FocusState private var isPrefermentNameFocused: Bool
+    @FocusState private var isNewStepFocused: Bool
+    @FocusState private var focusedValueRowID: UUID?
+    @State private var pendingValueRowID: UUID? = nil
+    @State private var ingredientsFormHasFocused = false
+    @State private var prefermentFormHasFocused = false
 
     // Convert-to-weight suggestions for additional ingredients, shown on "Next"
     @State private var conversionSheetData: ExtraIngredientConversionSheetData?
@@ -551,6 +627,10 @@ struct CreateRecipeView: View {
                     ) {
                         inputMode = .byPercent
                         navPath.append(.details)
+                        Task { @MainActor in
+                            try? await Task.sleep(for: .milliseconds(500))
+                            isRecipeNameFocused = true
+                        }
                     }
 
                     ModeCard(
@@ -561,6 +641,10 @@ struct CreateRecipeView: View {
                     ) {
                         inputMode = .byWeight
                         navPath.append(.details)
+                        Task { @MainActor in
+                            try? await Task.sleep(for: .milliseconds(500))
+                            isRecipeNameFocused = true
+                        }
                     }
 
                     scanCard
@@ -571,6 +655,10 @@ struct CreateRecipeView: View {
         }
         .navigationTitle("New Recipe")
         .navigationBarTitleDisplayMode(.inline)
+        .onChange(of: pendingValueRowID) { _, id in
+            focusedValueRowID = id
+            pendingValueRowID = nil
+        }
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
                 Button("Cancel") { requestDismiss() }
@@ -616,6 +704,7 @@ struct CreateRecipeView: View {
             Section("Recipe") {
                 TextField("Name", text: $recipeName)
                     .autocorrectionDisabled()
+                    .focused($isRecipeNameFocused)
                     .accessibilityIdentifier("recipeNameField")
             }
 
@@ -636,9 +725,18 @@ struct CreateRecipeView: View {
                 }
                 Toggle("New Collection", isOn: $isNewCollection.animation())
                     .accessibilityIdentifier("newCollectionToggle")
+                    .onChange(of: isNewCollection) { _, newValue in
+                        if newValue {
+                            Task { @MainActor in
+                                try? await Task.sleep(for: .milliseconds(150))
+                                isNewCollectionFocused = true
+                            }
+                        }
+                    }
                 if isNewCollection {
                     TextField("Collection Name", text: $newCollectionText)
                         .autocorrectionDisabled()
+                        .focused($isNewCollectionFocused)
                         .accessibilityIdentifier("newCollectionNameField")
                 }
             }
@@ -663,6 +761,13 @@ struct CreateRecipeView: View {
                     .accessibilityIdentifier("containsPrefermentToggle")
             } footer: {
                 Text("A preferment (biga, poolish, etc.) is a portion of the dough fermented separately.")
+            }
+        }
+        .onAppear {
+            guard editingRecipe != nil else { return }
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(500))
+                isRecipeNameFocused = true
             }
         }
         .navigationTitle(editingRecipe != nil ? "Edit Recipe" : "New Recipe")
@@ -698,6 +803,51 @@ struct CreateRecipeView: View {
     /// measured by volume/count rather than converted to grams).
     private let extraIngredientUnits = ["teaspoon", "tablespoon", "cup", "ounce", "milliliter", "count"]
 
+    private static let seededFlourSuggestions: [String] =
+        IngredientCategory.allCases
+            .filter { $0.group == .flours }
+            .map(\.displayName)
+
+    private static let seededIngredientSuggestions: [String] = [
+        "Water", "Kosher Salt", "Table Salt", "Sea Salt",
+        "Instant Yeast", "Active Dry Yeast", "Sourdough Starter",
+        "Butter", "Olive Oil", "Vegetable Oil",
+        "Granulated Sugar", "Brown Sugar", "Honey", "Molasses",
+        "Milk", "Buttermilk", "Eggs",
+    ]
+
+    private var allFlourSuggestions: [String] {
+        suggestionsSorted(isFlour: true)
+    }
+
+    private var allIngredientSuggestions: [String] {
+        suggestionsSorted(isFlour: false)
+    }
+
+    /// Builds the suggestion list for flour or ingredient name fields.
+    /// Names used in the chosen collection are ranked by how often they appear there;
+    /// names from other collections and static seeds follow at count 0.
+    /// Within the same count, names are sorted alphabetically.
+    private func suggestionsSorted(isFlour: Bool) -> [String] {
+        let target: String? = isNewCollection ? nil : (collectionName.isEmpty ? nil : collectionName)
+        var counts: [String: Int] = [:]
+        for collection in store.collections {
+            let inTarget = target.map { $0 == collection.name } ?? true
+            for recipe in collection.recipes {
+                for ingredient in recipe.ingredients where ingredient.isFlour == isFlour {
+                    if counts[ingredient.name] == nil { counts[ingredient.name] = 0 }
+                    if inTarget { counts[ingredient.name, default: 0] += 1 }
+                }
+            }
+        }
+        let seeds = isFlour ? Self.seededFlourSuggestions : Self.seededIngredientSuggestions
+        for seed in seeds where counts[seed] == nil { counts[seed] = 0 }
+        return counts.keys.sorted { a, b in
+            let ca = counts[a, default: 0], cb = counts[b, default: 0]
+            return ca != cb ? ca > cb : a < b
+        }
+    }
+
     private var ingredientsForm: some View {
         let useCelsius = Settings.shared.preferredTemp() == .celsius
         let isPercent = inputMode == .byPercent
@@ -705,16 +855,21 @@ struct CreateRecipeView: View {
         return Form {
             Section {
                 ForEach(Array(flours.enumerated()), id: \.element.id) { index, _ in
-                    HStack {
-                        TextField("Flour Name", text: $flours[index].name)
-                            .autocorrectionDisabled()
-                            .accessibilityIdentifier("flourNameField_\(index)")
+                    HStack(alignment: .top) {
+                        IngredientNameField(placeholder: "Flour Name", text: $flours[index].name,
+                                            suggestions: allFlourSuggestions,
+                                            accessibilityID: "flourNameField_\(index)",
+                                            rowID: flours[index].id,
+                                            focusedRowID: $focusedRowID,
+                                            pendingValueRowID: $pendingValueRowID,
+                                            exclude: Set(flours.map { $0.name.lowercased() }.filter { !$0.isEmpty }))
                         Spacer()
                         TextField("0", value: $flours[index].value, format: .number)
                             .multilineTextAlignment(.trailing)
                             .keyboardType(.decimalPad)
                             .frame(width: 70)
                             .accessibilityIdentifier("flourValueField_\(index)")
+                            .focused($focusedValueRowID, equals: flours[index].id)
                         Text(isPercent ? "%" : "g").foregroundStyle(.secondary)
                     }
                 }
@@ -722,7 +877,11 @@ struct CreateRecipeView: View {
                     flours.remove(atOffsets: offsets)
                     renormalizeFlourPercentages()
                 }
-                Button { flours.append(FlourRow()) } label: {
+                Button {
+                    let row = FlourRow()
+                    flours.append(row)
+                    focusedRowID = row.id
+                } label: {
                     Label("Add Flour", systemImage: "plus.circle")
                 }
                 .accessibilityIdentifier("addFlourButton")
@@ -759,16 +918,21 @@ struct CreateRecipeView: View {
 
             Section {
                 ForEach(Array(ingredients.enumerated()), id: \.element.id) { index, _ in
-                    HStack {
-                        TextField("Ingredient Name", text: $ingredients[index].name)
-                            .autocorrectionDisabled()
-                            .accessibilityIdentifier("ingredientNameField_\(index)")
+                    HStack(alignment: .top) {
+                        IngredientNameField(placeholder: "Ingredient Name", text: $ingredients[index].name,
+                                            suggestions: allIngredientSuggestions,
+                                            accessibilityID: "ingredientNameField_\(index)",
+                                            rowID: ingredients[index].id,
+                                            focusedRowID: $focusedRowID,
+                                            pendingValueRowID: $pendingValueRowID,
+                                            exclude: Set(ingredients.map { $0.name.lowercased() }.filter { !$0.isEmpty }))
                         Spacer()
                         TextField("0", value: $ingredients[index].value, format: .number)
                             .multilineTextAlignment(.trailing)
                             .keyboardType(.decimalPad)
                             .frame(width: 70)
                             .accessibilityIdentifier("ingredientValueField_\(index)")
+                            .focused($focusedValueRowID, equals: ingredients[index].id)
                         Text(isPercent ? "%" : "g").foregroundStyle(.secondary)
                     }
                     HStack {
@@ -789,6 +953,22 @@ struct CreateRecipeView: View {
                     Label("Add Ingredient", systemImage: "plus.circle")
                 }
                 .accessibilityIdentifier("addIngredientButton")
+                .confirmationDialog("Add Ingredient", isPresented: $showingAddIngredientDialog, titleVisibility: .visible) {
+                    Button(isPercent ? "By Percentage" : "By Weight") {
+                        let row = IngredientRow()
+                        ingredients.append(row)
+                        focusedRowID = row.id
+                    }
+                    Button("Volume") {
+                        extraIngredients.append(ExtraIngredientRow(name: "", amount: 0, unit: "tablespoon", isPreferment: false))
+                    }
+                    Button("Count") {
+                        extraIngredients.append(ExtraIngredientRow(name: "", amount: 1, unit: "count", isPreferment: false))
+                    }
+                    Button("Cancel", role: .cancel) {}
+                } message: {
+                    Text("How is this ingredient measured?")
+                }
             } header: {
                 Text("Other Ingredients")
             } footer: {
@@ -831,22 +1011,16 @@ struct CreateRecipeView: View {
                 }
             }
         }
+        .onAppear {
+            guard !ingredientsFormHasFocused, let firstID = flours.first?.id else { return }
+            ingredientsFormHasFocused = true
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(500))
+                focusedRowID = firstID
+            }
+        }
         .navigationTitle(containsPreferment ? "Main Dough" : "Ingredients")
         .navigationBarTitleDisplayMode(.inline)
-        .confirmationDialog("Add Ingredient", isPresented: $showingAddIngredientDialog, titleVisibility: .visible) {
-            Button(isPercent ? "By Percentage" : "By Weight") {
-                ingredients.append(IngredientRow())
-            }
-            Button("Volume") {
-                extraIngredients.append(ExtraIngredientRow(name: "", amount: 0, unit: "tablespoon", isPreferment: false))
-            }
-            Button("Count") {
-                extraIngredients.append(ExtraIngredientRow(name: "", amount: 1, unit: "count", isPreferment: false))
-            }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("How is this ingredient measured?")
-        }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Next") {
@@ -1117,6 +1291,7 @@ struct CreateRecipeView: View {
             Section("Preferment Details") {
                 TextField("Name (e.g. Biga, Poolish)", text: $prefermentName)
                     .autocorrectionDisabled()
+                    .focused($isPrefermentNameFocused)
                     .accessibilityIdentifier("prefermentNameField")
                 if isPercent {
                     HStack {
@@ -1134,21 +1309,30 @@ struct CreateRecipeView: View {
 
             Section {
                 ForEach(Array(prefermentFlours.enumerated()), id: \.element.id) { index, _ in
-                    HStack {
-                        TextField("Flour Name", text: $prefermentFlours[index].name)
-                            .autocorrectionDisabled()
-                            .accessibilityIdentifier("prefermentFlourNameField_\(index)")
+                    HStack(alignment: .top) {
+                        IngredientNameField(placeholder: "Flour Name", text: $prefermentFlours[index].name,
+                                            suggestions: allFlourSuggestions,
+                                            accessibilityID: "prefermentFlourNameField_\(index)",
+                                            rowID: prefermentFlours[index].id,
+                                            focusedRowID: $focusedRowID,
+                                            pendingValueRowID: $pendingValueRowID,
+                                            exclude: Set(prefermentFlours.map { $0.name.lowercased() }.filter { !$0.isEmpty }))
                         Spacer()
                         TextField("0", value: $prefermentFlours[index].value, format: .number)
                             .multilineTextAlignment(.trailing)
                             .keyboardType(.decimalPad)
                             .frame(width: 70)
                             .accessibilityIdentifier("prefermentFlourValueField_\(index)")
+                            .focused($focusedValueRowID, equals: prefermentFlours[index].id)
                         Text(unit).foregroundStyle(.secondary)
                     }
                 }
                 .onDelete { prefermentFlours.remove(atOffsets: $0) }
-                Button { prefermentFlours.append(FlourRow()) } label: {
+                Button {
+                    let row = FlourRow()
+                    prefermentFlours.append(row)
+                    focusedRowID = row.id
+                } label: {
                     Label("Add Flour", systemImage: "plus.circle")
                 }
                 .accessibilityIdentifier("addPrefermentFlourButton")
@@ -1171,21 +1355,30 @@ struct CreateRecipeView: View {
 
             Section {
                 ForEach(Array(prefermentIngredientRows.enumerated()), id: \.element.id) { index, _ in
-                    HStack {
-                        TextField("Ingredient Name", text: $prefermentIngredientRows[index].name)
-                            .autocorrectionDisabled()
-                            .accessibilityIdentifier("prefermentIngredientNameField_\(index)")
+                    HStack(alignment: .top) {
+                        IngredientNameField(placeholder: "Ingredient Name", text: $prefermentIngredientRows[index].name,
+                                            suggestions: allIngredientSuggestions,
+                                            accessibilityID: "prefermentIngredientNameField_\(index)",
+                                            rowID: prefermentIngredientRows[index].id,
+                                            focusedRowID: $focusedRowID,
+                                            pendingValueRowID: $pendingValueRowID,
+                                            exclude: Set(prefermentIngredientRows.map { $0.name.lowercased() }.filter { !$0.isEmpty }))
                         Spacer()
                         TextField("0", value: $prefermentIngredientRows[index].value, format: .number)
                             .multilineTextAlignment(.trailing)
                             .keyboardType(.decimalPad)
                             .frame(width: 70)
                             .accessibilityIdentifier("prefermentIngredientValueField_\(index)")
+                            .focused($focusedValueRowID, equals: prefermentIngredientRows[index].id)
                         Text(unit).foregroundStyle(.secondary)
                     }
                 }
                 .onDelete { prefermentIngredientRows.remove(atOffsets: $0) }
-                Button { prefermentIngredientRows.append(IngredientRow()) } label: {
+                Button {
+                    let row = IngredientRow()
+                    prefermentIngredientRows.append(row)
+                    focusedRowID = row.id
+                } label: {
                     Label("Add Ingredient", systemImage: "plus.circle")
                 }
                 .accessibilityIdentifier("addPrefermentIngredientButton")
@@ -1197,6 +1390,14 @@ struct CreateRecipeView: View {
                 } else {
                     Text("Enter the weight of each ingredient as it's used in the preferment. You'll add any additional amounts for the rest of the dough next.")
                 }
+            }
+        }
+        .onAppear {
+            guard !prefermentFormHasFocused else { return }
+            prefermentFormHasFocused = true
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(500))
+                isPrefermentNameFocused = true
             }
         }
         .navigationTitle("Preferment")
@@ -1231,6 +1432,18 @@ struct CreateRecipeView: View {
 
     // MARK: - Step 4: Preview + Instructions + Save
 
+    private func formatGrams(_ value: Double) -> String {
+        let formatted: String
+        if value < 5 {
+            formatted = value.formatted(.number.precision(.fractionLength(0...2)))
+        } else if value < 20 {
+            formatted = value.formatted(.number.precision(.fractionLength(0...1)))
+        } else {
+            formatted = value.rounded().formatted(.number.precision(.fractionLength(0)))
+        }
+        return "\(formatted)g"
+    }
+
     private var previewForm: some View {
         let isPercent = inputMode == .byPercent
         return Form {
@@ -1238,7 +1451,7 @@ struct CreateRecipeView: View {
                 LabeledContent("Name", value: recipeName)
                 LabeledContent("Collection", value: effectiveCollection)
                 if let w = defaultWeight, isPercent {
-                    LabeledContent("Default Weight", value: "\(Int(w))g")
+                    LabeledContent("Default Weight", value: formatGrams(w))
                 }
                 if containsPreferment { LabeledContent("Preferment", value: prefermentName) }
             }
@@ -1247,7 +1460,7 @@ struct CreateRecipeView: View {
                 ForEach(containsPreferment ? combinedFlours : flours.filter { !$0.name.isEmpty }, id: \.id) { flour in
                     LabeledContent(flour.name, value: isPercent
                         ? String(format: "%.4g%%", flour.value ?? 0)
-                        : "\(Int(flour.value ?? 0))g")
+                        : formatGrams(flour.value ?? 0))
                 }
             }
 
@@ -1255,7 +1468,7 @@ struct CreateRecipeView: View {
                 ForEach(containsPreferment ? combinedIngredients : ingredients.filter { !$0.name.isEmpty }, id: \.id) { ing in
                     LabeledContent(ing.name, value: isPercent
                         ? String(format: "%.4g%%", ing.value ?? 0)
-                        : "\(Int(ing.value ?? 0))g")
+                        : formatGrams(ing.value ?? 0))
                 }
             }
 
@@ -1280,12 +1493,12 @@ struct CreateRecipeView: View {
                     ForEach(prefermentFlours.filter { !$0.name.isEmpty }, id: \.id) { flour in
                         LabeledContent(flour.name, value: isPercent
                             ? String(format: "%.4g%%", flour.value ?? 0)
-                            : "\(Int(flour.value ?? 0))g")
+                            : formatGrams(flour.value ?? 0))
                     }
                     ForEach(prefermentIngredientRows.filter { !$0.name.isEmpty }, id: \.id) { ing in
                         LabeledContent(ing.name, value: isPercent
                             ? String(format: "%.4g%%", ing.value ?? 0)
-                            : "\(Int(ing.value ?? 0))g")
+                            : formatGrams(ing.value ?? 0))
                     }
                 }
             }
@@ -1308,9 +1521,11 @@ struct CreateRecipeView: View {
             Section("Add Step") {
                 TextField("Step description", text: $newStepText, axis: .vertical)
                     .lineLimit(3, reservesSpace: true)
+                    .focused($isNewStepFocused)
                 Button("Add Step") {
                     let trimmed = newStepText.trimmingCharacters(in: .whitespaces)
                     guard !trimmed.isEmpty else { return }
+                    isNewStepFocused = false
                     instructions.append(trimmed)
                     newStepText = ""
                 }
