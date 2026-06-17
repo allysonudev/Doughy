@@ -17,10 +17,13 @@ struct CalculatorView: View {
     @State private var extraIngredientAmounts: [Int: Double] = [:]
     @State private var ingredientTemps: [Int: Double] = [:]
     @State private var prefermentIngredientPercents: [Int: Double] = [:]
+    @State private var ingredientWeights: [Int: Double] = [:]
+    @State private var prefermentIngredientWeights: [Int: Double] = [:]
     @State private var prefermentTotalPercent: Double?
     @State private var calculatedResult: CalculatedWrapper?
     @State private var calculationError: String?
     @State private var showingEdit = false
+    @State private var sharingRecipe: RecipeWrapper?
 
     private let calculator = Calculator.shared
     private let settings = Settings.shared
@@ -40,6 +43,7 @@ struct CalculatorView: View {
 
     private var prefermentRecipe: PrefermentRecipe? { currentRecipe as? PrefermentRecipe }
     private var hasTemps: Bool { currentRecipe.containsVariableTemps() }
+    private var isWeightRecipe: Bool { currentRecipe.measurementMode == .weight }
     private var effectiveWeight: Double { singleDoughWeight ?? currentRecipe.defaultWeight }
     private var effectiveDoughCount: Int { doughCount ?? 1 }
     private var totalWeight: Double { effectiveWeight * Double(effectiveDoughCount) }
@@ -74,7 +78,7 @@ struct CalculatorView: View {
             // MARK: - Preferment toggle + adjustments
             if let preferment = prefermentRecipe?.preferment {
                 Section {
-                    Toggle("Adjust Preferment Percentages", isOn: $adjustPreferment)
+                    Toggle(isWeightRecipe ? "Adjust Preferment Weights" : "Adjust Preferment Percentages", isOn: $adjustPreferment)
                 }
                 if adjustPreferment {
                     prefermentAdjustSection(preferment: preferment)
@@ -83,7 +87,7 @@ struct CalculatorView: View {
 
             // MARK: - Ingredient toggle + adjustments
             Section {
-                Toggle("Adjust Dough Ingredients", isOn: $adjustIngredients)
+                Toggle(isWeightRecipe ? "Adjust Ingredient Weights" : "Adjust Dough Ingredients", isOn: $adjustIngredients)
                     .accessibilityIdentifier("adjustIngredientsToggle")
             }
             if adjustIngredients {
@@ -120,21 +124,38 @@ struct CalculatorView: View {
             CalculatedRecipeView(calculatedRecipe: wrapper.recipe, recipe: currentRecipe, overrides: wrapper.overrides)
         }
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button("Edit") { showingEdit = true }
-            }
-            ToolbarItem(placement: .topBarTrailing) {
+            ToolbarItemGroup(placement: .topBarTrailing) {
+                Button {
+                    sharingRecipe = RecipeWrapper(recipe: currentRecipe)
+                } label: {
+                    Image(systemName: "square.and.arrow.up")
+                }
+                .accessibilityLabel("Share")
+                .accessibilityIdentifier("calculatorShareButton")
+
                 NavigationLink {
                     RecipeHistoryView(recipe: currentRecipe)
                 } label: {
                     Image(systemName: "clock.arrow.circlepath")
                 }
+                .accessibilityLabel("History")
                 .accessibilityIdentifier("historyButton")
+
+                Button {
+                    showingEdit = true
+                } label: {
+                    Image(systemName: "pencil")
+                }
+                .accessibilityLabel("Edit")
+                .accessibilityIdentifier("calculatorEditButton")
             }
         }
         .sheet(isPresented: $showingEdit, onDismiss: { store.refresh() }) {
             CreateRecipeView(editingRecipe: currentRecipe)
                 .environment(store)
+        }
+        .sheet(item: $sharingRecipe) { wrapper in
+            RecipeShareView(recipe: wrapper.recipe)
         }
         .alert("Calculation Error", isPresented: Binding(
             get: { calculationError != nil },
@@ -143,6 +164,9 @@ struct CalculatorView: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text(calculationError ?? "")
+        }
+        .onAppear {
+            store.recordOpened(recipe: currentRecipe)
         }
     }
 
@@ -154,6 +178,24 @@ struct CalculatorView: View {
             ForEach(Array(currentRecipe.ingredients.enumerated()), id: \.offset) { index, ingredient in
                 if ingredient.extraAmount != nil {
                     // Handled in additionalIngredientsSection.
+                } else if isWeightRecipe {
+                    HStack {
+                        Text(ingredient.name)
+                        Spacer()
+                        TextField(
+                            String(format: "%.4g", ingredient.defaultWeight ?? 0),
+                            value: Binding(
+                                get: { ingredientWeights[index] },
+                                set: { ingredientWeights[index] = $0 }
+                            ),
+                            format: .number
+                        )
+                        .multilineTextAlignment(.trailing)
+                        .keyboardType(.decimalPad)
+                        .frame(width: 70)
+                        .accessibilityIdentifier("ingredientWeightField_\(index)")
+                        Text("g").foregroundStyle(.secondary)
+                    }
                 } else if ingredient.isFlour {
                     HStack {
                         Text(ingredient.name)
@@ -293,7 +335,24 @@ struct CalculatorView: View {
                 Text("%").foregroundStyle(.secondary)
             }
             ForEach(Array(preferment.ingredients.enumerated()), id: \.offset) { index, ingredient in
-                if ingredient.isFlour {
+                if isWeightRecipe {
+                    HStack {
+                        Text(ingredient.name)
+                        Spacer()
+                        TextField(
+                            String(format: "%.4g", ingredient.defaultWeight ?? 0),
+                            value: Binding(
+                                get: { prefermentIngredientWeights[index] },
+                                set: { prefermentIngredientWeights[index] = $0 }
+                            ),
+                            format: .number
+                        )
+                        .multilineTextAlignment(.trailing)
+                        .keyboardType(.decimalPad)
+                        .frame(width: 70)
+                        Text("g").foregroundStyle(.secondary)
+                    }
+                } else if ingredient.isFlour {
                     HStack {
                         Text(ingredient.name)
                         Spacer()
@@ -349,8 +408,10 @@ struct CalculatorView: View {
     private func currentOverrides() -> CalculatorOverrides {
         CalculatorOverrides(
             ingredientPercents: ingredientPercents,
+            ingredientWeights: ingredientWeights,
             ingredientTemps: ingredientTemps,
             prefermentIngredientPercents: prefermentIngredientPercents,
+            prefermentIngredientWeights: prefermentIngredientWeights,
             prefermentTotalPercent: prefermentTotalPercent,
             singleDoughWeight: singleDoughWeight,
             extraIngredientAmounts: extraIngredientAmounts,
@@ -365,7 +426,7 @@ struct CalculatorView: View {
             if let rawTemp = ingredientTemps[index] {
                 temp = Temperature(value: rawTemp, measurement: settings.preferredTemp())
             }
-            return MeasuredIngredient(ingredient: ingredient, percent: percent, temperature: temp, extraAmountOverride: extraIngredientAmounts[index])
+            return MeasuredIngredient(ingredient: ingredient, percent: percent, temperature: temp, weight: ingredientWeights[index] ?? ingredient.defaultWeight, extraAmountOverride: extraIngredientAmounts[index])
         }
     }
 
@@ -378,7 +439,7 @@ struct CalculatorView: View {
             if let rawTemp = ingredientTemps[1000 + index] {
                 temp = Temperature(value: rawTemp, measurement: settings.preferredTemp())
             }
-            return MeasuredIngredient(ingredient: ingredient, percent: percent, temperature: temp)
+            return MeasuredIngredient(ingredient: ingredient, percent: percent, temperature: temp, weight: prefermentIngredientWeights[index] ?? ingredient.defaultWeight)
         }
         return MeasuredPreferment(ingredients: fermentIngredients, name: preferment.name, flourPercentage: fermentPercent)
     }

@@ -11,8 +11,10 @@ import Foundation
 /// `ingredientTemps` keyed at `1000 + index`, matching `CalculatorView`.
 struct CalculatorOverrides {
     let ingredientPercents: [Int: Double]
+    let ingredientWeights: [Int: Double]
     let ingredientTemps: [Int: Double]
     let prefermentIngredientPercents: [Int: Double]
+    let prefermentIngredientWeights: [Int: Double]
     let prefermentTotalPercent: Double?
     let singleDoughWeight: Double?
     let extraIngredientAmounts: [Int: Double]
@@ -21,8 +23,8 @@ struct CalculatorOverrides {
     /// Whether the user set any "Adjust" value, regardless of whether it
     /// differs numerically from the recipe's current default.
     var hasAnyOverride: Bool {
-        !ingredientPercents.isEmpty || !ingredientTemps.isEmpty
-            || !prefermentIngredientPercents.isEmpty
+        !ingredientPercents.isEmpty || !ingredientWeights.isEmpty || !ingredientTemps.isEmpty
+            || !prefermentIngredientPercents.isEmpty || !prefermentIngredientWeights.isEmpty
             || prefermentTotalPercent != nil || singleDoughWeight != nil
             || !extraIngredientAmounts.isEmpty
     }
@@ -39,6 +41,9 @@ struct CalculatorOverrides {
         for (index, percent) in ingredientPercents where snapshot.ingredients.indices.contains(index) {
             snapshot.ingredients[index].defaultPercentage = percent
         }
+        for (index, weight) in ingredientWeights where snapshot.ingredients.indices.contains(index) {
+            snapshot.ingredients[index].defaultWeight = weight
+        }
         for (index, temp) in ingredientTemps where snapshot.ingredients.indices.contains(index) {
             snapshot.ingredients[index].temperatureValue = temp
             snapshot.ingredients[index].temperatureMeasurement = temperatureMeasurement.rawValue
@@ -54,6 +59,9 @@ struct CalculatorOverrides {
             for (index, percent) in prefermentIngredientPercents where preferment.ingredients.indices.contains(index) {
                 preferment.ingredients[index].defaultPercentage = percent
             }
+            for (index, weight) in prefermentIngredientWeights where preferment.ingredients.indices.contains(index) {
+                preferment.ingredients[index].defaultWeight = weight
+            }
             for (key, temp) in ingredientTemps where key >= 1000 {
                 let index = key - 1000
                 guard preferment.ingredients.indices.contains(index) else { continue }
@@ -61,6 +69,16 @@ struct CalculatorOverrides {
                 preferment.ingredients[index].temperatureMeasurement = temperatureMeasurement.rawValue
             }
             snapshot.preferment = preferment
+        }
+
+        if snapshot.measurementMode == .weight {
+            let sum = snapshot.ingredients
+                .filter { $0.extraAmount == nil }
+                .compactMap(\.defaultWeight)
+                .reduce(0, +)
+            if sum > 0 {
+                snapshot.defaultWeight = sum
+            }
         }
 
         return snapshot

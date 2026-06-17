@@ -26,6 +26,7 @@ class RecipeConverter: NSObject {
         coreData.name = recipe.name
         coreData.collection = recipe.collection
         coreData.defaultWeight = NSNumber(floatLiteral: recipe.defaultWeight)
+        coreData.setValue(recipe.measurementMode.rawValue, forKey: "measurementMode")
         recipe.ingredients.forEach {
             coreData.addToIngredients(ingredientConverter.convertToCoreData(ingredient: $0))
         }
@@ -45,6 +46,7 @@ class RecipeConverter: NSObject {
         existing.name = recipe.name
         existing.collection = recipe.collection
         existing.defaultWeight = NSNumber(floatLiteral: recipe.defaultWeight)
+        existing.setValue(recipe.measurementMode.rawValue, forKey: "measurementMode")
         self.replaceIngredients(recipe: recipe, existing: existing)
         self.replaceInstructions(recipe: recipe, existing: existing)
         
@@ -85,6 +87,8 @@ class RecipeConverter: NSObject {
         let name = recipe.name!
         let collection = recipe.collection!
         let defaultWeight = recipe.defaultWeight!.doubleValue
+        let measurementModeRaw = recipe.value(forKey: "measurementMode") as? String
+        let measurementMode = RecipeMeasurementMode(rawValue: measurementModeRaw ?? "") ?? .percent
         let ingredients = (recipe.ingredients!.array as! [XCIngredient]).map {
             ingredientConverter.convertToExternal(ingredient: $0)
         }
@@ -95,10 +99,11 @@ class RecipeConverter: NSObject {
             let preferment = prefermentConverter.convertToExternal(preferment: xcPreferment)
             return PrefermentRecipe(name: name, collection: collection,
                                     defaultWeight: defaultWeight, ingredients: ingredients,
-                                    preferment: preferment, instructions: instructions)
+                                    preferment: preferment, instructions: instructions,
+                                    measurementMode: measurementMode)
         }
         
-        return Recipe(name: name, collection: collection, defaultWeight: defaultWeight, ingredients: ingredients, instructions: instructions)
+        return Recipe(name: name, collection: collection, defaultWeight: defaultWeight, ingredients: ingredients, instructions: instructions, measurementMode: measurementMode)
         
     }
 }

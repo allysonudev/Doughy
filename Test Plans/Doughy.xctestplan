@@ -1,7 +1,7 @@
 {
   "configurations" : [
     {
-      "id" : "9B1B8010-7235-4D08-ABF0-2912CD3AE390",
+      "id" : "EBF8FA7B-A1B0-4BF1-A4A6-83D81AF387E9",
       "name" : "Configuration 1",
       "options" : {
 
@@ -9,11 +9,16 @@
     }
   ],
   "defaultOptions" : {
-
+    "codeCoverage" : false,
+    "performanceAntipatternCheckerEnabled" : true,
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:Doughy.xcodeproj",
+      "identifier" : "BB30DECB2425B83D00BFD472",
+      "name" : "Doughy"
+    }
   },
   "testTargets" : [
     {
-      "parallelizable" : true,
       "target" : {
         "containerPath" : "container:Doughy.xcodeproj",
         "identifier" : "BB30DEE42425B83F00BFD472",

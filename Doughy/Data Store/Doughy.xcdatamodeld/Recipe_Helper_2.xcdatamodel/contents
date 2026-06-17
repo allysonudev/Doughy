@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="16119" systemVersion="19E266" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+    <entity name="XCCalculatedIngredient" representedClassName="XCCalculatedIngredient" syncable="YES" codeGenerationType="class">
+        <attribute name="extraAmount" optional="YES" attributeType="Double" usesScalarValueType="NO"/>
+        <attribute name="extraUnit" optional="YES" attributeType="String"/>
+        <attribute name="isFlour" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="name" attributeType="String"/>
+        <attribute name="percentage" attributeType="Double" usesScalarValueType="NO"/>
+        <attribute name="temperature" optional="YES" attributeType="Double" usesScalarValueType="NO"/>
+        <attribute name="totalPercentage" attributeType="Double" usesScalarValueType="NO"/>
+        <attribute name="weight" attributeType="Double" usesScalarValueType="NO"/>
+        <relationship name="preferment" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="XCCalculatedPreferment" inverseName="ingredients" inverseEntity="XCCalculatedPreferment"/>
+        <relationship name="recipe" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="XCCalculatedRecipe" inverseName="ingredients" inverseEntity="XCCalculatedRecipe"/>
+    </entity>
+    <entity name="XCCalculatedPreferment" representedClassName="XCCalculatedPreferment" syncable="YES" codeGenerationType="class">
+        <attribute name="flourPercentage" attributeType="Double" usesScalarValueType="NO"/>
+        <attribute name="name" attributeType="String"/>
+        <attribute name="weight" attributeType="Double" usesScalarValueType="NO"/>
+        <relationship name="ingredients" toMany="YES" deletionRule="Nullify" ordered="YES" destinationEntity="XCCalculatedIngredient" inverseName="preferment" inverseEntity="XCCalculatedIngredient"/>
+        <relationship name="recipe" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="XCCalculatedRecipe" inverseName="preferment" inverseEntity="XCCalculatedRecipe"/>
+    </entity>
+    <entity name="XCCalculatedRecipe" representedClassName="XCCalculatedRecipe" syncable="YES" codeGenerationType="class">
+        <attribute name="collection" attributeType="String"/>
+        <attribute name="name" attributeType="String"/>
+        <attribute name="weight" attributeType="Double" usesScalarValueType="NO"/>
+        <relationship name="ingredients" optional="YES" toMany="YES" deletionRule="Nullify" ordered="YES" destinationEntity="XCCalculatedIngredient" inverseName="recipe" inverseEntity="XCCalculatedIngredient"/>
+        <relationship name="instructions" optional="YES" toMany="YES" deletionRule="Nullify" ordered="YES" destinationEntity="XCInstruction" inverseName="calculatedRecipe" inverseEntity="XCInstruction"/>
+        <relationship name="preferment" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="XCCalculatedPreferment" inverseName="recipe" inverseEntity="XCCalculatedPreferment"/>
+    </entity>
+    <entity name="XCIngredient" representedClassName="XCIngredient" syncable="YES" codeGenerationType="class">
+        <attribute name="defaultPercentage" attributeType="Double" usesScalarValueType="NO"/>
+        <attribute name="defaultWeight" optional="YES" attributeType="Double" usesScalarValueType="NO"/>
+        <attribute name="extraAmount" optional="YES" attributeType="Double" usesScalarValueType="NO"/>
+        <attribute name="extraUnit" optional="YES" attributeType="String"/>
+        <attribute name="isFlour" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="name" attributeType="String"/>
+        <attribute name="temperature" optional="YES" attributeType="Double" usesScalarValueType="NO"/>
+        <relationship name="preferment" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="XCPreferment" inverseName="ingredients" inverseEntity="XCPreferment"/>
+        <relationship name="recipe" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="XCRecipe" inverseName="ingredients" inverseEntity="XCRecipe"/>
+    </entity>
+    <entity name="XCHistoryEntry" representedClassName="XCHistoryEntry" syncable="YES" codeGenerationType="class">
+        <attribute name="date" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="kind" attributeType="String"/>
+        <attribute name="snapshot" optional="YES" attributeType="Binary"/>
+        <attribute name="text" attributeType="String"/>
+        <relationship name="recipe" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="XCRecipe" inverseName="historyEntries" inverseEntity="XCRecipe"/>
+    </entity>
+    <entity name="XCInstruction" representedClassName="XCInstruction" syncable="YES" codeGenerationType="class">
+        <attribute name="step" attributeType="String"/>
+        <relationship name="calculatedRecipe" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="XCCalculatedRecipe" inverseName="instructions" inverseEntity="XCCalculatedRecipe"/>
+        <relationship name="recipe" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="XCRecipe" inverseName="instructions" inverseEntity="XCRecipe"/>
+    </entity>
+    <entity name="XCPreferment" representedClassName="XCPreferment" syncable="YES" codeGenerationType="class">
+        <attribute name="flourPercentage" attributeType="Double" usesScalarValueType="NO"/>
+        <attribute name="name" attributeType="String"/>
+        <relationship name="ingredients" toMany="YES" deletionRule="Nullify" ordered="YES" destinationEntity="XCIngredient" inverseName="preferment" inverseEntity="XCIngredient"/>
+        <relationship name="recipe" maxCount="1" deletionRule="Nullify" destinationEntity="XCRecipe" inverseName="preferment" inverseEntity="XCRecipe"/>
+    </entity>
+    <entity name="XCRecipe" representedClassName="XCRecipe" syncable="YES" codeGenerationType="class">
+        <attribute name="collection" optional="YES" attributeType="String"/>
+        <attribute name="defaultWeight" attributeType="Double" usesScalarValueType="NO"/>
+        <attribute name="measurementMode" optional="YES" attributeType="String" defaultValueString="percent"/>
+        <attribute name="name" attributeType="String"/>
+        <relationship name="historyEntries" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="XCHistoryEntry" inverseName="recipe" inverseEntity="XCHistoryEntry"/>
+        <relationship name="ingredients" toMany="YES" deletionRule="Nullify" ordered="YES" destinationEntity="XCIngredient" inverseName="recipe" inverseEntity="XCIngredient"/>
+        <relationship name="instructions" optional="YES" toMany="YES" deletionRule="Nullify" ordered="YES" destinationEntity="XCInstruction" inverseName="recipe" inverseEntity="XCInstruction"/>
+        <relationship name="preferment" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="XCPreferment" inverseName="recipe" inverseEntity="XCPreferment"/>
+    </entity>
+    <elements>
+        <element name="XCCalculatedIngredient" positionX="-36" positionY="63" width="128" height="163"/>
+        <element name="XCCalculatedPreferment" positionX="-45" positionY="72" width="128" height="118"/>
+        <element name="XCCalculatedRecipe" positionX="-45" positionY="54" width="128" height="133"/>
+        <element name="XCHistoryEntry" positionX="-36" positionY="90" width="128" height="118"/>
+        <element name="XCIngredient" positionX="-54" positionY="9" width="128" height="148"/>
+        <element name="XCInstruction" positionX="-45" positionY="72" width="128" height="88"/>
+        <element name="XCPreferment" positionX="-54" positionY="63" width="128" height="103"/>
+        <element name="XCRecipe" positionX="-63" positionY="-18" width="128" height="148"/>
+    </elements>
+</model>

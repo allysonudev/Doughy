@@ -257,7 +257,9 @@ private struct ScanDiagnostics: Codable {
 
 struct CreateRecipeView: View {
     let editingRecipe: (any RecipeProtocol)?
+    let copyingRecipe: (any RecipeProtocol)?
     let initialScanImage: UIImage?
+    let openScanOptionsOnAppear: Bool
 
     @Environment(RecipeStore.self) private var store
     @Environment(\.dismiss) private var dismiss
@@ -273,6 +275,7 @@ struct CreateRecipeView: View {
     @State private var isScanning = false
     @State private var scanError: String?
     @State private var lastScanDiagnostics: String?
+    @State private var didOpenInitialScanOptions = false
 
     // Details
     @State private var recipeName = ""
@@ -328,25 +331,32 @@ struct CreateRecipeView: View {
     @State private var showDiscardConfirmation = false
     @State private var initialSnapshot: DraftSnapshot
 
-    init(editingRecipe: (any RecipeProtocol)? = nil, initialScanImage: UIImage? = nil) {
+    init(editingRecipe: (any RecipeProtocol)? = nil,
+         copyingRecipe: (any RecipeProtocol)? = nil,
+         initialScanImage: UIImage? = nil,
+         openScanOptionsOnAppear: Bool = false) {
         self.editingRecipe = editingRecipe
+        self.copyingRecipe = copyingRecipe
         self.initialScanImage = initialScanImage
-        guard let recipe = editingRecipe else {
+        self.openScanOptionsOnAppear = openScanOptionsOnAppear
+        guard let recipe = editingRecipe ?? copyingRecipe else {
             _initialSnapshot = State(initialValue: DraftSnapshot())
             return
         }
+        let recipeName = copyingRecipe == nil ? recipe.name : Self.copyName(for: recipe.name)
+        let isWeightRecipe = recipe.measurementMode == .weight
 
-        _inputMode = State(initialValue: .byPercent)
-        _recipeName = State(initialValue: recipe.name)
+        _inputMode = State(initialValue: isWeightRecipe ? .byWeight : .byPercent)
+        _recipeName = State(initialValue: recipeName)
         _collectionName = State(initialValue: recipe.collection)
         _defaultWeight = State(initialValue: recipe.defaultWeight)
         _instructions = State(initialValue: recipe.instructions.map(\.step))
 
         let flourRows = recipe.ingredients.filter(\.isFlour)
-            .map { FlourRow(name: $0.name, value: $0.defaultPercentage) }
+            .map { FlourRow(name: $0.name, value: isWeightRecipe ? ($0.defaultWeight ?? 0) : $0.defaultPercentage) }
         let nonFlour = recipe.ingredients.filter { !$0.isFlour }
         let ingRows = nonFlour.filter { $0.extraAmount == nil }
-            .map { IngredientRow(name: $0.name, value: $0.defaultPercentage, tempValue: $0.temperature?.value) }
+            .map { IngredientRow(name: $0.name, value: isWeightRecipe ? ($0.defaultWeight ?? 0) : $0.defaultPercentage, tempValue: $0.temperature?.value) }
         let mainExtra = nonFlour.filter { $0.extraAmount != nil }
 
         var prefName = ""
@@ -365,12 +375,12 @@ struct CreateRecipeView: View {
             let fp = pref.flourPercentage
 
             let prefFlourRows = pref.ingredients.filter(\.isFlour)
-                .map { FlourRow(name: $0.name, value: $0.defaultPercentage) }
+                .map { FlourRow(name: $0.name, value: isWeightRecipe ? ($0.defaultWeight ?? 0) : $0.defaultPercentage) }
             prefFlours = prefFlourRows.isEmpty ? [FlourRow()] : prefFlourRows
 
             let prefNonFlour = pref.ingredients.filter { !$0.isFlour }
             let prefIngredientRows = prefNonFlour.filter { $0.extraAmount == nil }
-                .map { IngredientRow(name: $0.name, value: $0.defaultPercentage, tempValue: $0.temperature?.value) }
+                .map { IngredientRow(name: $0.name, value: isWeightRecipe ? ($0.defaultWeight ?? 0) : $0.defaultPercentage, tempValue: $0.temperature?.value) }
             prefIngRows = prefIngredientRows.isEmpty ? [IngredientRow()] : prefIngredientRows
             prefExtra = prefNonFlour.filter { $0.extraAmount != nil }
 
@@ -380,14 +390,26 @@ struct CreateRecipeView: View {
                 let contribution = (prefRows.first(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame })?.percent ?? 0) / 100 * fp
                 return max(0, (total ?? 0) - contribution)
             }
+            func additionalWeight(total: Double?, prefRows: [(name: String, weight: Double?)], name: String) -> Double? {
+                let contribution = prefRows.first(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame })?.weight ?? 0
+                return max(0, (total ?? 0) - contribution)
+            }
             let prefFlourLookup = prefFlourRows.map { (name: $0.name, percent: $0.value) }
             let prefIngLookup = prefIngredientRows.map { (name: $0.name, percent: $0.value) }
+            let prefFlourWeightLookup = pref.ingredients.filter(\.isFlour).map { (name: $0.name, weight: $0.defaultWeight) }
+            let prefIngWeightLookup = pref.ingredients.filter { !$0.isFlour && $0.extraAmount == nil }.map { (name: $0.name, weight: $0.defaultWeight) }
 
             let adjustedFlourRows = flourRows.map {
-                FlourRow(name: $0.name, value: additional(total: $0.value, prefRows: prefFlourLookup, name: $0.name))
+                FlourRow(name: $0.name, value: isWeightRecipe
+                    ? additionalWeight(total: $0.value, prefRows: prefFlourWeightLookup, name: $0.name)
+                    : additional(total: $0.value, prefRows: prefFlourLookup, name: $0.name))
             }
             let adjustedIngRows = ingRows.map {
-                IngredientRow(name: $0.name, value: additional(total: $0.value, prefRows: prefIngLookup, name: $0.name), tempValue: $0.tempValue)
+                IngredientRow(name: $0.name,
+                              value: isWeightRecipe
+                                ? additionalWeight(total: $0.value, prefRows: prefIngWeightLookup, name: $0.name)
+                                : additional(total: $0.value, prefRows: prefIngLookup, name: $0.name),
+                              tempValue: $0.tempValue)
             }
             finalFlours = adjustedFlourRows.isEmpty ? [FlourRow()] : adjustedFlourRows
             finalIngredients = adjustedIngRows.isEmpty ? [IngredientRow()] : adjustedIngRows
@@ -415,7 +437,7 @@ struct CreateRecipeView: View {
         _extraIngredients = State(initialValue: extraRows)
 
         _initialSnapshot = State(initialValue: DraftSnapshot(
-            recipeName: recipe.name,
+            recipeName: recipeName,
             collectionName: recipe.collection,
             isNewCollection: false,
             newCollectionText: "",
@@ -430,6 +452,10 @@ struct CreateRecipeView: View {
             prefermentIngredientRows: prefIngRows,
             instructions: recipe.instructions.map(\.step)
         ))
+    }
+
+    private static func copyName(for name: String) -> String {
+        "Copy of \(name)"
     }
 
     private var effectiveCollection: String {
@@ -477,6 +503,7 @@ struct CreateRecipeView: View {
         coreView
             .overlay { if isScanning { scanningOverlay } }
             .task {
+                openInitialScanOptionsIfNeeded()
                 guard let image = initialScanImage else { return }
                 #if canImport(FoundationModels)
                 if #available(iOS 26, *) {
@@ -547,6 +574,16 @@ struct CreateRecipeView: View {
             .interactiveDismissDisabled(isDirty)
     }
 
+    private func openInitialScanOptionsIfNeeded() {
+        guard openScanOptionsOnAppear, !didOpenInitialScanOptions else { return }
+        didOpenInitialScanOptions = true
+        #if canImport(FoundationModels)
+        if #available(iOS 26, *) {
+            showScanOptions = true
+        }
+        #endif
+    }
+
     @ViewBuilder
     private var coreView: some View {
         #if canImport(FoundationModels)
@@ -579,6 +616,8 @@ struct CreateRecipeView: View {
         NavigationStack(path: $navPath) {
             Group {
                 if editingRecipe != nil {
+                    detailsForm
+                } else if copyingRecipe != nil {
                     detailsForm
                 } else {
                     modeSelectionPage
@@ -633,7 +672,7 @@ struct CreateRecipeView: View {
                     ModeCard(
                         icon: "percent",
                         title: "By Baker's Percentage",
-                        description: "Enter ingredients as percentages relative to total flour",
+                        description: "Best for flour-based doughs where ingredients scale from total flour",
                         accessibilityID: "byPercentModeCard"
                     ) {
                         inputMode = .byPercent
@@ -647,7 +686,7 @@ struct CreateRecipeView: View {
                     ModeCard(
                         icon: "scalemass",
                         title: "By Weight",
-                        description: "Enter ingredient weights in grams — percentages are calculated automatically",
+                        description: "Best for recipes without flour, or when you want to keep exact gram amounts",
                         accessibilityID: "byWeightModeCard"
                     ) {
                         inputMode = .byWeight
@@ -775,7 +814,7 @@ struct CreateRecipeView: View {
             }
         }
         .onAppear {
-            guard editingRecipe != nil else { return }
+            guard editingRecipe != nil || copyingRecipe != nil else { return }
             Task { @MainActor in
                 try? await Task.sleep(for: .milliseconds(500))
                 isRecipeNameFocused = true
@@ -784,7 +823,7 @@ struct CreateRecipeView: View {
         .navigationTitle(editingRecipe != nil ? "Edit Recipe" : "New Recipe")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            if editingRecipe != nil {
+            if editingRecipe != nil || copyingRecipe != nil {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Cancel") { requestDismiss() }
                         .accessibilityIdentifier("detailsCancelButton")
@@ -1205,8 +1244,11 @@ struct CreateRecipeView: View {
                 && flours.allSatisfy { !$0.name.trimmingCharacters(in: .whitespaces).isEmpty && $0.value != nil }
                 && abs(sum - 100) < 0.001
         } else {
-            floursOK = !flours.isEmpty
-                && flours.allSatisfy { !$0.name.trimmingCharacters(in: .whitespaces).isEmpty && ($0.value ?? 0) > 0 }
+            let namedFlours = flours.filter { !$0.name.trimmingCharacters(in: .whitespaces).isEmpty }
+            let namedIngredients = ingredients.filter { !$0.name.trimmingCharacters(in: .whitespaces).isEmpty }
+            return (!namedFlours.isEmpty || !namedIngredients.isEmpty)
+                && namedFlours.allSatisfy { ($0.value ?? 0) > 0 }
+                && namedIngredients.allSatisfy { ($0.value ?? 0) > 0 }
         }
         return floursOK
             && !ingredients.isEmpty
@@ -1881,6 +1923,7 @@ struct CreateRecipeView: View {
         builder.collection = effectiveCollection.trimmingCharacters(in: .whitespaces)
         builder.instructions = instructions.map { Instruction(step: $0) }
         builder.containsPreferment = containsPreferment
+        builder.measurementMode = inputMode == .byWeight ? .weight : .percent
         builder.mainDoughBuilder = MainDoughBuilder()
 
         let tempMeasurement = Settings.shared.preferredTemp()
@@ -1893,12 +1936,13 @@ struct CreateRecipeView: View {
             let useIngredients = containsPreferment ? combinedIngredients : ingredients
 
             let totalFlourWeight = useFlours.compactMap(\.value).reduce(0, +)
-            guard totalFlourWeight > 0 else { throw RecipeBuilderError.invalidIngredients }
+            if containsPreferment && totalFlourWeight <= 0 { throw RecipeBuilderError.invalidIngredients }
 
             for flour in useFlours where !flour.name.trimmingCharacters(in: .whitespaces).isEmpty {
                 let fb = FlourBuilder()
                 fb.name = flour.name.trimmingCharacters(in: .whitespaces)
-                fb.percent = ((flour.value ?? 0) / totalFlourWeight) * 100
+                fb.percent = totalFlourWeight > 0 ? ((flour.value ?? 0) / totalFlourWeight) * 100 : 0
+                fb.weight = flour.value
                 builder.mainDoughBuilder.flourBuilders.append(fb)
             }
 

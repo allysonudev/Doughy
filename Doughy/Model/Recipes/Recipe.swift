@@ -8,6 +8,11 @@
 
 import UIKit
 
+enum RecipeMeasurementMode: String, Codable {
+    case percent
+    case weight
+}
+
 protocol RecipeProtocol {
     
     var name: String { get }
@@ -15,6 +20,7 @@ protocol RecipeProtocol {
     var defaultWeight: Double { get }
     var ingredients: [Ingredient] { get }
     var instructions: [Instruction] { get }
+    var measurementMode: RecipeMeasurementMode { get }
     
     func containsVariableTemps() -> Bool
 }
@@ -26,15 +32,18 @@ class Recipe: NSObject, RecipeProtocol {
     let defaultWeight: Double
     let ingredients: [Ingredient]
     let instructions: [Instruction]
+    let measurementMode: RecipeMeasurementMode
     
     init(name: String, collection: String,
          defaultWeight: Double, ingredients: [Ingredient],
-         instructions: [Instruction]) {
+         instructions: [Instruction],
+         measurementMode: RecipeMeasurementMode = .percent) {
         self.name = name
         self.collection = collection
         self.defaultWeight = defaultWeight
         self.ingredients = ingredients
         self.instructions = instructions
+        self.measurementMode = measurementMode
     }
     
     func containsVariableTemps() -> Bool {
@@ -57,16 +66,19 @@ class PrefermentRecipe: NSObject, RecipeProtocol {
     let defaultWeight: Double
     let ingredients: [Ingredient]
     let instructions: [Instruction]
+    let measurementMode: RecipeMeasurementMode
     
     init(name: String, collection: String,
          defaultWeight: Double, ingredients: [Ingredient],
-         preferment: Preferment, instructions: [Instruction]) {
+         preferment: Preferment, instructions: [Instruction],
+         measurementMode: RecipeMeasurementMode = .percent) {
         self.name = name
         self.collection = collection
         self.defaultWeight = defaultWeight
         self.ingredients = ingredients
         self.preferment = preferment
         self.instructions = instructions
+        self.measurementMode = measurementMode
     }
     
     func containsVariableTemps() -> Bool {

@@ -118,6 +118,9 @@ class MainDoughBuilder: NSObject {
                 let name = $0.name
                 if let match = prefIngredients.first(where: { $0.name == name }) {
                     $0.defaultPercentage += match.defaultPercentage
+                    if let weight = $0.defaultWeight, let prefWeight = match.defaultWeight {
+                        $0.defaultWeight = weight + prefWeight
+                    }
                 }
             }
         }
@@ -215,11 +218,12 @@ class IngredientBuilder: IngredientBuilderBase {
             guard let weight = weight else {
                 throw RecipeBuilderError.invalidIngredients
             }
-            let defaultPercent = (weight / totalFlourWeight) * 100
+            let defaultPercent = totalFlourWeight > 0 ? (weight / totalFlourWeight) * 100 : 0
             return Ingredient(name: name,
                               isFlour: false,
                               defaultPercentage: defaultPercent,
-                              temperature: temperature)
+                              temperature: temperature,
+                              defaultWeight: weight)
         }
     }
 
@@ -287,14 +291,15 @@ class PrefermentIngredientBuilder: IngredientBuilderBase {
         if let p = percent {
             defaultPercent = p
         } else if let w = weight {
-            defaultPercent = (w / totalFlourWeight) * 100
+            defaultPercent = totalFlourWeight > 0 ? (w / totalFlourWeight) * 100 : 0
         } else {
             throw RecipeBuilderError.invalidIngredients
         }
         return Ingredient(name: name,
                           isFlour: isFlour,
                           defaultPercentage: defaultPercent,
-                          temperature: temperature)
+                          temperature: temperature,
+                          defaultWeight: weight)
     }
 
     override func copy() -> Any {
@@ -312,6 +317,7 @@ class PrefermentIngredientBuilder: IngredientBuilderBase {
 class FlourBuilder: IngredientBuilderBase {
     
     var percent: Double?
+    var weight: Double?
     
     override init() { }
     
@@ -319,6 +325,7 @@ class FlourBuilder: IngredientBuilderBase {
         super.init()
         self.name = ingredient.name
         self.percent = ingredient.defaultPercentage
+        self.weight = ingredient.defaultWeight
         self.temperature = ingredient.temperature
     }
     
@@ -336,13 +343,15 @@ class FlourBuilder: IngredientBuilderBase {
         return Ingredient(name: name,
                           isFlour: true,
                           defaultPercentage: defaultPercentage,
-                          temperature: temperature)
+                          temperature: temperature,
+                          defaultWeight: weight)
     }
     
     override func copy() -> Any {
         let copy = FlourBuilder()
         copy.name = self.name
         copy.percent = self.percent
+        copy.weight = self.weight
         copy.temperature = self.temperature?.copy() as? Temperature
         return copy
     }

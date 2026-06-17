@@ -64,6 +64,15 @@ struct DoughyShortcuts: AppShortcutsProvider {
             shortTitle: "Share Recipe",
             systemImageName: "square.and.arrow.up"
         )
+        AppShortcut(
+            intent: OpenRecipeIntent(),
+            phrases: [
+                "Open a recipe in \(.applicationName)",
+                "Open \(\.$recipe) in \(.applicationName)",
+            ],
+            shortTitle: "Open Recipe",
+            systemImageName: "book"
+        )
     }
 }
 

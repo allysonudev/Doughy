@@ -6,17 +6,18 @@ import Foundation
 
 // MARK: - File payload (the on-disk JSON envelope)
 
-struct RecipeFilePayload: Codable, Identifiable {
+struct RecipeFilePayload: Codable, Identifiable, Equatable {
     var id: String { recipe.name }
     let version: Int
     let author: String?
     let recipe: RecipeFileData
 }
 
-struct RecipeFileData: Codable {
+struct RecipeFileData: Codable, Equatable {
     let name: String
     let collection: String
     let defaultWeight: Double
+    let measurementMode: RecipeMeasurementMode?
     let ingredients: [IngredientFileData]
     let preferment: PrefermentFileData?
     let instructions: [String]
@@ -25,16 +26,18 @@ struct RecipeFileData: Codable {
         name = recipe.name
         collection = recipe.collection
         defaultWeight = recipe.defaultWeight
+        measurementMode = recipe.measurementMode
         ingredients = recipe.ingredients.map { IngredientFileData(from: $0) }
         preferment = (recipe as? PrefermentRecipe).map { PrefermentFileData(from: $0.preferment) }
         instructions = recipe.instructions.map { $0.step }
     }
 }
 
-struct IngredientFileData: Codable {
+struct IngredientFileData: Codable, Equatable {
     let name: String
     let isFlour: Bool
     let defaultPercentage: Double
+    let defaultWeight: Double?
     let temperatureValue: Double?
     let temperatureUnit: String?   // "celsius" or "fahrenheit"
     let extraAmount: Double?
@@ -44,6 +47,7 @@ struct IngredientFileData: Codable {
         name = ingredient.name
         isFlour = ingredient.isFlour
         defaultPercentage = ingredient.defaultPercentage
+        defaultWeight = ingredient.defaultWeight
         temperatureValue = ingredient.temperature?.value
         temperatureUnit = ingredient.temperature?.measurement.rawValue
         extraAmount = ingredient.extraAmount
@@ -60,11 +64,12 @@ struct IngredientFileData: Codable {
             temp = nil
         }
         return Ingredient(name: name, isFlour: isFlour, defaultPercentage: defaultPercentage,
-                          temperature: temp, extraAmount: extraAmount, extraUnit: extraUnit)
+                          temperature: temp, defaultWeight: defaultWeight,
+                          extraAmount: extraAmount, extraUnit: extraUnit)
     }
 }
 
-struct PrefermentFileData: Codable {
+struct PrefermentFileData: Codable, Equatable {
     let name: String
     let flourPercentage: Double
     let ingredients: [IngredientFileData]
@@ -89,7 +94,7 @@ enum RecipeFile {
 
     static func payload(from recipe: any RecipeProtocol, author: String?) -> RecipeFilePayload {
         let trimmed = author?.trimmingCharacters(in: .whitespaces)
-        return RecipeFilePayload(version: 1,
+        return RecipeFilePayload(version: 2,
                                  author: trimmed.flatMap { $0.isEmpty ? nil : $0 },
                                  recipe: RecipeFileData(from: recipe))
     }
@@ -124,10 +129,12 @@ enum RecipeFile {
         if let pref = data.preferment {
             return PrefermentRecipe(name: data.name, collection: collection,
                                     defaultWeight: data.defaultWeight, ingredients: ingredients,
-                                    preferment: pref.toPreferment(), instructions: instructions)
+                                    preferment: pref.toPreferment(), instructions: instructions,
+                                    measurementMode: data.measurementMode ?? .percent)
         }
         return Recipe(name: data.name, collection: collection,
                       defaultWeight: data.defaultWeight, ingredients: ingredients,
-                      instructions: instructions)
+                      instructions: instructions,
+                      measurementMode: data.measurementMode ?? .percent)
     }
 }

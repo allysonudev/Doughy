@@ -22,6 +22,9 @@ class IngredientConverter: NSObject {
         coreData.name = ingredient.name
         coreData.isFlour = ingredient.isFlour
         coreData.defaultPercentage = NSNumber(floatLiteral: ingredient.defaultPercentage)
+        if let defaultWeight = ingredient.defaultWeight {
+            coreData.setValue(NSNumber(floatLiteral: defaultWeight), forKey: "defaultWeight")
+        }
         if let temperature = ingredient.temperature {
             coreData.temperature = NSNumber(floatLiteral: temperature.value)
         }
@@ -36,6 +39,7 @@ class IngredientConverter: NSObject {
     func convertToExternal(ingredient: XCIngredient) -> Ingredient {
         let name = ingredient.name!
         let defaultPercentage = ingredient.defaultPercentage!.doubleValue
+        let defaultWeight = (ingredient.value(forKey: "defaultWeight") as? NSNumber)?.doubleValue
         let isFlour = ingredient.isFlour
         var temperature: Temperature? = nil
         if let temp = ingredient.temperature?.doubleValue {
@@ -44,6 +48,6 @@ class IngredientConverter: NSObject {
         let extraAmount = ingredient.extraAmount?.doubleValue
         let extraUnit = ingredient.extraUnit
 
-        return Ingredient(name: name, isFlour: isFlour, defaultPercentage: defaultPercentage, temperature: temperature, extraAmount: extraAmount, extraUnit: extraUnit)
+        return Ingredient(name: name, isFlour: isFlour, defaultPercentage: defaultPercentage, temperature: temperature, defaultWeight: defaultWeight, extraAmount: extraAmount, extraUnit: extraUnit)
     }
 }

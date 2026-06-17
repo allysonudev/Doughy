@@ -59,6 +59,11 @@ struct PendingShareRequest: Equatable {
     let recipientName: String?
 }
 
+struct PendingOpenRecipeRequest: Equatable {
+    let recipeName: String
+    let collection: String
+}
+
 // MARK: - Intent
 
 struct ShareRecipeIntent: AppIntent {
@@ -96,8 +101,37 @@ struct ShareRecipeIntent: AppIntent {
     }
 }
 
+struct OpenRecipeIntent: AppIntent {
+    static var title: LocalizedStringResource = "Open Recipe"
+    static var description = IntentDescription(
+        "Open a saved recipe in Doughy.",
+        categoryName: "Recipe"
+    )
+    static let openAppWhenRun = true
+
+    @Parameter(
+        title: "Recipe",
+        description: "The recipe to open",
+        requestValueDialog: IntentDialog("Which recipe would you like to open?")
+    )
+    var recipe: RecipeAppEntity
+
+    @MainActor
+    func perform() async throws -> some IntentResult {
+        NotificationCenter.default.post(
+            name: .doughyOpenRecipeFromIntent,
+            object: PendingOpenRecipeRequest(
+                recipeName: recipe.recipeName,
+                collection: recipe.collection
+            )
+        )
+        return .result()
+    }
+}
+
 // MARK: - Notification name
 
 extension Notification.Name {
     static let doughyShareFromIntent = Notification.Name("DoughyShareFromIntent")
+    static let doughyOpenRecipeFromIntent = Notification.Name("DoughyOpenRecipeFromIntent")
 }

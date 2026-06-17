@@ -18,14 +18,15 @@ enum RecipeDiff {
     static func summarize(from old: RecipeSnapshot, to new: RecipeSnapshot) -> String? {
         var lines: [String] = []
 
-        lines.append(contentsOf: ingredientLines(from: old.ingredients, to: new.ingredients, prefix: ""))
+        let weightMode = old.measurementMode == .weight || new.measurementMode == .weight
+        lines.append(contentsOf: ingredientLines(from: old.ingredients, to: new.ingredients, prefix: "", weightMode: weightMode))
 
         switch (old.preferment, new.preferment) {
         case (let old?, let new?):
             if differs(old.flourPercentage, new.flourPercentage) {
                 lines.append("\(new.name) flour: \(percentFormatter.format(percent: old.flourPercentage)) \u{2192} \(percentFormatter.format(percent: new.flourPercentage))")
             }
-            lines.append(contentsOf: ingredientLines(from: old.ingredients, to: new.ingredients, prefix: "\(new.name) "))
+            lines.append(contentsOf: ingredientLines(from: old.ingredients, to: new.ingredients, prefix: "\(new.name) ", weightMode: weightMode))
         case (nil, .some):
             lines.append("+ Added preferment")
         case (.some, nil):
@@ -45,7 +46,7 @@ enum RecipeDiff {
         return lines.isEmpty ? nil : lines.joined(separator: "\n")
     }
 
-    private static func ingredientLines(from old: [IngredientSnapshot], to new: [IngredientSnapshot], prefix: String) -> [String] {
+    private static func ingredientLines(from old: [IngredientSnapshot], to new: [IngredientSnapshot], prefix: String, weightMode: Bool) -> [String] {
         var lines: [String] = []
         let newByName = Dictionary(uniqueKeysWithValues: new.map { ($0.name.lowercased(), $0) })
         let oldByName = Dictionary(uniqueKeysWithValues: old.map { ($0.name.lowercased(), $0) })
@@ -55,7 +56,9 @@ enum RecipeDiff {
                 lines.append("- Removed \(prefix)\(ingredient.name)")
                 continue
             }
-            if differs(ingredient.defaultPercentage, match.defaultPercentage) {
+            if weightMode && differs(ingredient.defaultWeight ?? 0, match.defaultWeight ?? 0) {
+                lines.append("\(prefix)\(ingredient.name): \(weightFormatter.format(weight: ingredient.defaultWeight ?? 0)) \u{2192} \(weightFormatter.format(weight: match.defaultWeight ?? 0))")
+            } else if differs(ingredient.defaultPercentage, match.defaultPercentage) {
                 lines.append("\(prefix)\(ingredient.name): \(percentFormatter.format(percent: ingredient.defaultPercentage)) \u{2192} \(percentFormatter.format(percent: match.defaultPercentage))")
             }
             if let oldLine = temperatureLine(prefix: prefix, ingredient: ingredient, other: match) {

@@ -1,7 +1,7 @@
 {
   "configurations" : [
     {
-      "id" : "9B1B8010-7235-4D08-ABF0-2912CD3AE390",
+      "id" : "BA7BD447-7F76-4F26-9016-91E248DA4951",
       "name" : "Configuration 1",
       "options" : {
 
@@ -13,19 +13,10 @@
   },
   "testTargets" : [
     {
-      "parallelizable" : true,
       "target" : {
         "containerPath" : "container:Doughy.xcodeproj",
         "identifier" : "BB30DEE42425B83F00BFD472",
         "name" : "Doughy Tests"
-      }
-    },
-    {
-      "parallelizable" : true,
-      "target" : {
-        "containerPath" : "container:Doughy.xcodeproj",
-        "identifier" : "AA000000000000000000000A",
-        "name" : "Doughy UI Tests"
       }
     }
   ],

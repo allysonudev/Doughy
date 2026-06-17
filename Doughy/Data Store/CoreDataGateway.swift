@@ -30,6 +30,8 @@ class CoreDataGateway: NSObject {
             desc.cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(
                 containerIdentifier: "iCloud.org.georgie.Doughy"
             )
+            desc.setOption(true as NSNumber, forKey: NSMigratePersistentStoresAutomaticallyOption)
+            desc.setOption(true as NSNumber, forKey: NSInferMappingModelAutomaticallyOption)
             desc.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
             desc.setOption(true as NSNumber,
                            forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
@@ -51,6 +53,10 @@ class CoreDataGateway: NSObject {
         // CloudKit unavailable — use a local-only store so the app still works.
         print("CloudKit unavailable (\(cloudError!.localizedDescription)), falling back to local store")
         let localContainer = NSPersistentContainer(name: "Doughy")
+        if let desc = localContainer.persistentStoreDescriptions.first {
+            desc.setOption(true as NSNumber, forKey: NSMigratePersistentStoresAutomaticallyOption)
+            desc.setOption(true as NSNumber, forKey: NSInferMappingModelAutomaticallyOption)
+        }
         localContainer.loadPersistentStores { _, error in
             if let error = error {
                 fatalError("Failed to load local CoreData store: \(error)")

@@ -29,6 +29,7 @@ class RecipeBuilder: NSObject {
             isModified = true
         }
     }
+    var measurementMode: RecipeMeasurementMode = .percent
     var instructions: [Instruction]? {
         didSet {
             isModified = true
@@ -46,6 +47,7 @@ class RecipeBuilder: NSObject {
         self.existingCollection = recipe.collection
         self.collection = recipe.collection
         self.defaultWeight = recipe.defaultWeight
+        self.measurementMode = recipe.measurementMode
         self.instructions = recipe.instructions
         if recipe is PrefermentRecipe {
             let totalPercent = recipe.ingredients
@@ -79,17 +81,19 @@ class RecipeBuilder: NSObject {
         guard let instructions = instructions else {
             throw RecipeBuilderError.missingInstructions
         }
-        guard !mainDoughBuilder.flourBuilders.isEmpty else {
+        guard measurementMode == .weight || !mainDoughBuilder.flourBuilders.isEmpty else {
             throw RecipeBuilderError.invalidIngredients
         }
         var ingredients = [Ingredient]()
         let flours = try mainDoughBuilder.flourBuilders.map { try $0.build() }
         ingredients.append(contentsOf: flours)
         
-        guard !mainDoughBuilder.ingredientBuilders.isEmpty else {
+        guard !mainDoughBuilder.flourBuilders.isEmpty || !mainDoughBuilder.ingredientBuilders.isEmpty else {
             throw RecipeBuilderError.invalidIngredients
         }
-        let flourWeight = calculateDefaultFlourWeight()
+        let flourWeight = measurementMode == .weight
+            ? mainDoughBuilder.flourBuilders.map { $0.weight ?? 0 }.reduce(0, +)
+            : calculateDefaultFlourWeight()
         let remainingIngredients = try mainDoughBuilder.ingredientBuilders.map {
             try $0.build(totalFlourWeight: flourWeight)
         }
@@ -98,14 +102,16 @@ class RecipeBuilder: NSObject {
             let preferment = try prefermentBuilder.build(totalFlourWeight: flourWeight)
             let result = PrefermentRecipe(name: name, collection: collection,
                                     defaultWeight: defaultWeight, ingredients: ingredients,
-                                    preferment: preferment, instructions: instructions)
+                                    preferment: preferment, instructions: instructions,
+                                    measurementMode: measurementMode)
             try validatePrefermentRecipe(recipe: result)
             return result
         }
         
         return Recipe(name: name, collection: collection,
                       defaultWeight: defaultWeight, ingredients: ingredients,
-                      instructions: instructions)
+                      instructions: instructions,
+                      measurementMode: measurementMode)
     }
     
     private func validatePrefermentRecipe(recipe: PrefermentRecipe) throws {

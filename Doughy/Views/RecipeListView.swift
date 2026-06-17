@@ -8,16 +8,19 @@ struct RecipeListView: View {
     @Environment(RecipeStore.self) private var store
     @State private var showingCreate = false
     @State private var editingRecipe: RecipeWrapper?
+    @State private var copyingRecipe: RecipeWrapper?
     @State private var sharingRecipe: RecipeWrapper?
     @State private var pendingShareAuthor: String = ""
     @State private var deletionError: String?
     @State private var intentScanImage: UIImage? = nil
+    @State private var openScanOptionsOnCreate = false
+    @State private var path: [RecipeWrapper] = []
     @State private var collapsedCollections: Set<String> = {
         Set(UserDefaults.standard.array(forKey: "collapsedCollections") as? [String] ?? [])
     }()
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             mainContent
                 .navigationTitle("Doughy")
                 .toolbar {
@@ -39,12 +42,21 @@ struct RecipeListView: View {
                     CalculatorView(recipe: wrapper.recipe)
                 }
         }
-        .sheet(isPresented: $showingCreate, onDismiss: { store.refresh(); intentScanImage = nil }) {
-            CreateRecipeView(initialScanImage: intentScanImage)
+        .sheet(isPresented: $showingCreate, onDismiss: {
+            store.refresh()
+            intentScanImage = nil
+            openScanOptionsOnCreate = false
+        }) {
+            CreateRecipeView(initialScanImage: intentScanImage,
+                             openScanOptionsOnAppear: openScanOptionsOnCreate)
                 .environment(store)
         }
         .sheet(item: $editingRecipe, onDismiss: { store.refresh() }) { wrapper in
             CreateRecipeView(editingRecipe: wrapper.recipe)
+                .environment(store)
+        }
+        .sheet(item: $copyingRecipe, onDismiss: { store.refresh() }) { wrapper in
+            CreateRecipeView(copyingRecipe: wrapper.recipe)
                 .environment(store)
         }
         .sheet(item: $sharingRecipe, onDismiss: { pendingShareAuthor = "" }) { wrapper in
@@ -62,11 +74,19 @@ struct RecipeListView: View {
         } message: {
             Text(deletionError ?? "")
         }
+        .onAppear {
+            openPendingScanShortcutIfNeeded()
+        }
         .onChange(of: store.pendingIntentImage) { _, image in
             guard let image else { return }
             intentScanImage = image
+            openScanOptionsOnCreate = false
             store.pendingIntentImage = nil
             showingCreate = true
+        }
+        .onChange(of: store.pendingScanShortcut) { _, pending in
+            guard pending else { return }
+            openPendingScanShortcutIfNeeded()
         }
         .onChange(of: store.pendingShareIntent) { (_: PendingShareRequest?, pending: PendingShareRequest?) in
             guard let pending else { return }
@@ -76,6 +96,22 @@ struct RecipeListView: View {
             pendingShareAuthor = pending.recipientName ?? ""
             sharingRecipe = RecipeWrapper(recipe: recipe)
         }
+        .onChange(of: store.pendingOpenIntent) { (_: PendingOpenRecipeRequest?, pending: PendingOpenRecipeRequest?) in
+            guard let pending else { return }
+            store.pendingOpenIntent = nil
+            store.refresh()
+            guard let col = store.collections.first(where: { $0.name == pending.collection }),
+                  let recipe = col.recipes.first(where: { $0.name == pending.recipeName }) else { return }
+            path = [RecipeWrapper(recipe: recipe)]
+        }
+    }
+
+    private func openPendingScanShortcutIfNeeded() {
+        guard store.pendingScanShortcut else { return }
+        store.pendingScanShortcut = false
+        intentScanImage = nil
+        openScanOptionsOnCreate = true
+        showingCreate = true
     }
 
     private var mainContent: some View {
@@ -120,6 +156,32 @@ struct RecipeListView: View {
                                     sharingRecipe = RecipeWrapper(recipe: recipe)
                                 }
                                 .tint(.green)
+                            }
+                            .contextMenu {
+                                Button {
+                                    sharingRecipe = RecipeWrapper(recipe: recipe)
+                                } label: {
+                                    Label("Share", systemImage: "square.and.arrow.up")
+                                }
+                                Button {
+                                    copyingRecipe = RecipeWrapper(recipe: recipe)
+                                } label: {
+                                    Label("Copy", systemImage: "doc.on.doc")
+                                }
+                                Button {
+                                    editingRecipe = RecipeWrapper(recipe: recipe)
+                                } label: {
+                                    Label("Edit", systemImage: "pencil")
+                                }
+                                Button(role: .destructive) {
+                                    do {
+                                        try store.delete(recipe: recipe)
+                                    } catch {
+                                        deletionError = "Could not delete \"\(recipe.name)\"."
+                                    }
+                                } label: {
+                                    Label("Delete", systemImage: "trash")
+                                }
                             }
                         }
                     }

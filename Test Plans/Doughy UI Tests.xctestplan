@@ -1,7 +1,7 @@
 {
   "configurations" : [
     {
-      "id" : "9B1B8010-7235-4D08-ABF0-2912CD3AE390",
+      "id" : "0110FCE8-6B31-45FD-A9BC-1C02C986339F",
       "name" : "Configuration 1",
       "options" : {
 
@@ -12,14 +12,6 @@
 
   },
   "testTargets" : [
-    {
-      "parallelizable" : true,
-      "target" : {
-        "containerPath" : "container:Doughy.xcodeproj",
-        "identifier" : "BB30DEE42425B83F00BFD472",
-        "name" : "Doughy Tests"
-      }
-    },
     {
       "parallelizable" : true,
       "target" : {

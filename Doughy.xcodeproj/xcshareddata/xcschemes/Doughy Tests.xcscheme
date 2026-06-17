@@ -14,10 +14,30 @@
       shouldUseLaunchSchemeArgsEnv = "YES">
       <TestPlans>
          <TestPlanReference
-            reference = "container:Test Plans/Doughy UI Tests.xctestplan"
+            reference = "container:Test Plans/Doughy Tests.xctestplan"
             default = "YES">
          </TestPlanReference>
       </TestPlans>
+      <Testables>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "BB30DEE42425B83F00BFD472"
+               BuildableName = "Doughy Tests.xctest"
+               ReferencedContainer = "container:Doughy.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "AA000000000000000000000A"
+               BuildableName = "Doughy UI Tests.xctest"
+               ReferencedContainer = "container:Doughy.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+      </Testables>
    </TestAction>
    <LaunchAction
       buildConfiguration = "Debug"

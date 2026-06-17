@@ -13,6 +13,7 @@ class Ingredient: NSObject {
     let name: String
     let isFlour: Bool
     var defaultPercentage: Double
+    var defaultWeight: Double?
     let temperature: Temperature?
     /// Quantity for "extra" ingredients that aren't converted to grams (e.g. "2 tbsp" of
     /// rosemary). Nil for normal ingredients.
@@ -21,10 +22,12 @@ class Ingredient: NSObject {
     let extraUnit: String?
 
     init(name: String, isFlour: Bool, defaultPercentage: Double, temperature: Temperature?,
+         defaultWeight: Double? = nil,
          extraAmount: Double? = nil, extraUnit: String? = nil) {
         self.name = name
         self.isFlour = isFlour
         self.defaultPercentage = defaultPercentage
+        self.defaultWeight = defaultWeight
         self.temperature = temperature
         self.extraAmount = extraAmount
         self.extraUnit = extraUnit

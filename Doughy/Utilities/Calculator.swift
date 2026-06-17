@@ -24,8 +24,10 @@ class Calculator: NSObject {
         let totalPercent = ingredients.map { $0.percent }.reduce(0, +)
         var doughIngredients = [CalculatedIngredient]()
         ingredients.forEach { ingredient in
-            let actualPercent = ingredient.percent / totalPercent
-            let weight = actualPercent * totalWeight
+            let actualPercent = totalPercent > 0 ? ingredient.percent / totalPercent : 0
+            let weight = recipe.measurementMode == .weight
+                ? (ingredient.weight ?? ingredient.ingredient.defaultWeight ?? 0) * extraScale
+                : actualPercent * totalWeight
             let baseExtraAmount = ingredient.extraAmountOverride ?? ingredient.ingredient.extraAmount
             let scaledExtraAmount = baseExtraAmount.map { $0 * extraScale }
             let calcIngredient = CalculatedIngredient(name: ingredient.ingredient.name, isFlour: ingredient.ingredient.isFlour, percentage: ingredient.percent, totalPercentage: ingredient.percent, temperature: ingredient.temperature, weight: weight, extraAmount: scaledExtraAmount, extraUnit: ingredient.ingredient.extraUnit)
@@ -43,11 +45,15 @@ class Calculator: NSObject {
             let prefermentTotalPercent = prefermentIngredients
                 .map { $0.percent }.reduce(0, +)
 
-            let prefermentWeight = prefermentFlourWeight * (prefermentTotalPercent / 100)
+            let prefermentWeight = recipe.measurementMode == .weight
+                ? prefermentIngredients.map { ($0.weight ?? $0.ingredient.defaultWeight ?? 0) * extraScale }.reduce(0, +)
+                : prefermentFlourWeight * (prefermentTotalPercent / 100)
             var calculatedPrefIngredients = [CalculatedIngredient]()
             for prefIngredient in prefermentIngredients {
-                let actualPercent = prefIngredient.percent / prefermentTotalPercent
-                let weight = actualPercent * prefermentWeight
+                let actualPercent = prefermentTotalPercent > 0 ? prefIngredient.percent / prefermentTotalPercent : 0
+                let weight = recipe.measurementMode == .weight
+                    ? (prefIngredient.weight ?? prefIngredient.ingredient.defaultWeight ?? 0) * extraScale
+                    : actualPercent * prefermentWeight
                 let scaledExtraAmount = prefIngredient.ingredient.extraAmount.map { $0 * extraScale }
                 let ingredient = CalculatedIngredient(name: prefIngredient.ingredient.name, isFlour: prefIngredient.ingredient.isFlour, percentage: prefIngredient.percent, totalPercentage: prefIngredient.percent, temperature: prefIngredient.temperature, weight: weight, extraAmount: scaledExtraAmount, extraUnit: prefIngredient.ingredient.extraUnit)
                 calculatedPrefIngredients.append(ingredient)
@@ -61,15 +67,15 @@ class Calculator: NSObject {
             if let prefIngredient = calculatedPreferment?.ingredients.first(where: { $0.name == ingredient.name  }) {
                 let totalIngWeight = ingredient.weight
                 let doughWeight = totalIngWeight - prefIngredient.weight
-                let doughPercentage = (doughWeight / totalFlourWeight) * 100
-                let totalPercentage = (totalIngWeight / totalFlourWeight) * 100
+                let doughPercentage = totalFlourWeight > 0 ? (doughWeight / totalFlourWeight) * 100 : 0
+                let totalPercentage = totalFlourWeight > 0 ? (totalIngWeight / totalFlourWeight) * 100 : 0
                 ingredient.percentage = doughPercentage
                 ingredient.totalPercentage = totalPercentage
                 prefIngredient.totalPercentage = totalPercentage
             }
             else {
                 let totalIngWeight = ingredient.weight
-                let totalPercentage = (totalIngWeight / totalFlourWeight) * 100
+                let totalPercentage = totalFlourWeight > 0 ? (totalIngWeight / totalFlourWeight) * 100 : 0
                 ingredient.percentage = totalPercentage
                 ingredient.totalPercentage = totalPercentage
             }
@@ -92,13 +98,14 @@ class Calculator: NSObject {
         let totalWeight = recipe.defaultWeight
 
         let ingredients = recipe.ingredients
-        let totalPercent = ingredients
-            .map { $0.defaultPercentage }
-            .reduce(0, +)
+        let totalPercent = ingredients.map { $0.defaultPercentage }.reduce(0, +)
+        let extraScale = recipe.defaultWeight > 0 ? totalWeight / recipe.defaultWeight : 1
         var doughIngredients = [CalculatedIngredient]()
         ingredients.forEach { ingredient in
-            let actualPercent = ingredient.defaultPercentage / totalPercent
-            let weight = actualPercent * totalWeight
+            let actualPercent = totalPercent > 0 ? ingredient.defaultPercentage / totalPercent : 0
+            let weight = recipe.measurementMode == .weight
+                ? (ingredient.defaultWeight ?? 0) * extraScale
+                : actualPercent * totalWeight
             let calcIngredient = CalculatedIngredient(name: ingredient.name, isFlour: ingredient.isFlour, percentage: ingredient.defaultPercentage, totalPercentage: ingredient.defaultPercentage, temperature: ingredient.temperature, weight: weight, extraAmount: ingredient.extraAmount, extraUnit: ingredient.extraUnit)
             doughIngredients.append(calcIngredient)
         }
@@ -116,11 +123,15 @@ class Calculator: NSObject {
             let prefermentTotalPercent = prefermentIngredients
                 .map { $0.defaultPercentage }.reduce(0, +)
 
-            let prefermentWeight = prefermentFlourWeight * (prefermentTotalPercent / 100)
+            let prefermentWeight = recipe.measurementMode == .weight
+                ? prefermentIngredients.map { ($0.defaultWeight ?? 0) * extraScale }.reduce(0, +)
+                : prefermentFlourWeight * (prefermentTotalPercent / 100)
             var calculatedIngredients = [CalculatedIngredient]()
             for prefIngredient in prefermentIngredients {
-                let actualPercent = prefIngredient.defaultPercentage / prefermentTotalPercent
-                let weight = actualPercent * prefermentWeight
+                let actualPercent = prefermentTotalPercent > 0 ? prefIngredient.defaultPercentage / prefermentTotalPercent : 0
+                let weight = recipe.measurementMode == .weight
+                    ? (prefIngredient.defaultWeight ?? 0) * extraScale
+                    : actualPercent * prefermentWeight
                 let calcIngredient = CalculatedIngredient(name: prefIngredient.name, isFlour: prefIngredient.isFlour, percentage: prefIngredient.defaultPercentage, totalPercentage: prefIngredient.defaultPercentage, temperature: prefIngredient.temperature, weight: weight, extraAmount: prefIngredient.extraAmount, extraUnit: prefIngredient.extraUnit)
                 calculatedIngredients.append(calcIngredient)
             }
@@ -134,15 +145,15 @@ class Calculator: NSObject {
             if let prefIngredient = calculatedPreferment?.ingredients.first(where: { $0.name == ingredient.name  }) {
                 let totalIngWeight = ingredient.weight
                 let doughWeight = totalIngWeight - prefIngredient.weight
-                let doughPercentage = (doughWeight / totalFlourWeight) * 100
-                let totalPercentage = (totalIngWeight / totalFlourWeight) * 100
+                let doughPercentage = totalFlourWeight > 0 ? (doughWeight / totalFlourWeight) * 100 : 0
+                let totalPercentage = totalFlourWeight > 0 ? (totalIngWeight / totalFlourWeight) * 100 : 0
                 ingredient.percentage = doughPercentage
                 ingredient.totalPercentage = totalPercentage
                 prefIngredient.totalPercentage = totalPercentage
             }
             else {
                 let totalIngWeight = ingredient.weight
-                let totalPercentage = (totalIngWeight / totalFlourWeight) * 100
+                let totalPercentage = totalFlourWeight > 0 ? (totalIngWeight / totalFlourWeight) * 100 : 0
                 ingredient.percentage = totalPercentage
                 ingredient.totalPercentage = totalPercentage
             }
