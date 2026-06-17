@@ -116,7 +116,8 @@ enum ParsedIngredientCategory: String, Sendable {
 
     // Salt
     case tableSalt
-    case kosherSalt
+    case mortonKosherSalt
+    case diamondCrystalKosherSalt
     case seaSalt
 
     // Other
@@ -152,7 +153,9 @@ struct ParsedIngredient: Sendable {
         The closest matching category for this ingredient from the fixed list, based on \
         its name and likely density. Map common synonyms and variants to their closest \
         category rather than falling back to "other", e.g.: "Wholemeal flour" -> \
-        wholeWheatFlour, "Diamond Crystal kosher salt" -> kosherSalt, "EVOO" -> oliveOil, \
+        wholeWheatFlour, "Diamond Crystal kosher salt" -> diamondCrystalKosherSalt, "Morton \
+        kosher salt" -> mortonKosherSalt, plain "kosher salt" -> mortonKosherSalt, \
+        "EVOO" -> oliveOil, \
         "00 flour" or "pizza flour" -> breadFlour, margarine -> butter, "confectioners' \
         sugar" or "icing sugar" -> powderedSugar, "caster sugar" or "superfine sugar" -> \
         granulatedSugar, "demerara sugar", "turbinado sugar", or "raw sugar" -> brownSugar, \

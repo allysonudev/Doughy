@@ -72,12 +72,13 @@ private struct IngredientNameField: View {
 
     private var filtered: [String] {
         let q = text.trimmingCharacters(in: .whitespaces)
-        let available = suggestions.filter { !exclude.contains($0.lowercased()) }
+        let qLower = q.lowercased()
+        let available = suggestions.filter { !exclude.contains($0.lowercased()) || $0.lowercased() == qLower }
         if q.isEmpty {
             return Array(available.prefix(5))
         }
         return available
-            .filter { $0.localizedCaseInsensitiveContains(q) && $0.localizedCaseInsensitiveCompare(q) != .orderedSame }
+            .filter { $0.localizedCaseInsensitiveContains(q) }
             .prefix(8)
             .map { $0 }
     }
@@ -256,6 +257,7 @@ private struct ScanDiagnostics: Codable {
 
 struct CreateRecipeView: View {
     let editingRecipe: (any RecipeProtocol)?
+    let initialScanImage: UIImage?
 
     @Environment(RecipeStore.self) private var store
     @Environment(\.dismiss) private var dismiss
@@ -326,8 +328,9 @@ struct CreateRecipeView: View {
     @State private var showDiscardConfirmation = false
     @State private var initialSnapshot: DraftSnapshot
 
-    init(editingRecipe: (any RecipeProtocol)? = nil) {
+    init(editingRecipe: (any RecipeProtocol)? = nil, initialScanImage: UIImage? = nil) {
         self.editingRecipe = editingRecipe
+        self.initialScanImage = initialScanImage
         guard let recipe = editingRecipe else {
             _initialSnapshot = State(initialValue: DraftSnapshot())
             return
@@ -473,6 +476,14 @@ struct CreateRecipeView: View {
     var body: some View {
         coreView
             .overlay { if isScanning { scanningOverlay } }
+            .task {
+                guard let image = initialScanImage else { return }
+                #if canImport(FoundationModels)
+                if #available(iOS 26, *) {
+                    await processImage(image)
+                }
+                #endif
+            }
             .sheet(isPresented: $showCamera) {
                 CameraPickerView { image in
                     showCamera = false
@@ -808,13 +819,15 @@ struct CreateRecipeView: View {
             .filter { $0.group == .flours }
             .map(\.displayName)
 
-    private static let seededIngredientSuggestions: [String] = [
-        "Water", "Kosher Salt", "Table Salt", "Sea Salt",
-        "Instant Yeast", "Active Dry Yeast", "Sourdough Starter",
-        "Butter", "Olive Oil", "Vegetable Oil",
-        "Granulated Sugar", "Brown Sugar", "Honey", "Molasses",
-        "Milk", "Buttermilk", "Eggs",
-    ]
+    private static let seededIngredientSuggestions: [String] = {
+        var names = IngredientCategory.allCases
+            .filter { $0.group != .flours }
+            .map(\.displayName)
+        for variant in ["Eggs", "Egg Whites", "Egg Yolks"] {
+            EggSize.allCases.forEach { names.append("\($0.displayName) \(variant)") }
+        }
+        return names
+    }()
 
     private var allFlourSuggestions: [String] {
         suggestionsSorted(isFlour: true)
@@ -842,6 +855,10 @@ struct CreateRecipeView: View {
         }
         let seeds = isFlour ? Self.seededFlourSuggestions : Self.seededIngredientSuggestions
         for seed in seeds where counts[seed] == nil { counts[seed] = 0 }
+        for entry in IngredientConversionStore.shared.allEntries() {
+            let entryIsFlour = entry.group == .flours
+            if entryIsFlour == isFlour, counts[entry.name] == nil { counts[entry.name] = 0 }
+        }
         return counts.keys.sorted { a, b in
             let ca = counts[a, default: 0], cb = counts[b, default: 0]
             return ca != cb ? ca > cb : a < b
@@ -1854,7 +1871,7 @@ struct CreateRecipeView: View {
         } catch RecipeBuilderError.mainDoughMissingPreferment(let ing) {
             saveError = "Preferment ingredient \"\(ing.name)\" is not in the main dough."
         } catch {
-            saveError = "Failed to save: \(error.localizedDescription)"
+            saveError = error.localizedDescription
         }
     }
 

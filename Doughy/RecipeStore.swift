@@ -4,10 +4,14 @@
 
 import Foundation
 import Observation
+import UIKit
 
 @Observable
 class RecipeStore {
     private(set) var collections: [RecipeCollection] = []
+    var pendingImport: RecipeFilePayload? = nil
+    var pendingIntentImage: UIImage? = nil
+    var pendingShareIntent: PendingShareRequest? = nil
 
     private let writer = RecipeWriter.shared
     private let predicates = RecipePredicates.shared

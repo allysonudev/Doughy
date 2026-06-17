@@ -17,9 +17,9 @@ struct IngredientConversionsView: View {
     @State private var eggValues: [EggSize: [EggPart: Double]] = [:]
     @State private var defaultEggSize: EggSize = .large
     @State private var showingResetAllConfirmation = false
-    @State private var showingAddConversion = false
     @State private var addingToGroup: IngredientCategoryGroup? = nil
     @State private var customEntries: [IngredientConversionStore.ConversionEntry] = []
+    @State private var hiddenCategories: Set<IngredientCategory> = []
 
     private func customEntries(for group: IngredientCategoryGroup) -> [IngredientConversionStore.ConversionEntry] {
         customEntries.filter { $0.group == group }
@@ -41,7 +41,6 @@ struct IngredientConversionsView: View {
                     }
                     Button {
                         addingToGroup = group
-                        showingAddConversion = true
                     } label: {
                         Label("Add Ingredient", systemImage: "plus.circle")
                     }
@@ -64,6 +63,15 @@ struct IngredientConversionsView: View {
                     showingResetAllConfirmation = true
                 }
                 .accessibilityIdentifier("resetAllConversionsButton")
+                .confirmationDialog("Reset All to Defaults?", isPresented: $showingResetAllConfirmation, titleVisibility: .visible) {
+                    Button("Reset All to Defaults", role: .destructive) {
+                        store.resetAllToDefaults()
+                        loadValues()
+                    }
+                    Button("Cancel", role: .cancel) { }
+                } message: {
+                    Text("This replaces every value below with Doughy's default for that ingredient.")
+                }
             } footer: {
                 Text("Doughy uses these values to convert cup, tablespoon, and teaspoon measurements to grams when scanning recipes. Adjust them if your results consistently run heavy or light - ingredient density varies with humidity, brand, and how it's measured.")
             }
@@ -72,23 +80,13 @@ struct IngredientConversionsView: View {
         .onAppear {
             loadValues()
             customEntries = conversionStore.allEntries()
+            hiddenCategories = store.hiddenCategories()
         }
-        .sheet(isPresented: $showingAddConversion) {
-            if let group = addingToGroup {
-                AddConversionSheet { name, unit, grams in
-                    conversionStore.save(name: name, unit: unit, gramsPerUnit: grams, group: group)
-                    customEntries = conversionStore.allEntries()
-                }
+        .sheet(item: $addingToGroup) { group in
+            AddConversionSheet { name, unit, grams in
+                conversionStore.save(name: name, unit: unit, gramsPerUnit: grams, group: group)
+                customEntries = conversionStore.allEntries()
             }
-        }
-        .confirmationDialog("Reset All to Defaults?", isPresented: $showingResetAllConfirmation, titleVisibility: .visible) {
-            Button("Reset All to Defaults", role: .destructive) {
-                store.resetAllToDefaults()
-                loadValues()
-            }
-            Button("Cancel", role: .cancel) { }
-        } message: {
-            Text("This replaces every value below with Doughy's default for that ingredient.")
         }
     }
 
@@ -97,7 +95,11 @@ struct IngredientConversionsView: View {
         HStack {
             Text(entry.name.capitalized)
             Spacer()
-            Text("\(entry.gramsPerUnit.formatted(.number.precision(.fractionLength(0...1)))) g / \(VolumeUnitFormatter.label(unit: entry.unit, amount: 1))")
+            TextField("", value: customEntryBinding(for: entry), format: .number.precision(.fractionLength(0...2)))
+                .multilineTextAlignment(.trailing)
+                .keyboardType(.decimalPad)
+                .frame(width: 70)
+            Text(shortUnitLabel(for: entry.unit))
                 .foregroundStyle(.secondary)
         }
         .swipeActions(edge: .trailing) {
@@ -108,8 +110,22 @@ struct IngredientConversionsView: View {
         }
     }
 
+    private func customEntryBinding(for entry: IngredientConversionStore.ConversionEntry) -> Binding<Double> {
+        Binding(
+            get: { entry.gramsPerUnit },
+            set: { newValue in
+                conversionStore.save(name: entry.name, unit: entry.unit, gramsPerUnit: newValue, group: entry.group)
+                customEntries = conversionStore.allEntries()
+            }
+        )
+    }
+
+    private func shortUnitLabel(for unit: String) -> String {
+        DensityUnit(rawValue: unit)?.label ?? "g/\(unit)"
+    }
+
     private func categories(in group: IngredientCategoryGroup) -> [IngredientCategory] {
-        IngredientCategory.allCases.filter { $0.group == group }
+        IngredientCategory.allCases.filter { $0.group == group && !hiddenCategories.contains($0) }
     }
 
     @ViewBuilder
@@ -120,7 +136,7 @@ struct IngredientConversionsView: View {
             TextField(
                 "",
                 value: binding(for: category),
-                format: .number
+                format: .number.precision(.fractionLength(0...2))
             )
             .multilineTextAlignment(.trailing)
             .keyboardType(.decimalPad)
@@ -141,6 +157,10 @@ struct IngredientConversionsView: View {
             .accessibilityIdentifier("unitMenu_\(category.rawValue)")
         }
         .swipeActions(edge: .trailing) {
+            Button("Delete", role: .destructive) {
+                store.hide(category: category)
+                hiddenCategories = store.hiddenCategories()
+            }
             if store.isCustomized(category) {
                 Button("Reset") {
                     store.resetToDefault(for: category)
@@ -183,7 +203,7 @@ struct IngredientConversionsView: View {
             TextField(
                 "",
                 value: eggBinding(for: size, part: part),
-                format: .number
+                format: .number.precision(.fractionLength(0...2))
             )
             .multilineTextAlignment(.trailing)
             .keyboardType(.decimalPad)
@@ -241,6 +261,7 @@ struct IngredientConversionsView: View {
             }))
         })
         defaultEggSize = store.defaultEggSize()
+        hiddenCategories = store.hiddenCategories()
     }
 }
 
@@ -263,7 +284,7 @@ private struct AddConversionSheet: View {
         NavigationStack {
             Form {
                 Section("Ingredient") {
-                    TextField("Name (e.g. Rosemary Leaves)", text: $name)
+                    TextField("Name", text: $name)
                         .autocorrectionDisabled()
                         .focused($isNameFocused)
                 }
@@ -276,7 +297,7 @@ private struct AddConversionSheet: View {
                     HStack {
                         Text("Grams per \(VolumeUnitFormatter.label(unit: unit, amount: 1))")
                         Spacer()
-                        TextField("0", value: $gramsPerUnit, format: .number)
+                        TextField("0", value: $gramsPerUnit, format: .number.precision(.fractionLength(0...2)))
                             .multilineTextAlignment(.trailing)
                             .keyboardType(.decimalPad)
                             .frame(width: 70)

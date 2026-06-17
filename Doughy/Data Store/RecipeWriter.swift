@@ -104,9 +104,22 @@ class RecipeWriter: NSObject {
 
 }
 
-enum RecipeWritingError: Error {
+enum RecipeWritingError: LocalizedError {
     case recipeExistsDuringWrite
     case noRecipeToUpdate
     case noRecipeToDelete
     case couldNotSave
+
+    var errorDescription: String? {
+        switch self {
+        case .recipeExistsDuringWrite:
+            return "A recipe with that name already exists in this collection. Please choose a different name."
+        case .noRecipeToUpdate:
+            return "The recipe could not be found. It may have been deleted."
+        case .noRecipeToDelete:
+            return "The recipe could not be deleted because it no longer exists."
+        case .couldNotSave:
+            return "The recipe could not be saved. Please try again."
+        }
+    }
 }

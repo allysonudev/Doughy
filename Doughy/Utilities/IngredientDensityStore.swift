@@ -6,7 +6,8 @@
 import Foundation
 
 /// Groups `IngredientCategory` cases for display in the conversions settings screen.
-enum IngredientCategoryGroup: String, CaseIterable {
+enum IngredientCategoryGroup: String, CaseIterable, Identifiable {
+    var id: String { rawValue }
     case flours = "Flours"
     case sweeteners = "Sweeteners"
     case fatsAndOils = "Fats & Oils"
@@ -188,7 +189,8 @@ enum IngredientCategory: String, CaseIterable, Identifiable {
 
     // Salt
     case tableSalt
-    case kosherSalt
+    case mortonKosherSalt
+    case diamondCrystalKosherSalt
     case seaSalt
 
     // Other
@@ -215,7 +217,7 @@ enum IngredientCategory: String, CaseIterable, Identifiable {
             return .dairy
         case .instantYeast, .activeDryYeast, .freshYeast, .sourdoughStarter, .bakingPowder, .bakingSoda:
             return .leaveningAndStarters
-        case .tableSalt, .kosherSalt, .seaSalt:
+        case .tableSalt, .mortonKosherSalt, .diamondCrystalKosherSalt, .seaSalt:
             return .salts
         case .water, .seeds, .nuts, .spices, .cocoaPowder, .chocolateChips:
             return .other
@@ -265,7 +267,8 @@ enum IngredientCategory: String, CaseIterable, Identifiable {
         case .bakingSoda: return "Baking Soda"
 
         case .tableSalt: return "Table Salt"
-        case .kosherSalt: return "Kosher Salt"
+        case .mortonKosherSalt: return "Morton Kosher Salt"
+        case .diamondCrystalKosherSalt: return "Diamond Crystal Kosher Salt"
         case .seaSalt: return "Sea Salt"
 
         case .water: return "Water"
@@ -300,34 +303,35 @@ enum IngredientCategory: String, CaseIterable, Identifiable {
         case .granulatedSugar: return 198
         case .brownSugar: return 213
         case .powderedSugar: return 113
-        case .honey: return 336 // 21g/tbsp
-        case .mapleSyrup: return 312
+        case .honey: return 340
+        case .mapleSyrup: return 322
         case .molasses: return 340
 
-        case .butter: return 226
-        case .oliveOil: return 200
-        case .vegetableOil: return 198
-        case .coconutOil: return 226
-        case .shortening: return 184
+        case .butter: return 227
+        case .oliveOil: return 216
+        case .vegetableOil: return 218
+        case .coconutOil: return 218
+        case .shortening: return 205
 
-        case .milk: return 227
-        case .buttermilk: return 227
-        case .yogurt: return 227
-        case .cream: return 227
-        case .sourCream: return 227
+        case .milk: return 240
+        case .buttermilk: return 245
+        case .yogurt: return 245
+        case .cream: return 240
+        case .sourCream: return 240
 
         case .instantYeast: return 144 // 3g/tsp
         case .activeDryYeast: return 144 // same as instant yeast
-        case .freshYeast: return 144 // same as instant yeast
-        case .sourdoughStarter: return 234
+        case .freshYeast: return 180 // denser/moister than dry yeast
+        case .sourdoughStarter: return 240
         case .bakingPowder: return 192 // 4g/tsp
         case .bakingSoda: return 288 // 6g/tsp
 
         case .tableSalt: return 288 // 6g/tsp
-        case .kosherSalt: return 256 // ~5.3g/tsp (Morton's)
+        case .mortonKosherSalt: return 240 // ~5g/tsp
+        case .diamondCrystalKosherSalt: return 140 // ~2.9g/tsp (much fluffier than Morton's)
         case .seaSalt: return 240 // 5g/tsp
 
-        case .water: return 227
+        case .water: return 236
         case .seeds: return 160
         case .nuts: return 120
         case .spices: return 100
@@ -343,7 +347,7 @@ enum IngredientCategory: String, CaseIterable, Identifiable {
     var defaultDisplayUnit: DensityUnit {
         switch self {
         case .instantYeast, .activeDryYeast, .freshYeast, .bakingPowder, .bakingSoda,
-             .tableSalt, .kosherSalt, .seaSalt:
+             .tableSalt, .mortonKosherSalt, .diamondCrystalKosherSalt, .seaSalt:
             return .teaspoon
         case .honey:
             return .tablespoon
@@ -367,6 +371,7 @@ class IngredientDensityStore: NSObject {
     private let displayUnitStorageKey = "ingredientDensityDisplayUnitStoreKey"
     private let eggOverridesStorageKey = "ingredientDensityEggOverridesKey"
     private let defaultEggSizeStorageKey = "ingredientDensityDefaultEggSizeKey"
+    private let hiddenCategoriesKey = "ingredientDensityHiddenCategoriesKey"
 
     private override init() { super.init() }
 
@@ -423,10 +428,25 @@ class IngredientDensityStore: NSObject {
         overrides = current
     }
 
-    /// Removes all user overrides, reverting every category and egg size to its default.
+    /// Removes all user overrides, reverting every category and egg size to its default,
+    /// and restores any hidden categories.
     func resetAllToDefaults() {
         overrides = [:]
         eggOverrides = [:]
+        userDefaults.removeObject(forKey: hiddenCategoriesKey)
+    }
+
+    /// Returns the set of categories the user has hidden from the conversions list.
+    func hiddenCategories() -> Set<IngredientCategory> {
+        let raw = userDefaults.array(forKey: hiddenCategoriesKey) as? [String] ?? []
+        return Set(raw.compactMap(IngredientCategory.init(rawValue:)))
+    }
+
+    /// Hides `category` from the conversions list.
+    func hide(category: IngredientCategory) {
+        var current = hiddenCategories()
+        current.insert(category)
+        userDefaults.set(current.map(\.rawValue), forKey: hiddenCategoriesKey)
     }
 
     private func eggOverrideKey(_ size: EggSize, _ part: EggPart) -> String {

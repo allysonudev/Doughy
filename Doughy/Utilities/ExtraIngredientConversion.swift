@@ -62,7 +62,7 @@ enum ExtraIngredientConversion {
         let gramsPerEgg = IngredientDensityStore.shared.gramsPerEgg(for: size, part: part)
         let grams = amount * gramsPerEgg
 
-        let amountText = amount == amount.rounded() ? String(Int(amount)) : String(amount)
+        let amountText = amount == amount.rounded() ? String(Int(amount)) : String(format: "%.2g", amount)
         let noun: String
         switch part {
         case .whole: noun = amount == 1 ? "egg" : "eggs"
@@ -133,7 +133,11 @@ enum ExtraIngredientConversion {
             (.sourdoughStarter, ["sourdough starter", "starter"]),
             (.bakingPowder, ["baking powder"]),
             (.bakingSoda, ["baking soda"]),
-            (.kosherSalt, ["kosher salt"]),
+            (.mortonKosherSalt, ["morton kosher salt", "morton's kosher salt", "morton kosher", "morton's kosher"]),
+            (.diamondCrystalKosherSalt, ["diamond crystal kosher salt", "diamond crystal"]),
+            // Unbranded "kosher salt" defaults to Morton (the more common brand in home kitchens).
+            // Must come after the Diamond Crystal entry, whose full name also contains "kosher salt".
+            (.mortonKosherSalt, ["kosher salt"]),
             (.seaSalt, ["sea salt"]),
             (.tableSalt, ["table salt", "salt"]),
             (.water, ["water"]),
