@@ -579,9 +579,9 @@ struct CreateRecipeView: View {
                 }
             }
             .confirmationDialog("Are you sure? You will lose unsaved changes", isPresented: $showDiscardConfirmation, titleVisibility: .visible) {
-                Button("Discard", role: .destructive) { dismiss() }
+                Button("action.discard", role: .destructive) { dismiss() }
                     .accessibilityIdentifier("discardChangesButton")
-                Button("Keep Editing", role: .cancel) {}
+                Button("action.keep_editing", role: .cancel) {}
                     .accessibilityIdentifier("keepEditingButton")
             }
             .interactiveDismissDisabled(isDirty)
@@ -866,19 +866,29 @@ struct CreateRecipeView: View {
 
     /// Units offered when switching the unit of an "extra" ingredient (one that's
     /// measured by volume/count rather than converted to grams).
-    private let extraIngredientUnits = ["teaspoon", "tablespoon", "cup", "ounce", "milliliter", "count"]
+    private var extraIngredientUnits: [String] {
+        switch Settings.shared.preferredVolumeSystem() {
+        case .metric:   return ["milliliter", "deciliter", "liter", "count"]
+        case .imperial: return ["teaspoon", "tablespoon", "cup", "ounce", "count"]
+        }
+    }
 
     private static let seededFlourSuggestions: [String] =
         IngredientCategory.allCases
             .filter { $0.group == .flours }
-            .map(\.displayName)
+            .map(\.localizedDisplayName)
 
     private static let seededIngredientSuggestions: [String] = {
         var names = IngredientCategory.allCases
             .filter { $0.group != .flours }
-            .map(\.displayName)
-        for variant in ["Eggs", "Egg Whites", "Egg Yolks"] {
-            EggSize.allCases.forEach { names.append("\($0.displayName) \(variant)") }
+            .map(\.localizedDisplayName)
+        let eggVariants = [
+            String(localized: "egg.noun.whole.many", defaultValue: "eggs"),
+            String(localized: "egg.noun.white.many", defaultValue: "egg whites"),
+            String(localized: "egg.noun.yolk.many",  defaultValue: "egg yolks"),
+        ]
+        for variant in eggVariants {
+            EggSize.allCases.forEach { names.append("\($0.localizedDisplayName) \(variant)") }
         }
         return names
     }()
@@ -935,7 +945,7 @@ struct CreateRecipeView: View {
                                             pendingValueRowID: $pendingValueRowID,
                                             exclude: Set(flours.map { $0.name.lowercased() }.filter { !$0.isEmpty }))
                         Spacer()
-                        TextField("0", value: $flours[index].value, format: .number)
+                        TextField("0", value: $flours[index].value, format: .number.precision(.fractionLength(0...4)))
                             .multilineTextAlignment(.trailing)
                             .keyboardType(.decimalPad)
                             .frame(width: 70)
@@ -957,7 +967,7 @@ struct CreateRecipeView: View {
                 }
                 .accessibilityIdentifier("addFlourButton")
             } header: {
-                Text("Flours")
+                Text(String(localized: "density.group.flours", defaultValue: "Flours"))
             } footer: {
                 if containsPreferment {
                     let prefermentLabel = prefermentName.isEmpty ? "preferment" : prefermentName
@@ -986,7 +996,7 @@ struct CreateRecipeView: View {
                     if flours.compactMap(\.value).isEmpty {
                         Text("Flour percentages must add up to 100%.")
                     } else if abs(diff) > 0.001 {
-                        Text(String(format: "%.4g%% remaining to reach 100%%", diff))
+                        Text(String(format: String(localized: "create.flours.main.percent_remaining", defaultValue: "%.4g%% remaining to reach 100%%"), diff))
                             .foregroundStyle(diff < 0 ? .red : .orange)
                     } else {
                         Text("Flour percentages total 100%. ✓").foregroundStyle(.green)
@@ -1005,7 +1015,7 @@ struct CreateRecipeView: View {
                                             pendingValueRowID: $pendingValueRowID,
                                             exclude: Set(ingredients.map { $0.name.lowercased() }.filter { !$0.isEmpty }))
                         Spacer()
-                        TextField("0", value: $ingredients[index].value, format: .number)
+                        TextField("0", value: $ingredients[index].value, format: .number.precision(.fractionLength(0...4)))
                             .multilineTextAlignment(.trailing)
                             .keyboardType(.decimalPad)
                             .frame(width: 70)
@@ -1028,10 +1038,10 @@ struct CreateRecipeView: View {
                 }
                 .onDelete { ingredients.remove(atOffsets: $0) }
                 Button { showingAddIngredientDialog = true } label: {
-                    Label("Add Ingredient", systemImage: "plus.circle")
+                    Label(String(localized: "action.add_ingredient", defaultValue: "Add Ingredient"), systemImage: "plus.circle")
                 }
                 .accessibilityIdentifier("addIngredientButton")
-                .confirmationDialog("Add Ingredient", isPresented: $showingAddIngredientDialog, titleVisibility: .visible) {
+                .confirmationDialog(LocalizedStringKey("action.add_ingredient"), isPresented: $showingAddIngredientDialog, titleVisibility: .visible) {
                     Button(isPercent
                            ? String(localized: "create.add_ingredient.by_percentage", defaultValue: "By Percentage")
                            : String(localized: "create.add_ingredient.by_weight", defaultValue: "By Weight")) {
@@ -1040,9 +1050,10 @@ struct CreateRecipeView: View {
                         focusedRowID = row.id
                     }
                     Button("Volume") {
-                        extraIngredients.append(ExtraIngredientRow(name: "", amount: 0, unit: "tablespoon", isPreferment: false))
+                        let defaultUnit = Settings.shared.preferredVolumeSystem() == .metric ? "deciliter" : "tablespoon"
+                        extraIngredients.append(ExtraIngredientRow(name: "", amount: 0, unit: defaultUnit, isPreferment: false))
                     }
-                    Button("Count") {
+                    Button(String(localized: "unit.count", defaultValue: "Count")) {
                         extraIngredients.append(ExtraIngredientRow(name: "", amount: 1, unit: "count", isPreferment: false))
                     }
                     Button("Cancel", role: .cancel) {}
@@ -1406,7 +1417,7 @@ struct CreateRecipeView: View {
                                             pendingValueRowID: $pendingValueRowID,
                                             exclude: Set(prefermentFlours.map { $0.name.lowercased() }.filter { !$0.isEmpty }))
                         Spacer()
-                        TextField("0", value: $prefermentFlours[index].value, format: .number)
+                        TextField("0", value: $prefermentFlours[index].value, format: .number.precision(.fractionLength(0...4)))
                             .multilineTextAlignment(.trailing)
                             .keyboardType(.decimalPad)
                             .frame(width: 70)
@@ -1425,7 +1436,7 @@ struct CreateRecipeView: View {
                 }
                 .accessibilityIdentifier("addPrefermentFlourButton")
             } header: {
-                Text("Flours")
+                Text(String(localized: "density.group.flours", defaultValue: "Flours"))
             } footer: {
                 if isPercent {
                     let sum = prefermentFlours.compactMap(\.value).reduce(0, +)
@@ -1433,7 +1444,7 @@ struct CreateRecipeView: View {
                     if prefermentFlours.compactMap(\.value).isEmpty {
                         Text("Flour percentages (relative to the preferment's own flour) must add up to 100%.")
                     } else if abs(diff) > 0.001 {
-                        Text(String(format: "%.4g%% remaining to reach 100%% of the preferment's flour.", diff))
+                        Text(String(format: String(localized: "create.flours.preferment.percent_remaining", defaultValue: "%.4g%% remaining to reach 100%% of the preferment's flour."), diff))
                             .foregroundStyle(diff < 0 ? .red : .orange)
                     } else {
                         Text("Flour percentages total 100%. ✓").foregroundStyle(.green)
@@ -1452,7 +1463,7 @@ struct CreateRecipeView: View {
                                             pendingValueRowID: $pendingValueRowID,
                                             exclude: Set(prefermentIngredientRows.map { $0.name.lowercased() }.filter { !$0.isEmpty }))
                         Spacer()
-                        TextField("0", value: $prefermentIngredientRows[index].value, format: .number)
+                        TextField("0", value: $prefermentIngredientRows[index].value, format: .number.precision(.fractionLength(0...4)))
                             .multilineTextAlignment(.trailing)
                             .keyboardType(.decimalPad)
                             .frame(width: 70)
@@ -1467,7 +1478,7 @@ struct CreateRecipeView: View {
                     prefermentIngredientRows.append(row)
                     focusedRowID = row.id
                 } label: {
-                    Label("Add Ingredient", systemImage: "plus.circle")
+                    Label(String(localized: "action.add_ingredient", defaultValue: "Add Ingredient"), systemImage: "plus.circle")
                 }
                 .accessibilityIdentifier("addPrefermentIngredientButton")
             } header: {
@@ -1544,7 +1555,7 @@ struct CreateRecipeView: View {
                 if containsPreferment { LabeledContent("Preferment", value: prefermentName) }
             }
 
-            Section("Flours") {
+            Section(String(localized: "density.group.flours", defaultValue: "Flours")) {
                 ForEach(containsPreferment ? combinedFlours : flours.filter { !$0.name.isEmpty }, id: \.id) { flour in
                     LabeledContent(flour.name, value: isPercent
                         ? String(format: "%.4g%%", flour.value ?? 0)

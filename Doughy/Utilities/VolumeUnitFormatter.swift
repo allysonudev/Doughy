@@ -16,6 +16,8 @@ enum VolumeUnitFormatter {
         case "cup":        return plural ? "cups" : "cup"
         case "ounce":      return plural ? "ounces" : "ounce"
         case "milliliter": return "ml"
+        case "deciliter":  return "dl"
+        case "liter":      return "l"
         case "count":      return ""
         default:           return unit
         }

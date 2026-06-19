@@ -35,6 +35,8 @@ enum ParsedVolumeUnit: String, Sendable {
     case cup
     case ounce
     case milliliter
+    case deciliter
+    case liter
     case egg
 }
 
@@ -186,7 +188,7 @@ struct ParsedIngredient: Sendable {
         belongs in weightGrams instead, even if it's the only quantity given (e.g. \
         "(455 g) lukewarm water" with no cup amount has weightGrams: 455 and \
         volumeAmount: 0, NOT volumeAmount: 455). Set volumeAmount to 0 if the recipe \
-        gives no cup/tablespoon/teaspoon/ounce/milliliter/egg amount for this ingredient \
+        gives no cup/tablespoon/teaspoon/ounce/milliliter/deciliter/liter/egg amount for this ingredient \
         (e.g. "4 cloves garlic", or no measurable quantity at all such as "butter for \
         greasing").
         """)
@@ -194,9 +196,11 @@ struct ParsedIngredient: Sendable {
     @Guide(description: """
         The unit that volumeAmount is measured in. Use "ounce" for weight given in \
         ounces (e.g. "4 ounces chocolate" -> 4, ounce — NOT a gram value). Use \
-        "milliliter" for "ml" amounts. Use "egg" when the quantity is a count of eggs, \
-        egg whites, or egg yolks (e.g. "2 large eggs" -> volumeAmount: 2, volumeUnit: \
-        egg). Use "none" if volumeAmount is 0.
+        "milliliter" for "ml" amounts. Use "deciliter" for "dl"/"deciliter"/"decilitre" \
+        amounts (common in Nordic and Icelandic recipes, e.g. "2 dl mjöl" -> 2, \
+        deciliter). Use "liter" for "l"/"liter"/"litre" amounts. Use "egg" when the \
+        quantity is a count of eggs, egg whites, or egg yolks (e.g. "2 large eggs" -> \
+        volumeAmount: 2, volumeUnit: egg). Use "none" if volumeAmount is 0.
         """)
     var volumeUnit: ParsedVolumeUnit
     @Guide(description: """
@@ -353,6 +357,10 @@ struct RecipeScanner {
             return amount * gramsPerOunce
         case .milliliter:
             return amount * gramsPerCup(for: category) / millilitersPerCup
+        case .deciliter:
+            return amount * 100 * gramsPerCup(for: category) / millilitersPerCup
+        case .liter:
+            return amount * 1000 * gramsPerCup(for: category) / millilitersPerCup
         }
     }
 
@@ -368,7 +376,7 @@ struct RecipeScanner {
     /// Units whose gram conversion depends on the ingredient's density (and is therefore
     /// only an estimate). Ounce amounts are an exact mass conversion and are excluded.
     private static let densityDependentUnits: Set<ParsedVolumeUnit> = [
-        .teaspoon, .tablespoon, .cup, .milliliter,
+        .teaspoon, .tablespoon, .cup, .milliliter, .deciliter, .liter,
     ]
 
     /// Descriptors for water temperature commonly found in ingredient names (e.g.

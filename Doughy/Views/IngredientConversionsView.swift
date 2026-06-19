@@ -235,7 +235,7 @@ struct IngredientConversionsView: View {
     }
 
     private func unit(for category: IngredientCategory) -> DensityUnit {
-        displayUnits[category] ?? .cup
+        displayUnits[category] ?? store.displayUnit(for: category)
     }
 
     /// The density for `category`, converted from the canonical grams-per-cup
@@ -270,11 +270,16 @@ private struct AddConversionSheet: View {
 
     @Environment(\.dismiss) private var dismiss
     @State private var name = ""
-    @State private var unit = "tablespoon"
+    @State private var unit = Settings.shared.preferredVolumeSystem() == .metric ? "milliliter" : "tablespoon"
     @State private var gramsPerUnit: Double? = nil
     @FocusState private var isNameFocused: Bool
 
-    private let units = ["teaspoon", "tablespoon", "cup", "ounce", "milliliter"]
+    private var units: [String] {
+        switch Settings.shared.preferredVolumeSystem() {
+        case .metric:   return ["milliliter", "deciliter", "liter", "ounce"]
+        case .imperial: return ["teaspoon", "tablespoon", "cup", "ounce", "milliliter"]
+        }
+    }
 
     private var isValid: Bool {
         !name.trimmingCharacters(in: .whitespaces).isEmpty && (gramsPerUnit ?? 0) > 0

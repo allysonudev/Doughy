@@ -8,11 +8,19 @@
 
 import UIKit
 
+enum VolumeSystem: String {
+    case metric
+    case imperial
+}
+
 fileprivate let hasInitializedDefaultsKey = "hasInitializedDefaultsKey"
 fileprivate let preferredTempKey = "preferredTempKey"
 
 class Settings: NSObject {
-    
+
+    static let preferredLanguageKey = "doughy.preferredLanguage"
+    static let preferredVolumeSystemKey = "doughy.preferredVolumeSystem"
+
     private let recipeConverter = RecipeConverter.shared
     private let recipeReader = RecipeReader.shared
     private let recipeWriter = RecipeWriter.shared
@@ -75,6 +83,42 @@ extension Settings {
         }
     }
     
+}
+
+extension Settings {
+    /// Returns the BCP 47 language code the user has pinned in-app (e.g. "is", "de"),
+    /// or nil if the app should follow the system language.
+    func preferredLanguageCode() -> String? {
+        userDefaults.string(forKey: Settings.preferredLanguageKey)
+    }
+
+    /// Persists `code` as the in-app language override and updates AppleLanguages so
+    /// the change takes effect on the next launch. Pass nil to revert to system default.
+    func setPreferredLanguageCode(_ code: String?) {
+        if let code = code {
+            userDefaults.set(code, forKey: Settings.preferredLanguageKey)
+            userDefaults.set([code, "en"], forKey: "AppleLanguages")
+        } else {
+            userDefaults.removeObject(forKey: Settings.preferredLanguageKey)
+            userDefaults.removeObject(forKey: "AppleLanguages")
+        }
+    }
+}
+
+extension Settings {
+    /// Returns the user's preferred volume measurement system, defaulting to metric
+    /// outside the US and imperial inside the US if no explicit preference is saved.
+    func preferredVolumeSystem() -> VolumeSystem {
+        if let raw = userDefaults.string(forKey: Settings.preferredVolumeSystemKey),
+           let system = VolumeSystem(rawValue: raw) {
+            return system
+        }
+        return Locale.current.region?.identifier == "US" ? .imperial : .metric
+    }
+
+    func setPreferredVolumeSystem(_ system: VolumeSystem) {
+        userDefaults.set(system.rawValue, forKey: Settings.preferredVolumeSystemKey)
+    }
 }
 
 extension Settings {

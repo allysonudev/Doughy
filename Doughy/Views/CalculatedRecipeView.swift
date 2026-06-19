@@ -211,19 +211,28 @@ struct CalculatedRecipeView: View {
     /// Returns the ordered list of units available for `name` at `grams`, starting with
     /// "grams". Units whose converted amount falls outside a practical range are skipped.
     /// Returns `nil` when no volume conversion exists for the ingredient.
+    private func systemPrimary(for category: IngredientCategory, system: VolumeSystem) -> DensityUnit {
+        DensityUnit.systemDefault(for: category.defaultDisplayUnit, in: system)
+    }
+
     private func cycleUnits(for name: String, grams: Double) -> [String]? {
         var units: [String] = ["grams"]
         let lowerName = name.lowercased()
 
         if let category = densityCategory(for: lowerName) {
             let gramsPerCup = densityStore.gramsPerCup(for: category)
-            let primary = category.defaultDisplayUnit
-            let volumeUnits: [DensityUnit] = [primary] + [.cup, .tablespoon, .teaspoon].filter { $0 != primary }
-            // The primary unit is always included — it's always the most natural unit for
-            // this ingredient and should be available even for very small amounts.
-            // Secondary units are filtered to practical ranges to avoid e.g. "66 tablespoons of flour".
+            let system = Settings.shared.preferredVolumeSystem()
+            let primary = systemPrimary(for: category, system: system)
+            let systemUnits: [DensityUnit]
+            switch system {
+            case .imperial: systemUnits = [.cup, .tablespoon, .teaspoon]
+            case .metric:   systemUnits = [.deciliter, .liter, .milliliter]
+            }
+            // Primary is always shown; remaining system units are filtered to practical ranges.
+            let volumeUnits: [DensityUnit] = [primary] + systemUnits.filter { $0 != primary }
             let secondaryLimits: [DensityUnit: (min: Double, max: Double)] = [
-                .cup: (0.0625, 20), .tablespoon: (0.0625, 32), .teaspoon: (0.0625, 48)
+                .cup: (0.0625, 20), .tablespoon: (0.0625, 32), .teaspoon: (0.0625, 48),
+                .deciliter: (0.5, 50), .liter: (0.05, 10), .milliliter: (5, 1000),
             ]
             for unit in volumeUnits {
                 let amount = grams / (gramsPerCup / unit.unitsPerCup)
