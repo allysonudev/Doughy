@@ -87,7 +87,7 @@ struct RecipeHistoryView: View {
             try store.deleteHistoryEntry(entry, from: recipe)
             refreshEntries()
         } catch {
-            actionError = "Could not delete this history entry."
+            actionError = String(localized: "history.error.delete_entry", defaultValue: "Could not delete this history entry.")
         }
     }
 
@@ -96,7 +96,7 @@ struct RecipeHistoryView: View {
             try store.restoreVersion(entry, for: recipe)
             refreshEntries()
         } catch {
-            actionError = "Could not restore this version."
+            actionError = String(localized: "history.error.restore_version", defaultValue: "Could not restore this version.")
         }
     }
 }

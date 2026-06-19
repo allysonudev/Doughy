@@ -30,7 +30,12 @@ enum ExtraIngredientConversion {
             let grams = amount * 28.3495
             return ExtraIngredientConversionSuggestion(
                 grams: grams,
-                description: "\(VolumeUnitFormatter.format(amount: amount, unit: unit)) \(name) \u{2248} \(Int(grams.rounded())) g"
+                description: String(
+                    format: String(localized: "conversion.suggestion.volume", defaultValue: "%@ %@ \u{2248} %d g"),
+                    VolumeUnitFormatter.format(amount: amount, unit: unit),
+                    name,
+                    Int(grams.rounded())
+                )
             )
         }
 
@@ -42,7 +47,12 @@ enum ExtraIngredientConversion {
         let grams = cups * gramsPerCup
         return ExtraIngredientConversionSuggestion(
             grams: grams,
-            description: "\(VolumeUnitFormatter.format(amount: amount, unit: unit)) \(name) \u{2248} \(Int(grams.rounded())) g"
+            description: String(
+                format: String(localized: "conversion.suggestion.volume", defaultValue: "%@ %@ \u{2248} %d g"),
+                VolumeUnitFormatter.format(amount: amount, unit: unit),
+                name,
+                Int(grams.rounded())
+            )
         )
     }
 
@@ -65,13 +75,28 @@ enum ExtraIngredientConversion {
         let amountText = amount == amount.rounded() ? String(Int(amount)) : String(format: "%.2g", amount)
         let noun: String
         switch part {
-        case .whole: noun = amount == 1 ? "egg" : "eggs"
-        case .white: noun = amount == 1 ? "egg white" : "egg whites"
-        case .yolk: noun = amount == 1 ? "egg yolk" : "egg yolks"
+        case .whole:
+            noun = amount == 1
+                ? String(localized: "egg.noun.whole.one", defaultValue: "egg")
+                : String(localized: "egg.noun.whole.many", defaultValue: "eggs")
+        case .white:
+            noun = amount == 1
+                ? String(localized: "egg.noun.white.one", defaultValue: "egg white")
+                : String(localized: "egg.noun.white.many", defaultValue: "egg whites")
+        case .yolk:
+            noun = amount == 1
+                ? String(localized: "egg.noun.yolk.one", defaultValue: "egg yolk")
+                : String(localized: "egg.noun.yolk.many", defaultValue: "egg yolks")
         }
         return ExtraIngredientConversionSuggestion(
             grams: grams,
-            description: "\(amountText) \(size.displayName.lowercased()) \(noun) \u{2248} \(Int(grams.rounded())) g"
+            description: String(
+                format: String(localized: "conversion.suggestion.egg", defaultValue: "%@ %@ %@ \u{2248} %d g"),
+                amountText,
+                size.localizedDisplayName.lowercased(),
+                noun,
+                Int(grams.rounded())
+            )
         )
     }
 

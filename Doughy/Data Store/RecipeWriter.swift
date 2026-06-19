@@ -113,13 +113,13 @@ enum RecipeWritingError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .recipeExistsDuringWrite:
-            return "A recipe with that name already exists in this collection. Please choose a different name."
+            return String(localized: "recipe_writer.error.recipe_exists", defaultValue: "A recipe with that name already exists in this collection. Please choose a different name.")
         case .noRecipeToUpdate:
-            return "The recipe could not be found. It may have been deleted."
+            return String(localized: "recipe_writer.error.not_found", defaultValue: "The recipe could not be found. It may have been deleted.")
         case .noRecipeToDelete:
-            return "The recipe could not be deleted because it no longer exists."
+            return String(localized: "recipe_writer.error.delete_missing", defaultValue: "The recipe could not be deleted because it no longer exists.")
         case .couldNotSave:
-            return "The recipe could not be saved. Please try again."
+            return String(localized: "recipe_writer.error.save_failed", defaultValue: "The recipe could not be saved. Please try again.")
         }
     }
 }

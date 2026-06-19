@@ -11,10 +11,22 @@ import UIKit
 class AlertViewHelper: NSObject {
     
     static func createDismissAlert(discardCompletion: ((UIAlertAction) -> Void)?) -> UIAlertController {
-        let alert = UIAlertController(title: "Discard changes?", message: "Your changes will be lost", preferredStyle: .actionSheet)
+        let alert = UIAlertController(
+            title: String(localized: "alert.discard_changes.title", defaultValue: "Discard changes?"),
+            message: String(localized: "alert.discard_changes.message", defaultValue: "Your changes will be lost"),
+            preferredStyle: .actionSheet
+        )
         
-        let discardAction = UIAlertAction(title: "Discard", style: .destructive, handler: discardCompletion)
-        let keepEditing = UIAlertAction(title: "Keep Editing", style: .default, handler: nil)
+        let discardAction = UIAlertAction(
+            title: String(localized: "action.discard", defaultValue: "Discard"),
+            style: .destructive,
+            handler: discardCompletion
+        )
+        let keepEditing = UIAlertAction(
+            title: String(localized: "action.keep_editing", defaultValue: "Keep Editing"),
+            style: .default,
+            handler: nil
+        )
         alert.addAction(discardAction)
         alert.addAction(keepEditing)
         return alert
@@ -23,7 +35,7 @@ class AlertViewHelper: NSObject {
     static func createErrorAlert(title: String, message: String, completion: ((UIAlertAction) -> Void)?) -> UIAlertController {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
         
-        let okAction = UIAlertAction(title: "OK", style: .default, handler: completion)
+        let okAction = UIAlertAction(title: String(localized: "action.ok", defaultValue: "OK"), style: .default, handler: completion)
         alert.addAction(okAction)
         return alert
     }

@@ -32,7 +32,7 @@ struct IngredientConversionsView: View {
     var body: some View {
         Form {
             ForEach(IngredientCategoryGroup.allCases, id: \.self) { group in
-                Section(group.rawValue) {
+                Section(group.localizedTitle) {
                     ForEach(categories(in: group)) { category in
                         row(for: category)
                     }
@@ -42,7 +42,7 @@ struct IngredientConversionsView: View {
                     Button {
                         addingToGroup = group
                     } label: {
-                        Label("Add Ingredient", systemImage: "plus.circle")
+                        Label(String(localized: "action.add_ingredient", defaultValue: "Add Ingredient"), systemImage: "plus.circle")
                     }
                 }
                 if group == .salts {
@@ -51,7 +51,7 @@ struct IngredientConversionsView: View {
             }
 
             if !ungroupedCustomEntries.isEmpty {
-                Section("Custom Ingredients") {
+                Section(String(localized: "conversions.custom_ingredients", defaultValue: "Custom Ingredients")) {
                     ForEach(ungroupedCustomEntries) { entry in
                         customEntryRow(entry)
                     }
@@ -59,24 +59,24 @@ struct IngredientConversionsView: View {
             }
 
             Section {
-                Button("Reset All to Defaults", role: .destructive) {
+                Button(String(localized: "action.reset_all_to_defaults", defaultValue: "Reset All to Defaults"), role: .destructive) {
                     showingResetAllConfirmation = true
                 }
                 .accessibilityIdentifier("resetAllConversionsButton")
-                .confirmationDialog("Reset All to Defaults?", isPresented: $showingResetAllConfirmation, titleVisibility: .visible) {
-                    Button("Reset All to Defaults", role: .destructive) {
+                .confirmationDialog(String(localized: "conversions.reset_all.title", defaultValue: "Reset All to Defaults?"), isPresented: $showingResetAllConfirmation, titleVisibility: .visible) {
+                    Button(String(localized: "action.reset_all_to_defaults", defaultValue: "Reset All to Defaults"), role: .destructive) {
                         store.resetAllToDefaults()
                         loadValues()
                     }
-                    Button("Cancel", role: .cancel) { }
+                    Button(String(localized: "action.cancel", defaultValue: "Cancel"), role: .cancel) { }
                 } message: {
-                    Text("This replaces every value below with Doughy's default for that ingredient.")
+                    Text(String(localized: "conversions.reset_all.message", defaultValue: "This replaces every value below with Doughy's default for that ingredient."))
                 }
             } footer: {
-                Text("Doughy uses these values to convert cup, tablespoon, and teaspoon measurements to grams when scanning recipes. Adjust them if your results consistently run heavy or light - ingredient density varies with humidity, brand, and how it's measured.")
+                Text(String(localized: "conversions.footer", defaultValue: "Doughy uses these values to convert cup, tablespoon, and teaspoon measurements to grams when scanning recipes. Adjust them if your results consistently run heavy or light - ingredient density varies with humidity, brand, and how it's measured."))
             }
         }
-        .navigationTitle("Ingredient Conversions")
+        .navigationTitle(String(localized: "conversions.title", defaultValue: "Ingredient Conversions"))
         .onAppear {
             loadValues()
             customEntries = conversionStore.allEntries()
@@ -121,7 +121,7 @@ struct IngredientConversionsView: View {
     }
 
     private func shortUnitLabel(for unit: String) -> String {
-        DensityUnit(rawValue: unit)?.label ?? "g/\(unit)"
+        DensityUnit(rawValue: unit)?.localizedLabel ?? "g/\(unit)"
     }
 
     private func categories(in group: IngredientCategoryGroup) -> [IngredientCategory] {
@@ -131,7 +131,7 @@ struct IngredientConversionsView: View {
     @ViewBuilder
     private func row(for category: IngredientCategory) -> some View {
         HStack {
-            Text(category.displayName)
+            Text(category.localizedDisplayName)
             Spacer()
             TextField(
                 "",
@@ -145,13 +145,13 @@ struct IngredientConversionsView: View {
 
             Menu {
                 ForEach(DensityUnit.allCases) { unit in
-                    Button(unit.label) {
+                    Button(unit.localizedLabel) {
                         displayUnits[category] = unit
                         store.setDisplayUnit(unit, for: category)
                     }
                 }
             } label: {
-                Text(unit(for: category).label)
+                Text(unit(for: category).localizedLabel)
                     .foregroundStyle(.secondary)
             }
             .accessibilityIdentifier("unitMenu_\(category.rawValue)")
@@ -173,9 +173,9 @@ struct IngredientConversionsView: View {
 
     private var eggsSection: some View {
         Section {
-            Picker("Default Egg Size", selection: $defaultEggSize) {
+            Picker(String(localized: "conversions.default_egg_size", defaultValue: "Default Egg Size"), selection: $defaultEggSize) {
                 ForEach(EggSize.allCases) { size in
-                    Text(size.displayName).tag(size)
+                    Text(size.localizedDisplayName).tag(size)
                 }
             }
             .accessibilityIdentifier("defaultEggSizePicker")
@@ -189,16 +189,16 @@ struct IngredientConversionsView: View {
                 }
             }
         } header: {
-            Text("Eggs")
+            Text(String(localized: "conversions.eggs", defaultValue: "Eggs"))
         } footer: {
-            Text("Eggs are measured by count rather than volume. These weights convert quantities like “2 large eggs” or “3 large egg whites” to grams. Whole-egg weights are for the egg out of its shell (white plus yolk); separated white and yolk weights vary more. If a recipe doesn’t specify a size, the default size above is assumed.")
+            Text(String(localized: "conversions.eggs.footer", defaultValue: "Eggs are measured by count rather than volume. These weights convert quantities like “2 large eggs” or “3 large egg whites” to grams. Whole-egg weights are for the egg out of its shell (white plus yolk); separated white and yolk weights vary more. If a recipe doesn’t specify a size, the default size above is assumed."))
         }
     }
 
     @ViewBuilder
     private func eggRow(for size: EggSize, part: EggPart) -> some View {
         HStack {
-            Text("\(size.displayName) \(part.displayName)")
+            Text("\(size.localizedDisplayName) \(part.localizedDisplayName)")
             Spacer()
             TextField(
                 "",
@@ -210,7 +210,7 @@ struct IngredientConversionsView: View {
             .frame(width: 70)
             .accessibilityIdentifier("eggGramsField_\(size.rawValue)_\(part.rawValue)")
 
-            Text("g")
+            Text(String(localized: "unit.grams.short", defaultValue: "g"))
                 .foregroundStyle(.secondary)
         }
         .swipeActions(edge: .trailing) {
@@ -283,40 +283,40 @@ private struct AddConversionSheet: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Ingredient") {
-                    TextField("Name", text: $name)
+                Section(String(localized: "create.ingredient_label", defaultValue: "Ingredient")) {
+                    TextField(String(localized: "create.name", defaultValue: "Name"), text: $name)
                         .autocorrectionDisabled()
                         .focused($isNameFocused)
                 }
                 Section {
-                    Picker("Unit", selection: $unit) {
+                    Picker(String(localized: "conversions.unit", defaultValue: "Unit"), selection: $unit) {
                         ForEach(units, id: \.self) { u in
                             Text(VolumeUnitFormatter.label(unit: u, amount: 1).capitalized).tag(u)
                         }
                     }
                     HStack {
-                        Text("Grams per \(VolumeUnitFormatter.label(unit: unit, amount: 1))")
+                        Text(String(format: String(localized: "conversions.grams_per_unit", defaultValue: "Grams per %@"), VolumeUnitFormatter.label(unit: unit, amount: 1)))
                         Spacer()
                         TextField("0", value: $gramsPerUnit, format: .number.precision(.fractionLength(0...2)))
                             .multilineTextAlignment(.trailing)
                             .keyboardType(.decimalPad)
                             .frame(width: 70)
-                        Text("g").foregroundStyle(.secondary)
+                        Text(String(localized: "unit.grams.short", defaultValue: "g")).foregroundStyle(.secondary)
                     }
                 } header: {
-                    Text("Conversion")
+                    Text(String(localized: "conversions.conversion", defaultValue: "Conversion"))
                 } footer: {
-                    Text("Enter how many grams are in one \(VolumeUnitFormatter.label(unit: unit, amount: 1)) of this ingredient.")
+                    Text(String(format: String(localized: "conversions.grams_per_unit.footer", defaultValue: "Enter how many grams are in one %@ of this ingredient."), VolumeUnitFormatter.label(unit: unit, amount: 1)))
                 }
             }
-            .navigationTitle("Add Ingredient")
+            .navigationTitle(String(localized: "action.add_ingredient", defaultValue: "Add Ingredient"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Cancel") { dismiss() }
+                    Button(String(localized: "action.cancel", defaultValue: "Cancel")) { dismiss() }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Save") {
+                    Button(String(localized: "action.save", defaultValue: "Save")) {
                         if let g = gramsPerUnit, isValid {
                             onSave(name.trimmingCharacters(in: .whitespaces), unit, g)
                             dismiss()

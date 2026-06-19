@@ -41,9 +41,9 @@ public class Temperature: NSObject {
             get {
                 switch self {
                 case .celsius:
-                    return "Celsius"
+                    return String(localized: "temperature.celsius", defaultValue: "Celsius")
                 case .fahrenheit:
-                    return "Fahrenheit"
+                    return String(localized: "temperature.fahrenheit", defaultValue: "Fahrenheit")
                 }
             }
         }

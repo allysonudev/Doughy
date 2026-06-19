@@ -397,11 +397,19 @@ struct CalculatorView: View {
             )
             calculatedResult = CalculatedWrapper(recipe: calculated, overrides: currentOverrides())
         } catch CalculationError.finalDoughNegativeValue(let name, let value) {
-            calculationError = "Calculated final dough \(name) weight is \(weightFormatter.format(weight: value)). Please adjust input."
+            calculationError = String(
+                format: String(localized: "calculator.error.final_dough_negative", defaultValue: "Calculated final dough %@ weight is %@. Please adjust input."),
+                name,
+                weightFormatter.format(weight: value)
+            )
         } catch CalculationError.prefermentNegativeValue(let name, let value) {
-            calculationError = "Calculated preferment \(name) weight is \(weightFormatter.format(weight: value)). Please adjust input."
+            calculationError = String(
+                format: String(localized: "calculator.error.preferment_negative", defaultValue: "Calculated preferment %@ weight is %@. Please adjust input."),
+                name,
+                weightFormatter.format(weight: value)
+            )
         } catch {
-            calculationError = "An unexpected calculation error occurred."
+            calculationError = String(localized: "calculator.error.unexpected", defaultValue: "An unexpected calculation error occurred.")
         }
     }
 
