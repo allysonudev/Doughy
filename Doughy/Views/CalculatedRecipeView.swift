@@ -186,7 +186,7 @@ struct CalculatedRecipeView: View {
             try store.addNote(text, to: recipe)
             lastSavedNoteText = text
         } catch {
-            actionError = "Could not save this note."
+            actionError = String(localized: "calculated.error.save_note", defaultValue: "Could not save this note.")
         }
     }
 
@@ -194,7 +194,7 @@ struct CalculatedRecipeView: View {
         do {
             try store.setAsDefault(recipe: recipe, overrides: overrides)
         } catch {
-            actionError = "Could not update this recipe's default values."
+            actionError = String(localized: "calculated.error.set_default", defaultValue: "Could not update this recipe's default values.")
         }
     }
 

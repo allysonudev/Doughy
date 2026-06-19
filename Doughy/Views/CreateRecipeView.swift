@@ -542,14 +542,23 @@ struct CreateRecipeView: View {
                 get: { pendingConversions.first != nil },
                 set: { _ in }
             )) {
-                TextField("Grams per \(pendingConversions.first.map { VolumeUnitFormatter.label(unit: $0.unit, amount: 1) } ?? "unit")",
+                TextField(String(
+                    format: String(localized: "create.unknown_ingredient.grams_per_unit", defaultValue: "Grams per %@"),
+                    pendingConversions.first.map { VolumeUnitFormatter.label(unit: $0.unit, amount: 1) }
+                        ?? String(localized: "create.unknown_ingredient.unit_fallback", defaultValue: "unit")
+                ),
                           text: $conversionGramsText)
                     .keyboardType(.decimalPad)
                 Button("Save & Use") { resolveConversionPrompt(useGrams: true) }
                 Button("Keep Original Unit", role: .cancel) { resolveConversionPrompt(useGrams: false) }
             } message: {
                 if let pending = pendingConversions.first {
-                    Text("We don't have a gram conversion for \"\(pending.name)\" (\(VolumeUnitFormatter.format(amount: pending.amount, unit: pending.unit))). If you know how many grams are in one \(VolumeUnitFormatter.label(unit: pending.unit, amount: 1)), enter it to use it now and remember it for future scans.")
+                    Text(String(
+                        format: String(localized: "create.unknown_ingredient.message", defaultValue: "We don't have a gram conversion for \"%@\" (%@). If you know how many grams are in one %@, enter it to use it now and remember it for future scans."),
+                        pending.name,
+                        VolumeUnitFormatter.format(amount: pending.amount, unit: pending.unit),
+                        VolumeUnitFormatter.label(unit: pending.unit, amount: 1)
+                    ))
                 }
             }
             .alert("Ingredient Has an Alternative", isPresented: Binding(
@@ -562,7 +571,11 @@ struct CreateRecipeView: View {
                 }
             } message: {
                 if let pending = pendingNameChoices.first {
-                    Text("This recipe lists \"\(pending.primaryName)\" or \"\(pending.alternativeName)\" — which would you like to use?")
+                    Text(String(
+                        format: String(localized: "create.alternative_ingredient.message", defaultValue: "This recipe lists \"%@\" or \"%@\" — which would you like to use?"),
+                        pending.primaryName,
+                        pending.alternativeName
+                    ))
                 }
             }
             .confirmationDialog("Are you sure? You will lose unsaved changes", isPresented: $showDiscardConfirmation, titleVisibility: .visible) {
@@ -671,8 +684,8 @@ struct CreateRecipeView: View {
                 VStack(spacing: 16) {
                     ModeCard(
                         icon: "percent",
-                        title: "By Baker's Percentage",
-                        description: "Best for flour-based doughs where ingredients scale from total flour",
+                        title: String(localized: "create.mode.percent.title", defaultValue: "By Baker's Percentage"),
+                        description: String(localized: "create.mode.percent.description", defaultValue: "Best for flour-based doughs where ingredients scale from total flour"),
                         accessibilityID: "byPercentModeCard"
                     ) {
                         inputMode = .byPercent
@@ -685,8 +698,8 @@ struct CreateRecipeView: View {
 
                     ModeCard(
                         icon: "scalemass",
-                        title: "By Weight",
-                        description: "Best for recipes without flour, or when you want to keep exact gram amounts",
+                        title: String(localized: "create.mode.weight.title", defaultValue: "By Weight"),
+                        description: String(localized: "create.mode.weight.description", defaultValue: "Best for recipes without flour, or when you want to keep exact gram amounts"),
                         accessibilityID: "byWeightModeCard"
                     ) {
                         inputMode = .byWeight
@@ -723,24 +736,24 @@ struct CreateRecipeView: View {
         if #available(iOS 26, *) {
             ModeCard(
                 icon: "camera.viewfinder",
-                title: "Scan a Recipe",
-                description: "Use Apple Intelligence to read a recipe from a photo or screenshot, entirely on-device and offline"
+                title: String(localized: "create.mode.scan.title", defaultValue: "Scan a Recipe"),
+                description: String(localized: "create.mode.scan.description", defaultValue: "Use Apple Intelligence to read a recipe from a photo or screenshot, entirely on-device and offline")
             ) {
                 showScanOptions = true
             }
         } else {
             ModeCard(
                 icon: "camera.viewfinder",
-                title: "Scan a Recipe",
-                description: "Requires iOS 26 or later with Apple Intelligence",
+                title: String(localized: "create.mode.scan.title", defaultValue: "Scan a Recipe"),
+                description: String(localized: "create.mode.scan.unavailable", defaultValue: "Requires iOS 26 or later with Apple Intelligence"),
                 enabled: false
             ) {}
         }
         #else
         ModeCard(
             icon: "camera.viewfinder",
-            title: "Scan a Recipe",
-            description: "Requires iOS 26 or later with Apple Intelligence",
+            title: String(localized: "create.mode.scan.title", defaultValue: "Scan a Recipe"),
+            description: String(localized: "create.mode.scan.unavailable", defaultValue: "Requires iOS 26 or later with Apple Intelligence"),
             enabled: false
         ) {}
         #endif
@@ -820,7 +833,9 @@ struct CreateRecipeView: View {
                 isRecipeNameFocused = true
             }
         }
-        .navigationTitle(editingRecipe != nil ? "Edit Recipe" : "New Recipe")
+        .navigationTitle(editingRecipe != nil
+                         ? String(localized: "create.title.edit", defaultValue: "Edit Recipe")
+                         : String(localized: "create.title.new", defaultValue: "New Recipe"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             if editingRecipe != nil || copyingRecipe != nil {
@@ -912,7 +927,7 @@ struct CreateRecipeView: View {
             Section {
                 ForEach(Array(flours.enumerated()), id: \.element.id) { index, _ in
                     HStack(alignment: .top) {
-                        IngredientNameField(placeholder: "Flour Name", text: $flours[index].name,
+                        IngredientNameField(placeholder: String(localized: "create.flour_name", defaultValue: "Flour Name"), text: $flours[index].name,
                                             suggestions: allFlourSuggestions,
                                             accessibilityID: "flourNameField_\(index)",
                                             rowID: flours[index].id,
@@ -950,13 +965,20 @@ struct CreateRecipeView: View {
                         let sum = combinedFlours.compactMap(\.value).reduce(0, +)
                         let diff = 100.0 - sum
                         if abs(diff) > 0.001 {
-                            Text(String(format: "Enter any additional flour used in the main dough, on top of what's in the \(prefermentLabel). Combined with the preferment, flour percentages must total 100%% (%.4g%% remaining).", diff))
+                            Text(String(
+                                format: String(localized: "create.flours.footer.preferment_percent_remaining", defaultValue: "Enter any additional flour used in the main dough, on top of what's in the %@. Combined with the preferment, flour percentages must total 100%% (%.4g%% remaining)."),
+                                prefermentLabel,
+                                diff
+                            ))
                                 .foregroundStyle(diff < 0 ? .red : .orange)
                         } else {
                             Text("Combined flour percentages total 100%. ✓").foregroundStyle(.green)
                         }
                     } else {
-                        Text("Enter any additional flour used in the main dough, on top of what's in the \(prefermentLabel). Leave at 0 (or remove) if all the flour is in the preferment.")
+                        Text(String(
+                            format: String(localized: "create.flours.footer.preferment_weight", defaultValue: "Enter any additional flour used in the main dough, on top of what's in the %@. Leave at 0 (or remove) if all the flour is in the preferment."),
+                            prefermentLabel
+                        ))
                     }
                 } else if isPercent {
                     let sum = flours.compactMap(\.value).reduce(0, +)
@@ -975,7 +997,7 @@ struct CreateRecipeView: View {
             Section {
                 ForEach(Array(ingredients.enumerated()), id: \.element.id) { index, _ in
                     HStack(alignment: .top) {
-                        IngredientNameField(placeholder: "Ingredient Name", text: $ingredients[index].name,
+                        IngredientNameField(placeholder: String(localized: "create.ingredient_name", defaultValue: "Ingredient Name"), text: $ingredients[index].name,
                                             suggestions: allIngredientSuggestions,
                                             accessibilityID: "ingredientNameField_\(index)",
                                             rowID: ingredients[index].id,
@@ -1010,7 +1032,9 @@ struct CreateRecipeView: View {
                 }
                 .accessibilityIdentifier("addIngredientButton")
                 .confirmationDialog("Add Ingredient", isPresented: $showingAddIngredientDialog, titleVisibility: .visible) {
-                    Button(isPercent ? "By Percentage" : "By Weight") {
+                    Button(isPercent
+                           ? String(localized: "create.add_ingredient.by_percentage", defaultValue: "By Percentage")
+                           : String(localized: "create.add_ingredient.by_weight", defaultValue: "By Weight")) {
                         let row = IngredientRow()
                         ingredients.append(row)
                         focusedRowID = row.id
@@ -1030,7 +1054,10 @@ struct CreateRecipeView: View {
             } footer: {
                 if containsPreferment {
                     let prefermentLabel = prefermentName.isEmpty ? "preferment" : prefermentName
-                    Text("Enter the additional amount of each ingredient used in the main dough, on top of what's in the \(prefermentLabel). Leave at 0 (or remove) if it's only used in the preferment.")
+                    Text(String(
+                        format: String(localized: "create.other_ingredients.footer.preferment", defaultValue: "Enter the additional amount of each ingredient used in the main dough, on top of what's in the %@. Leave at 0 (or remove) if it's only used in the preferment."),
+                        prefermentLabel
+                    ))
                 }
             }
 
@@ -1075,7 +1102,9 @@ struct CreateRecipeView: View {
                 focusedRowID = firstID
             }
         }
-        .navigationTitle(containsPreferment ? "Main Dough" : "Ingredients")
+        .navigationTitle(containsPreferment
+                         ? String(localized: "create.title.main_dough", defaultValue: "Main Dough")
+                         : String(localized: "create.title.ingredients", defaultValue: "Ingredients"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -1369,7 +1398,7 @@ struct CreateRecipeView: View {
             Section {
                 ForEach(Array(prefermentFlours.enumerated()), id: \.element.id) { index, _ in
                     HStack(alignment: .top) {
-                        IngredientNameField(placeholder: "Flour Name", text: $prefermentFlours[index].name,
+                        IngredientNameField(placeholder: String(localized: "create.flour_name", defaultValue: "Flour Name"), text: $prefermentFlours[index].name,
                                             suggestions: allFlourSuggestions,
                                             accessibilityID: "prefermentFlourNameField_\(index)",
                                             rowID: prefermentFlours[index].id,
@@ -1415,7 +1444,7 @@ struct CreateRecipeView: View {
             Section {
                 ForEach(Array(prefermentIngredientRows.enumerated()), id: \.element.id) { index, _ in
                     HStack(alignment: .top) {
-                        IngredientNameField(placeholder: "Ingredient Name", text: $prefermentIngredientRows[index].name,
+                        IngredientNameField(placeholder: String(localized: "create.ingredient_name", defaultValue: "Ingredient Name"), text: $prefermentIngredientRows[index].name,
                                             suggestions: allIngredientSuggestions,
                                             accessibilityID: "prefermentIngredientNameField_\(index)",
                                             rowID: prefermentIngredientRows[index].id,
@@ -1445,9 +1474,9 @@ struct CreateRecipeView: View {
                 Text("Other Ingredients")
             } footer: {
                 if isPercent {
-                    Text("Enter each ingredient's percentage relative to the preferment's own flour (e.g. 50 = 50% hydration). You'll add any additional amounts for the rest of the dough next.")
+                    Text(String(localized: "create.preferment.other_ingredients.footer.percent", defaultValue: "Enter each ingredient's percentage relative to the preferment's own flour (e.g. 50 = 50% hydration). You'll add any additional amounts for the rest of the dough next."))
                 } else {
-                    Text("Enter the weight of each ingredient as it's used in the preferment. You'll add any additional amounts for the rest of the dough next.")
+                    Text(String(localized: "create.preferment.other_ingredients.footer.weight", defaultValue: "Enter the weight of each ingredient as it's used in the preferment. You'll add any additional amounts for the rest of the dough next."))
                 }
             }
         }
@@ -1606,7 +1635,9 @@ struct CreateRecipeView: View {
         .environment(\.editMode, .constant(.active))
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Button(editingRecipe != nil ? "Save Changes" : "Save Recipe") {
+                Button(editingRecipe != nil
+                       ? String(localized: "create.action.save_changes", defaultValue: "Save Changes")
+                       : String(localized: "create.action.save_recipe", defaultValue: "Save Recipe")) {
                     saveRecipe()
                 }
                 .bold()
@@ -1628,7 +1659,7 @@ struct CreateRecipeView: View {
         do {
             guard let data = try await item.loadTransferable(type: Data.self),
                   let image = UIImage(data: data) else {
-                scanError = "Could not load the selected image."
+                scanError = String(localized: "scan.error.load_selected_image", defaultValue: "Could not load the selected image.")
                 return
             }
             let result = try await RecipeScanner.shared.scan(image: image)
@@ -1901,17 +1932,24 @@ struct CreateRecipeView: View {
             }
             dismiss()
         } catch RecipeBuilderError.missingName {
-            saveError = "Recipe name is missing."
+            saveError = String(localized: "create.error.missing_name", defaultValue: "Recipe name is missing.")
         } catch RecipeBuilderError.missingCollection {
-            saveError = "Collection name is missing."
+            saveError = String(localized: "create.error.missing_collection", defaultValue: "Collection name is missing.")
         } catch RecipeBuilderError.missingDefaultWeight {
-            saveError = "Default weight is missing."
+            saveError = String(localized: "create.error.missing_default_weight", defaultValue: "Default weight is missing.")
         } catch RecipeBuilderError.invalidIngredients {
-            saveError = "One or more ingredients are invalid. Please review your recipe."
+            saveError = String(localized: "create.error.invalid_ingredients", defaultValue: "One or more ingredients are invalid. Please review your recipe.")
         } catch RecipeBuilderError.mainDoughLessThanPreferment(let main, let pref) {
-            saveError = "\(main.name) in the main dough must be at least as much as in the preferment (\(pref.name))."
+            saveError = String(
+                format: String(localized: "create.error.main_dough_less_than_preferment", defaultValue: "%@ in the main dough must be at least as much as in the preferment (%@)."),
+                main.name,
+                pref.name
+            )
         } catch RecipeBuilderError.mainDoughMissingPreferment(let ing) {
-            saveError = "Preferment ingredient \"\(ing.name)\" is not in the main dough."
+            saveError = String(
+                format: String(localized: "create.error.main_dough_missing_preferment", defaultValue: "Preferment ingredient \"%@\" is not in the main dough."),
+                ing.name
+            )
         } catch {
             saveError = error.localizedDescription
         }

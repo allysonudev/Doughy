@@ -95,7 +95,10 @@ struct ImportRecipeView: View {
             }
             store.pendingImport = nil
         } catch {
-            errorMessage = "A recipe named \"\(recipe.name)\" already exists. Rename it before importing, or ask the sender to rename theirs."
+            errorMessage = String(
+                format: String(localized: "import.error.duplicate_recipe", defaultValue: "A recipe named \"%@\" already exists. Rename it before importing, or ask the sender to rename theirs."),
+                recipe.name
+            )
         }
     }
 }

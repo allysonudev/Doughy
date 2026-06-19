@@ -238,10 +238,14 @@ enum ScanError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .invalidImage:       return "Could not read the selected image."
-        case .noTextFound:        return "No readable text was found in the image."
-        case .modelUnavailable:   return "Apple Intelligence is not available on this device or region."
-        case .noFlourFound:       return "Could not identify any flour in the recipe. Please enter the recipe manually."
+        case .invalidImage:
+            return String(localized: "scan.error.invalid_image", defaultValue: "Could not read the selected image.")
+        case .noTextFound:
+            return String(localized: "scan.error.no_text_found", defaultValue: "No readable text was found in the image.")
+        case .modelUnavailable:
+            return String(localized: "scan.error.model_unavailable", defaultValue: "Apple Intelligence is not available on this device or region.")
+        case .noFlourFound:
+            return String(localized: "scan.error.no_flour_found", defaultValue: "Could not identify any flour in the recipe. Please enter the recipe manually.")
         }
     }
 }

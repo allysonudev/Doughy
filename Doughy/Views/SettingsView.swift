@@ -29,7 +29,7 @@ struct SettingsView: View {
                             try Settings.shared.updateRecipeTemps(original: old, target: new)
                             store.refresh()
                         } catch {
-                            tempUpdateError = "Could not convert recipe temperatures."
+                            tempUpdateError = String(localized: "settings.error.convert_temperatures", defaultValue: "Could not convert recipe temperatures.")
                             selectedTemp = old
                         }
                     }

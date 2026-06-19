@@ -143,7 +143,10 @@ struct RecipeListView: View {
                                     do {
                                         try store.delete(recipe: recipe)
                                     } catch {
-                                        deletionError = "Could not delete \"\(recipe.name)\"."
+                                        deletionError = String(
+                                            format: String(localized: "recipe_list.delete_failed", defaultValue: "Could not delete \"%@\"."),
+                                            recipe.name
+                                        )
                                     }
                                 }
                                 Button("Edit") {
@@ -177,7 +180,10 @@ struct RecipeListView: View {
                                     do {
                                         try store.delete(recipe: recipe)
                                     } catch {
-                                        deletionError = "Could not delete \"\(recipe.name)\"."
+                                        deletionError = String(
+                                            format: String(localized: "recipe_list.delete_failed", defaultValue: "Could not delete \"%@\"."),
+                                            recipe.name
+                                        )
                                     }
                                 } label: {
                                     Label("Delete", systemImage: "trash")

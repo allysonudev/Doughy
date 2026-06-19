@@ -129,6 +129,7 @@
 		EAB3150D4BD26C22D891FC75 /* RecipeListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F3DC0F90C6416B3782E7EA1 /* RecipeListView.swift */; };
 		EE00000000000000000001 /* RecipeScannerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE00000000000000000002 /* RecipeScannerTests.swift */; };
 		EE00000000000000000003 /* Recipes in Resources */ = {isa = PBXBuildFile; fileRef = EE00000000000000000004 /* Recipes */; };
+		F0A1B2C3D4E5F60718293A4C /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = F0A1B2C3D4E5F60718293A4B /* Localizable.strings */; };
 		FF0000000000000000000002 /* IngredientDensityStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0000000000000000000001 /* IngredientDensityStore.swift */; };
 		FF0000000000000000000004 /* IngredientConversionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0000000000000000000003 /* IngredientConversionsView.swift */; };
 /* End PBXBuildFile section */
@@ -284,6 +285,7 @@
 		DD0000000000000000000023 /* ExtraIngredientConversion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtraIngredientConversion.swift; sourceTree = "<group>"; };
 		EE00000000000000000002 /* RecipeScannerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeScannerTests.swift; sourceTree = "<group>"; };
 		EE00000000000000000004 /* Recipes */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Recipes; sourceTree = "<group>"; };
+		F0A1B2C3D4E5F60718293A4B /* Localizable.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		FF0000000000000000000001 /* IngredientDensityStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IngredientDensityStore.swift; sourceTree = "<group>"; };
 		FF0000000000000000000003 /* IngredientConversionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IngredientConversionsView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -371,6 +373,7 @@
 				BB30DED12425B83E00BFD472 /* SceneDelegate.swift */,
 				39CC5426652CEF6C8DF863BB /* RecipeStore.swift */,
 				BB30DEDB2425B83F00BFD472 /* Assets.xcassets */,
+				F0A1B2C3D4E5F60718293A4B /* Localizable.strings */,
 				BB30DEDD2425B83F00BFD472 /* LaunchScreen.storyboard */,
 				BB30DEE02425B83F00BFD472 /* Info.plist */,
 				8D5DEA7121902BEE05D59CD2 /* Doughy.entitlements */,
@@ -799,6 +802,7 @@
 				BBE2FF55243AB76D0091A485 /* WeightSliderCell.xib in Resources */,
 				BBEA0CB024345A0800A708C7 /* IngredientWithPrefermentListCell.xib in Resources */,
 				BBEA0CAE243458E100A708C7 /* InstructionListCell.xib in Resources */,
+				F0A1B2C3D4E5F60718293A4C /* Localizable.strings in Resources */,
 				BB30DED72425B83E00BFD472 /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -15,6 +15,18 @@ enum IngredientCategoryGroup: String, CaseIterable, Identifiable {
     case leaveningAndStarters = "Leavening & Starters"
     case salts = "Salt"
     case other = "Other"
+
+    var localizedTitle: String {
+        switch self {
+        case .flours: return String(localized: "density.group.flours", defaultValue: "Flours")
+        case .sweeteners: return String(localized: "density.group.sweeteners", defaultValue: "Sweeteners")
+        case .fatsAndOils: return String(localized: "density.group.fats_oils", defaultValue: "Fats & Oils")
+        case .dairy: return String(localized: "density.group.dairy", defaultValue: "Dairy")
+        case .leaveningAndStarters: return String(localized: "density.group.leavening", defaultValue: "Leavening & Starters")
+        case .salts: return String(localized: "density.group.salt", defaultValue: "Salt")
+        case .other: return String(localized: "density.group.other", defaultValue: "Other")
+        }
+    }
 }
 
 /// A unit of volume an ingredient's density can be expressed/edited in. Densities are
@@ -46,6 +58,15 @@ enum DensityUnit: String, CaseIterable, Identifiable {
         case .milliliter: return "g/ml"
         }
     }
+
+    var localizedLabel: String {
+        switch self {
+        case .cup: return String(localized: "density.unit.cup", defaultValue: "g/cup")
+        case .tablespoon: return String(localized: "density.unit.tablespoon", defaultValue: "g/tbsp")
+        case .teaspoon: return String(localized: "density.unit.teaspoon", defaultValue: "g/tsp")
+        case .milliliter: return String(localized: "density.unit.milliliter", defaultValue: "g/ml")
+        }
+    }
 }
 
 /// Which part of an egg a quantity refers to: the whole egg (in its shell), or just
@@ -62,6 +83,14 @@ enum EggPart: String, CaseIterable, Identifiable {
         case .whole: return "Whole Egg"
         case .white: return "Egg White"
         case .yolk: return "Egg Yolk"
+        }
+    }
+
+    var localizedDisplayName: String {
+        switch self {
+        case .whole: return String(localized: "egg.part.whole", defaultValue: "Whole Egg")
+        case .white: return String(localized: "egg.part.white", defaultValue: "Egg White")
+        case .yolk: return String(localized: "egg.part.yolk", defaultValue: "Egg Yolk")
         }
     }
 }
@@ -132,6 +161,16 @@ enum EggSize: String, CaseIterable, Identifiable {
         case .large: return "Large"
         case .extraLarge: return "Extra Large"
         case .jumbo: return "Jumbo"
+        }
+    }
+
+    var localizedDisplayName: String {
+        switch self {
+        case .small: return String(localized: "egg.size.small", defaultValue: "Small")
+        case .medium: return String(localized: "egg.size.medium", defaultValue: "Medium")
+        case .large: return String(localized: "egg.size.large", defaultValue: "Large")
+        case .extraLarge: return String(localized: "egg.size.extra_large", defaultValue: "Extra Large")
+        case .jumbo: return String(localized: "egg.size.jumbo", defaultValue: "Jumbo")
         }
     }
 }
@@ -277,6 +316,62 @@ enum IngredientCategory: String, CaseIterable, Identifiable {
         case .spices: return "Spices"
         case .cocoaPowder: return "Cocoa Powder"
         case .chocolateChips: return "Chocolate Chips"
+        }
+    }
+
+    var localizedDisplayName: String {
+        switch self {
+        case .breadFlour: return String(localized: "density.ingredient.bread_flour", defaultValue: "Bread Flour")
+        case .allPurposeFlour: return String(localized: "density.ingredient.all_purpose_flour", defaultValue: "All-Purpose Flour")
+        case .cakeFlour: return String(localized: "density.ingredient.cake_flour", defaultValue: "Cake Flour")
+        case .wholeWheatFlour: return String(localized: "density.ingredient.whole_wheat_flour", defaultValue: "Whole Wheat Flour")
+        case .ryeFlour: return String(localized: "density.ingredient.rye_flour", defaultValue: "Rye Flour")
+        case .speltFlour: return String(localized: "density.ingredient.spelt_flour", defaultValue: "Spelt Flour")
+        case .semolinaFlour: return String(localized: "density.ingredient.semolina_flour", defaultValue: "Semolina Flour")
+        case .oatFlour: return String(localized: "density.ingredient.oat_flour", defaultValue: "Oat Flour")
+        case .cornmeal: return String(localized: "density.ingredient.cornmeal", defaultValue: "Cornmeal")
+        case .riceFlour: return String(localized: "density.ingredient.rice_flour", defaultValue: "Rice Flour")
+        case .almondFlour: return String(localized: "density.ingredient.almond_flour", defaultValue: "Almond Flour")
+        case .buckwheatFlour: return String(localized: "density.ingredient.buckwheat_flour", defaultValue: "Buckwheat Flour")
+        case .glutenFreeFlourBlend: return String(localized: "density.ingredient.gluten_free_flour_blend", defaultValue: "Gluten-Free Flour Blend")
+
+        case .granulatedSugar: return String(localized: "density.ingredient.granulated_sugar", defaultValue: "Granulated Sugar")
+        case .brownSugar: return String(localized: "density.ingredient.brown_sugar", defaultValue: "Brown Sugar")
+        case .powderedSugar: return String(localized: "density.ingredient.powdered_sugar", defaultValue: "Powdered Sugar")
+        case .honey: return String(localized: "density.ingredient.honey", defaultValue: "Honey")
+        case .mapleSyrup: return String(localized: "density.ingredient.maple_syrup", defaultValue: "Maple Syrup")
+        case .molasses: return String(localized: "density.ingredient.molasses", defaultValue: "Molasses")
+
+        case .butter: return String(localized: "density.ingredient.butter", defaultValue: "Butter")
+        case .oliveOil: return String(localized: "density.ingredient.olive_oil", defaultValue: "Olive Oil")
+        case .vegetableOil: return String(localized: "density.ingredient.vegetable_oil", defaultValue: "Vegetable Oil")
+        case .coconutOil: return String(localized: "density.ingredient.coconut_oil", defaultValue: "Coconut Oil")
+        case .shortening: return String(localized: "density.ingredient.shortening", defaultValue: "Shortening")
+
+        case .milk: return String(localized: "density.ingredient.milk", defaultValue: "Milk")
+        case .buttermilk: return String(localized: "density.ingredient.buttermilk", defaultValue: "Buttermilk")
+        case .yogurt: return String(localized: "density.ingredient.yogurt", defaultValue: "Yogurt")
+        case .cream: return String(localized: "density.ingredient.cream", defaultValue: "Cream")
+        case .sourCream: return String(localized: "density.ingredient.sour_cream", defaultValue: "Sour Cream")
+
+        case .instantYeast: return String(localized: "density.ingredient.instant_yeast", defaultValue: "Instant Yeast")
+        case .activeDryYeast: return String(localized: "density.ingredient.active_dry_yeast", defaultValue: "Active Dry Yeast")
+        case .freshYeast: return String(localized: "density.ingredient.fresh_yeast", defaultValue: "Fresh Yeast")
+        case .sourdoughStarter: return String(localized: "density.ingredient.sourdough_starter", defaultValue: "Sourdough Starter")
+        case .bakingPowder: return String(localized: "density.ingredient.baking_powder", defaultValue: "Baking Powder")
+        case .bakingSoda: return String(localized: "density.ingredient.baking_soda", defaultValue: "Baking Soda")
+
+        case .tableSalt: return String(localized: "density.ingredient.table_salt", defaultValue: "Table Salt")
+        case .mortonKosherSalt: return String(localized: "density.ingredient.morton_kosher_salt", defaultValue: "Morton Kosher Salt")
+        case .diamondCrystalKosherSalt: return String(localized: "density.ingredient.diamond_crystal_kosher_salt", defaultValue: "Diamond Crystal Kosher Salt")
+        case .seaSalt: return String(localized: "density.ingredient.sea_salt", defaultValue: "Sea Salt")
+
+        case .water: return String(localized: "density.ingredient.water", defaultValue: "Water")
+        case .seeds: return String(localized: "density.ingredient.seeds", defaultValue: "Seeds")
+        case .nuts: return String(localized: "density.ingredient.nuts", defaultValue: "Nuts")
+        case .spices: return String(localized: "density.ingredient.spices", defaultValue: "Spices")
+        case .cocoaPowder: return String(localized: "density.ingredient.cocoa_powder", defaultValue: "Cocoa Powder")
+        case .chocolateChips: return String(localized: "density.ingredient.chocolate_chips", defaultValue: "Chocolate Chips")
         }
     }
 

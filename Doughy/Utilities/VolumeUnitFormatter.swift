@@ -24,7 +24,7 @@ enum VolumeUnitFormatter {
     /// A display name for `unit` suitable for menus/pickers, where `label`'s
     /// empty string for `"count"` would otherwise be confusing.
     static func menuName(unit: String) -> String {
-        unit == "count" ? "Count" : label(unit: unit, amount: 2)
+        unit == "count" ? String(localized: "unit.count", defaultValue: "Count") : label(unit: unit, amount: 2)
     }
 
     static func format(amount: Double, unit: String) -> String {

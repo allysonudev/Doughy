@@ -65,7 +65,7 @@ struct RecipeShareView: View {
         let trimmed = authorName.trimmingCharacters(in: .whitespaces)
         let payload = RecipeFile.payload(from: recipe, author: trimmed.isEmpty ? nil : trimmed)
         guard let url = try? RecipeFile.write(payload) else {
-            errorMessage = "Could not prepare the recipe file."
+            errorMessage = String(localized: "share.error.prepare_file", defaultValue: "Could not prepare the recipe file.")
             return
         }
         // Present UIActivityViewController on top of this sheet — no dismiss first.
