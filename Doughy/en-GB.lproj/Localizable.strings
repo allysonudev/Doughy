@@ -31,11 +31,11 @@
 "density.group.sweeteners" = "Sweeteners";
 
 "density.ingredient.active_dry_yeast" = "Active Dry Yeast";
-"density.ingredient.all_purpose_flour" = "All-Purpose Flour";
+"density.ingredient.all_purpose_flour" = "Plain Flour";
 "density.ingredient.almond_flour" = "Almond Flour";
 "density.ingredient.baking_powder" = "Baking Powder";
-"density.ingredient.baking_soda" = "Baking Soda";
-"density.ingredient.bread_flour" = "Bread Flour";
+"density.ingredient.baking_soda" = "Bicarbonate of Soda";
+"density.ingredient.bread_flour" = "Strong Flour";
 "density.ingredient.brown_sugar" = "Brown Sugar";
 "density.ingredient.buckwheat_flour" = "Buckwheat Flour";
 "density.ingredient.butter" = "Butter";
@@ -44,7 +44,7 @@
 "density.ingredient.chocolate_chips" = "Chocolate Chips";
 "density.ingredient.cocoa_powder" = "Cocoa Powder";
 "density.ingredient.coconut_oil" = "Coconut Oil";
-"density.ingredient.cornmeal" = "Cornmeal";
+"density.ingredient.cornmeal" = "Polenta / Cornmeal";
 "density.ingredient.cream" = "Cream";
 "density.ingredient.diamond_crystal_kosher_salt" = "Diamond Crystal Kosher Salt";
 "density.ingredient.fresh_yeast" = "Fresh Yeast";
@@ -59,12 +59,12 @@
 "density.ingredient.nuts" = "Nuts";
 "density.ingredient.oat_flour" = "Oat Flour";
 "density.ingredient.olive_oil" = "Olive Oil";
-"density.ingredient.powdered_sugar" = "Powdered Sugar";
+"density.ingredient.powdered_sugar" = "Icing Sugar";
 "density.ingredient.rice_flour" = "Rice Flour";
 "density.ingredient.rye_flour" = "Rye Flour";
 "density.ingredient.sea_salt" = "Sea Salt";
 "density.ingredient.seeds" = "Seeds";
-"density.ingredient.self_rising_flour" = "Self-Rising Flour";
+"density.ingredient.self_rising_flour" = "Self-Raising Flour";
 "density.ingredient.semolina_flour" = "Semolina Flour";
 "density.ingredient.shortening" = "Shortening";
 "density.ingredient.sour_cream" = "Sour Cream";
@@ -74,7 +74,7 @@
 "density.ingredient.table_salt" = "Table Salt";
 "density.ingredient.vegetable_oil" = "Vegetable Oil";
 "density.ingredient.water" = "Water";
-"density.ingredient.whole_wheat_flour" = "Whole Wheat Flour";
+"density.ingredient.whole_wheat_flour" = "Wholemeal Flour";
 "density.ingredient.yogurt" = "Yogurt";
 
 "density.unit.cup" = "g/cup";
@@ -104,7 +104,6 @@
 /* Explicit app-code strings */
 "action.discard" = "Discard";
 "action.keep_editing" = "Keep Editing";
-"action.close" = "Close";
 "action.ok" = "OK";
 "alert.discard_changes.message" = "Your changes will be lost";
 "alert.discard_changes.title" = "Discard changes?";
@@ -165,7 +164,6 @@
 "share.error.prepare_file" = "Could not prepare the recipe file.";
 "settings.error.convert_temperatures" = "Could not convert recipe temperatures.";
 "settings.footer.volume_system" = "Weight is always in grams — volume is just open to negotiation.";
-"source_photo.open" = "Open source photo";
 "temperature.celsius" = "Celsius";
 "temperature.fahrenheit" = "Fahrenheit";
 "unit.count" = "Count";
@@ -259,8 +257,8 @@
 "Preferment Details" = "Preferment Details";
 "Preview" = "Preview";
 "Recipe" = "Recipe";
-"Reset" = "Reset";
 "Restart Required" = "Restart Required";
+"Reset" = "Reset";
 "Restore" = "Restore";
 "Restore the recipe to this version? The current state will be saved to history first." = "Restore the recipe to this version? The current state will be saved to history first.";
 "Restore Version" = "Restore Version";

@@ -5,6 +5,7 @@
 import SwiftUI
 import PhotosUI
 import UIKit
+import NaturalLanguage
 #if canImport(VisionKit)
 import VisionKit
 #endif
@@ -51,6 +52,43 @@ private struct IngredientRow: Identifiable, Equatable {
 
     static func == (lhs: IngredientRow, rhs: IngredientRow) -> Bool {
         lhs.name == rhs.name && lhs.value == rhs.value && lhs.tempValue == rhs.tempValue
+    }
+}
+
+private struct InstructionRow: Identifiable {
+    var id = UUID()
+    var text: String
+}
+
+/// A ParseableFormatStyle for decimal number fields (.decimalPad keyboard) that displays
+/// with the app language's decimal separator but accepts both "." and "," when parsing,
+/// so hardware-keyboard input works correctly in any locale (e.g. German/Icelandic where
+/// "." is a grouping separator and would otherwise be misread as a thousands separator).
+private struct FlexibleDecimalStyle: ParseableFormatStyle {
+    typealias FormatInput = Double
+    typealias FormatOutput = String
+
+    var fractionDigits: ClosedRange<Int>
+
+    func format(_ value: Double) -> String {
+        // Use the app's selected language (not the device region) to pick the decimal
+        // separator. This keeps "." for English-language users even when their device
+        // region is set to a comma-decimal locale, while correctly showing "," for
+        // users running the app in German, French, etc.
+        let lang = Bundle.main.preferredLocalizations.first ?? "en"
+        return value.formatted(.number.locale(Locale(identifier: lang)).precision(.fractionLength(fractionDigits)))
+    }
+
+    var parseStrategy: FlexibleDecimalParseStrategy { FlexibleDecimalParseStrategy() }
+}
+
+private struct FlexibleDecimalParseStrategy: ParseStrategy {
+    func parse(_ value: String) throws -> Double {
+        // Swift's Double() always uses "." as decimal — handles en-US and hardware keyboards
+        if let d = Double(value) { return d }
+        // Also accept comma as decimal separator (locale-native decimal pad)
+        if let d = Double(value.replacingOccurrences(of: ",", with: ".")) { return d }
+        throw CocoaError(.formatting)
     }
 }
 
@@ -330,6 +368,7 @@ struct CreateRecipeView: View {
     @State private var isScanning = false
     @State private var scanError: String?
     @State private var lastScanDiagnostics: String?
+    @State private var detectedRecipeLanguage: String? = nil
     @State private var didOpenInitialScanOptions = false
     @State private var sourcePhotoImage: UIImage?
     @State private var sourcePhotoCorner: SourcePhotoCorner = .bottomLeading
@@ -382,7 +421,7 @@ struct CreateRecipeView: View {
     @State private var prefermentIngredientRows: [IngredientRow] = [IngredientRow()]
 
     // Preview + save
-    @State private var instructions: [String] = []
+    @State private var instructions: [InstructionRow] = []
     @State private var newStepText = ""
     @State private var saveError: String?
 
@@ -409,7 +448,7 @@ struct CreateRecipeView: View {
         _recipeName = State(initialValue: recipeName)
         _collectionName = State(initialValue: recipe.collection)
         _defaultWeight = State(initialValue: recipe.defaultWeight)
-        _instructions = State(initialValue: recipe.instructions.map(\.step))
+        _instructions = State(initialValue: recipe.instructions.map { InstructionRow(text: $0.step) })
 
         let flourRows = recipe.ingredients.filter(\.isFlour)
             .map { FlourRow(name: $0.name, value: isWeightRecipe ? ($0.defaultWeight ?? 0) : $0.defaultPercentage) }
@@ -538,7 +577,7 @@ struct CreateRecipeView: View {
             prefermentFlourPercent: prefermentFlourPercent,
             prefermentFlours: prefermentFlours,
             prefermentIngredientRows: prefermentIngredientRows,
-            instructions: instructions
+            instructions: instructions.map(\.text)
         )
     }
 
@@ -636,9 +675,9 @@ struct CreateRecipeView: View {
                 }
             }
             .confirmationDialog("Are you sure? You will lose unsaved changes", isPresented: $showDiscardConfirmation, titleVisibility: .visible) {
-                Button("Discard", role: .destructive) { dismiss() }
+                Button("action.discard", role: .destructive) { dismiss() }
                     .accessibilityIdentifier("discardChangesButton")
-                Button("Keep Editing", role: .cancel) {}
+                Button("action.keep_editing", role: .cancel) {}
                     .accessibilityIdentifier("keepEditingButton")
             }
             .interactiveDismissDisabled(isDirty)
@@ -702,6 +741,16 @@ struct CreateRecipeView: View {
                 case .preview:     previewForm
                 }
             }
+        }
+        .onChange(of: inputMode) { oldValue, newValue in
+            guard let oldValue, let newValue, oldValue != newValue else { return }
+            defaultWeight = nil
+            for i in flours.indices { flours[i].value = nil }
+            for i in ingredients.indices { ingredients[i].value = nil }
+            prefermentFlourPercent = nil
+            for i in prefermentFlours.indices { prefermentFlours[i].value = nil }
+            for i in prefermentIngredientRows.indices { prefermentIngredientRows[i].value = nil }
+            detectedRecipeLanguage = nil
         }
     }
 
@@ -864,11 +913,18 @@ struct CreateRecipeView: View {
     private var detailsForm: some View {
         let collections = store.collectionNames
         return Form {
-            Section("Recipe") {
+            Section {
                 TextField("Name", text: $recipeName)
                     .autocorrectionDisabled()
                     .focused($isRecipeNameFocused)
                     .accessibilityIdentifier("recipeNameField")
+            } header: {
+                Text("Recipe")
+            } footer: {
+                if let lang = detectedRecipeLanguage {
+                    Label(String(format: String(localized: "scan.detected_language", defaultValue: "Recipe detected in %@. Ingredient names have been translated."), lang), systemImage: "globe")
+                        .font(.footnote)
+                }
             }
 
             Section("Collection") {
@@ -909,7 +965,7 @@ struct CreateRecipeView: View {
                     HStack {
                         Text("Default Dough Weight")
                         Spacer()
-                        TextField("500", value: $defaultWeight, format: .number)
+                        TextField("500", value: $defaultWeight, format: FlexibleDecimalStyle(fractionDigits: 0...2))
                             .multilineTextAlignment(.trailing)
                             .keyboardType(.decimalPad)
                             .frame(width: 80)
@@ -966,19 +1022,29 @@ struct CreateRecipeView: View {
 
     /// Units offered when switching the unit of an "extra" ingredient (one that's
     /// measured by volume/count rather than converted to grams).
-    private let extraIngredientUnits = ["teaspoon", "tablespoon", "cup", "ounce", "milliliter", "count"]
+    private var extraIngredientUnits: [String] {
+        switch Settings.shared.preferredVolumeSystem() {
+        case .metric:   return ["milliliter", "deciliter", "liter", "count"]
+        case .imperial: return ["teaspoon", "tablespoon", "cup", "ounce", "count"]
+        }
+    }
 
     private static let seededFlourSuggestions: [String] =
         IngredientCategory.allCases
             .filter { $0.group == .flours }
-            .map(\.displayName)
+            .map(\.localizedDisplayName)
 
     private static let seededIngredientSuggestions: [String] = {
         var names = IngredientCategory.allCases
             .filter { $0.group != .flours }
-            .map(\.displayName)
-        for variant in ["Eggs", "Egg Whites", "Egg Yolks"] {
-            EggSize.allCases.forEach { names.append("\($0.displayName) \(variant)") }
+            .map(\.localizedDisplayName)
+        let eggVariants = [
+            String(localized: "egg.noun.whole.many", defaultValue: "eggs"),
+            String(localized: "egg.noun.white.many", defaultValue: "egg whites"),
+            String(localized: "egg.noun.yolk.many",  defaultValue: "egg yolks"),
+        ]
+        for variant in eggVariants {
+            EggSize.allCases.forEach { names.append("\($0.localizedDisplayName) \(variant)") }
         }
         return names
     }()
@@ -1035,7 +1101,7 @@ struct CreateRecipeView: View {
                                             pendingValueRowID: $pendingValueRowID,
                                             exclude: Set(flours.map { $0.name.lowercased() }.filter { !$0.isEmpty }))
                         Spacer()
-                        TextField("0", value: $flours[index].value, format: .number)
+                        TextField("0", value: $flours[index].value, format: FlexibleDecimalStyle(fractionDigits: 0...4))
                             .multilineTextAlignment(.trailing)
                             .keyboardType(.decimalPad)
                             .frame(width: 70)
@@ -1057,7 +1123,7 @@ struct CreateRecipeView: View {
                 }
                 .accessibilityIdentifier("addFlourButton")
             } header: {
-                Text("Flours")
+                Text(String(localized: "density.group.flours", defaultValue: "Flours"))
             } footer: {
                 if containsPreferment {
                     let prefermentLabel = prefermentName.isEmpty ? "preferment" : prefermentName
@@ -1086,7 +1152,7 @@ struct CreateRecipeView: View {
                     if flours.compactMap(\.value).isEmpty {
                         Text("Flour percentages must add up to 100%.")
                     } else if abs(diff) > 0.001 {
-                        Text(String(format: "%.4g%% remaining to reach 100%%", diff))
+                        Text(String(format: String(localized: "create.flours.main.percent_remaining", defaultValue: "%.4g%% remaining to reach 100%%"), diff))
                             .foregroundStyle(diff < 0 ? .red : .orange)
                     } else {
                         Text("Flour percentages total 100%. ✓").foregroundStyle(.green)
@@ -1105,20 +1171,35 @@ struct CreateRecipeView: View {
                                             pendingValueRowID: $pendingValueRowID,
                                             exclude: Set(ingredients.map { $0.name.lowercased() }.filter { !$0.isEmpty }))
                         Spacer()
-                        TextField("0", value: $ingredients[index].value, format: .number)
-                            .multilineTextAlignment(.trailing)
-                            .keyboardType(.decimalPad)
-                            .frame(width: 70)
-                            .accessibilityIdentifier("ingredientValueField_\(index)")
-                            .focused($focusedValueRowID, equals: ingredients[index].id)
-                        Text(isPercent ? "%" : "g").foregroundStyle(.secondary)
+                        VStack(alignment: .trailing, spacing: 2) {
+                            HStack(spacing: 4) {
+                                TextField("0", value: $ingredients[index].value, format: FlexibleDecimalStyle(fractionDigits: 0...4))
+                                    .multilineTextAlignment(.trailing)
+                                    .keyboardType(.decimalPad)
+                                    .frame(width: 70)
+                                    .accessibilityIdentifier("ingredientValueField_\(index)")
+                                    .focused($focusedValueRowID, equals: ingredients[index].id)
+                                Text(isPercent ? "%" : "g").foregroundStyle(.secondary)
+                            }
+                            if isPercent && containsPreferment {
+                                let name = ingredients[index].name
+                                let prefVal = prefermentIngredientRows
+                                    .first { $0.name.caseInsensitiveCompare(name) == .orderedSame }?.value
+                                if let prefVal, prefVal > 0.001, !name.isEmpty {
+                                    let combined = prefermentContribution(prefVal) + (ingredients[index].value ?? 0)
+                                    Text(String(format: String(localized: "create.ingredients.percent_total", defaultValue: "%.4g%% total"), combined))
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
+                        }
                     }
                     HStack {
                         Text("Temperature (optional)")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                         Spacer()
-                        TextField("–", value: $ingredients[index].tempValue, format: .number)
+                        TextField("–", value: $ingredients[index].tempValue, format: FlexibleDecimalStyle(fractionDigits: 0...1))
                             .multilineTextAlignment(.trailing)
                             .keyboardType(.decimalPad)
                             .frame(width: 60)
@@ -1128,10 +1209,10 @@ struct CreateRecipeView: View {
                 }
                 .onDelete { ingredients.remove(atOffsets: $0) }
                 Button { showingAddIngredientDialog = true } label: {
-                    Label("Add Ingredient", systemImage: "plus.circle")
+                    Label(String(localized: "action.add_ingredient", defaultValue: "Add Ingredient"), systemImage: "plus.circle")
                 }
                 .accessibilityIdentifier("addIngredientButton")
-                .confirmationDialog("Add Ingredient", isPresented: $showingAddIngredientDialog, titleVisibility: .visible) {
+                .confirmationDialog(LocalizedStringKey("action.add_ingredient"), isPresented: $showingAddIngredientDialog, titleVisibility: .visible) {
                     Button(isPercent
                            ? String(localized: "create.add_ingredient.by_percentage", defaultValue: "By Percentage")
                            : String(localized: "create.add_ingredient.by_weight", defaultValue: "By Weight")) {
@@ -1140,9 +1221,10 @@ struct CreateRecipeView: View {
                         focusedRowID = row.id
                     }
                     Button("Volume") {
-                        extraIngredients.append(ExtraIngredientRow(name: "", amount: 0, unit: "tablespoon", isPreferment: false))
+                        let defaultUnit = Settings.shared.preferredVolumeSystem() == .metric ? "deciliter" : "tablespoon"
+                        extraIngredients.append(ExtraIngredientRow(name: "", amount: 0, unit: defaultUnit, isPreferment: false))
                     }
-                    Button("Count") {
+                    Button(String(localized: "unit.count", defaultValue: "Count")) {
                         extraIngredients.append(ExtraIngredientRow(name: "", amount: 1, unit: "count", isPreferment: false))
                     }
                     Button("Cancel", role: .cancel) {}
@@ -1485,7 +1567,7 @@ struct CreateRecipeView: View {
                     HStack {
                         Text("% of Total Flour")
                         Spacer()
-                        TextField("0", value: $prefermentFlourPercent, format: .number)
+                        TextField("0", value: $prefermentFlourPercent, format: FlexibleDecimalStyle(fractionDigits: 0...4))
                             .multilineTextAlignment(.trailing)
                             .keyboardType(.decimalPad)
                             .frame(width: 70)
@@ -1506,7 +1588,7 @@ struct CreateRecipeView: View {
                                             pendingValueRowID: $pendingValueRowID,
                                             exclude: Set(prefermentFlours.map { $0.name.lowercased() }.filter { !$0.isEmpty }))
                         Spacer()
-                        TextField("0", value: $prefermentFlours[index].value, format: .number)
+                        TextField("0", value: $prefermentFlours[index].value, format: FlexibleDecimalStyle(fractionDigits: 0...4))
                             .multilineTextAlignment(.trailing)
                             .keyboardType(.decimalPad)
                             .frame(width: 70)
@@ -1525,7 +1607,7 @@ struct CreateRecipeView: View {
                 }
                 .accessibilityIdentifier("addPrefermentFlourButton")
             } header: {
-                Text("Flours")
+                Text(String(localized: "density.group.flours", defaultValue: "Flours"))
             } footer: {
                 if isPercent {
                     let sum = prefermentFlours.compactMap(\.value).reduce(0, +)
@@ -1533,7 +1615,7 @@ struct CreateRecipeView: View {
                     if prefermentFlours.compactMap(\.value).isEmpty {
                         Text("Flour percentages (relative to the preferment's own flour) must add up to 100%.")
                     } else if abs(diff) > 0.001 {
-                        Text(String(format: "%.4g%% remaining to reach 100%% of the preferment's flour.", diff))
+                        Text(String(format: String(localized: "create.flours.preferment.percent_remaining", defaultValue: "%.4g%% remaining to reach 100%% of the preferment's flour."), diff))
                             .foregroundStyle(diff < 0 ? .red : .orange)
                     } else {
                         Text("Flour percentages total 100%. ✓").foregroundStyle(.green)
@@ -1552,7 +1634,7 @@ struct CreateRecipeView: View {
                                             pendingValueRowID: $pendingValueRowID,
                                             exclude: Set(prefermentIngredientRows.map { $0.name.lowercased() }.filter { !$0.isEmpty }))
                         Spacer()
-                        TextField("0", value: $prefermentIngredientRows[index].value, format: .number)
+                        TextField("0", value: $prefermentIngredientRows[index].value, format: FlexibleDecimalStyle(fractionDigits: 0...4))
                             .multilineTextAlignment(.trailing)
                             .keyboardType(.decimalPad)
                             .frame(width: 70)
@@ -1567,7 +1649,7 @@ struct CreateRecipeView: View {
                     prefermentIngredientRows.append(row)
                     focusedRowID = row.id
                 } label: {
-                    Label("Add Ingredient", systemImage: "plus.circle")
+                    Label(String(localized: "action.add_ingredient", defaultValue: "Add Ingredient"), systemImage: "plus.circle")
                 }
                 .accessibilityIdentifier("addPrefermentIngredientButton")
             } header: {
@@ -1644,7 +1726,7 @@ struct CreateRecipeView: View {
                 if containsPreferment { LabeledContent("Preferment", value: prefermentName) }
             }
 
-            Section("Flours") {
+            Section(String(localized: "density.group.flours", defaultValue: "Flours")) {
                 ForEach(containsPreferment ? combinedFlours : flours.filter { !$0.name.isEmpty }, id: \.id) { flour in
                     LabeledContent(flour.name, value: isPercent
                         ? String(format: "%.4g%%", flour.value ?? 0)
@@ -1692,10 +1774,10 @@ struct CreateRecipeView: View {
             }
 
             Section {
-                ForEach(Array(instructions.enumerated()), id: \.offset) { index, step in
+                ForEach(Array(instructions.enumerated()), id: \.element.id) { index, row in
                     HStack(alignment: .top, spacing: 12) {
                         Text("\(index + 1).").foregroundStyle(.secondary)
-                        Text(step)
+                        Text(row.text)
                     }
                 }
                 .onDelete { instructions.remove(atOffsets: $0) }
@@ -1714,7 +1796,7 @@ struct CreateRecipeView: View {
                     let trimmed = newStepText.trimmingCharacters(in: .whitespaces)
                     guard !trimmed.isEmpty else { return }
                     isNewStepFocused = false
-                    instructions.append(trimmed)
+                    instructions.append(InstructionRow(text: trimmed))
                     newStepText = ""
                 }
                 .disabled(newStepText.trimmingCharacters(in: .whitespaces).isEmpty)
@@ -1783,6 +1865,26 @@ struct CreateRecipeView: View {
         }
     }
 
+    /// Returns the localized display name for a scanned ingredient when its category is a
+    /// known enum case, falling back to the raw scanned name for `.other`.
+    @available(iOS 26, *)
+    private func localizedIngredientName(for ingredient: ResolvedIngredient) -> String {
+        guard ingredient.category != .other,
+              let cat = IngredientCategory(rawValue: ingredient.category.rawValue) else {
+            return ingredient.name
+        }
+        return cat.localizedDisplayName
+    }
+
+    /// Reverse-looks-up an IngredientCategory by its English display name and returns the
+    /// localized name, falling back to `name` when no match is found. Used to localize
+    /// alternative ingredient names from the scanner (e.g. "Bread Flour" → "Harina de fuerza").
+    private func localizedAltName(_ name: String) -> String {
+        IngredientCategory.allCases
+            .first { $0.displayName.caseInsensitiveCompare(name) == .orderedSame }
+            .map(\.localizedDisplayName) ?? name
+    }
+
     @available(iOS 26, *)
     private func applyParsed(_ result: ScanResult) throws {
         let parsed = result.resolvedRecipe
@@ -1803,6 +1905,21 @@ struct CreateRecipeView: View {
             throw ScanError.noFlourFound
         }
 
+        let langRecognizer = NLLanguageRecognizer()
+        langRecognizer.processString(result.ocrText)
+        if let detected = langRecognizer.dominantLanguage {
+            let appLang = Bundle.main.preferredLocalizations.first ?? "en"
+            let appPrimary = appLang.components(separatedBy: "-").first ?? appLang
+            let detectedPrimary = detected.rawValue.components(separatedBy: "-").first ?? detected.rawValue
+            if appPrimary != detectedPrimary {
+                detectedRecipeLanguage = Locale(identifier: appLang).localizedString(forLanguageCode: detected.rawValue)
+            } else {
+                detectedRecipeLanguage = nil
+            }
+        } else {
+            detectedRecipeLanguage = nil
+        }
+
         recipeName = parsed.name
         defaultWeight = valid.reduce(0) { $0 + $1.weightGrams }
 
@@ -1810,18 +1927,18 @@ struct CreateRecipeView: View {
         activeConversion = nil
 
         flours = mainFlours.map {
-            FlourRow(name: $0.name, value: $0.weightGrams)
+            FlourRow(name: localizedIngredientName(for: $0), value: $0.weightGrams)
         }
         queueNameChoices(source: mainFlours, rows: flours, kind: .flour)
         if flours.isEmpty { flours = [FlourRow()] }
 
         ingredients = mainOthers.map {
-            IngredientRow(name: $0.name, value: $0.weightGrams, tempValue: scannedTempValue(for: $0))
+            IngredientRow(name: localizedIngredientName(for: $0), value: $0.weightGrams, tempValue: scannedTempValue(for: $0))
         }
         queueNameChoices(source: mainOthers, rows: ingredients, kind: .ingredient)
         if ingredients.isEmpty { ingredients = [IngredientRow()] }
 
-        instructions = parsed.instructions
+        instructions = parsed.instructions.map { InstructionRow(text: $0) }
 
         var diagPreferment: ScanDiagnostics.DiagFinalRecipe.DiagPreferment? = nil
         if parsed.hasPreferment && totalPrefFlourWeight > 0 {
@@ -1830,13 +1947,13 @@ struct CreateRecipeView: View {
             prefermentFlourPercent = totalPrefFlourWeight / totalFlourWeight * 100
 
             let prefFlourRows = prefFlours.map {
-                FlourRow(name: $0.name, value: $0.weightGrams)
+                FlourRow(name: localizedIngredientName(for: $0), value: $0.weightGrams)
             }
             queueNameChoices(source: prefFlours, rows: prefFlourRows, kind: .prefermentFlour)
             prefermentFlours = prefFlourRows.isEmpty ? [FlourRow()] : prefFlourRows
 
             let prefIngRows = prefOthers.map {
-                IngredientRow(name: $0.name, value: $0.weightGrams, tempValue: scannedTempValue(for: $0))
+                IngredientRow(name: localizedIngredientName(for: $0), value: $0.weightGrams, tempValue: scannedTempValue(for: $0))
             }
             queueNameChoices(source: prefOthers, rows: prefIngRows, kind: .prefermentIngredient)
             prefermentIngredientRows = prefIngRows.isEmpty ? [IngredientRow()] : prefIngRows
@@ -1910,9 +2027,9 @@ struct CreateRecipeView: View {
         for (resolved, row) in zip(source, rows) {
             guard let alt = resolved.alternativeName, !alt.isEmpty else { continue }
             pendingNameChoices.append(PendingNameChoice(rowID: row.id, kind: kind,
-                                                          primaryName: resolved.name,
-                                                          alternativeName: alt,
-                                                          selectedName: resolved.name))
+                                                          primaryName: localizedIngredientName(for: resolved),
+                                                          alternativeName: localizedAltName(alt),
+                                                          selectedName: localizedIngredientName(for: resolved)))
         }
     }
 
@@ -2104,7 +2221,7 @@ struct CreateRecipeView: View {
         let builder = RecipeBuilder()
         builder.name = recipeName.trimmingCharacters(in: .whitespaces)
         builder.collection = effectiveCollection.trimmingCharacters(in: .whitespaces)
-        builder.instructions = instructions.map { Instruction(step: $0) }
+        builder.instructions = instructions.map { Instruction(step: $0.text) }
         builder.containsPreferment = containsPreferment
         builder.measurementMode = inputMode == .byWeight ? .weight : .percent
         builder.mainDoughBuilder = MainDoughBuilder()

@@ -57,16 +57,7 @@ enum ExtraIngredientConversion {
     }
 
     private static func eggSuggestion(lowerName: String, amount: Double) -> ExtraIngredientConversionSuggestion? {
-        guard lowerName.contains("egg") else { return nil }
-
-        let part: EggPart
-        if lowerName.contains("yolk") {
-            part = .yolk
-        } else if lowerName.contains("white") {
-            part = .white
-        } else {
-            part = .whole
-        }
+        guard let part = eggPart(from: lowerName) else { return nil }
 
         let size = eggSize(from: lowerName) ?? IngredientDensityStore.shared.defaultEggSize()
         let gramsPerEgg = IngredientDensityStore.shared.gramsPerEgg(for: size, part: part)
@@ -100,7 +91,29 @@ enum ExtraIngredientConversion {
         )
     }
 
+    /// Returns the egg part for `lowerName`, or nil if the name doesn't refer to eggs.
+    /// Checks English keywords first, then localized egg nouns so non-English names
+    /// (e.g. "Eigelb", "blanc d'œuf", "달걀 노른자") are recognized.
+    /// Yolk and white are checked before whole so "egg yolk" / "Eigelb" don't
+    /// accidentally match the shorter whole-egg noun ("egg" / "Ei").
+    private static func eggPart(from lowerName: String) -> EggPart? {
+        if lowerName.contains("yolk") { return .yolk }
+        if [String(localized: "egg.noun.yolk.one"), String(localized: "egg.noun.yolk.many")]
+            .contains(where: { lowerName.contains($0.lowercased()) }) { return .yolk }
+
+        if lowerName.contains("white") { return .white }
+        if [String(localized: "egg.noun.white.one"), String(localized: "egg.noun.white.many")]
+            .contains(where: { lowerName.contains($0.lowercased()) }) { return .white }
+
+        if lowerName.contains("egg") { return .whole }
+        if [String(localized: "egg.noun.whole.one"), String(localized: "egg.noun.whole.many")]
+            .contains(where: { lowerName.contains($0.lowercased()) }) { return .whole }
+
+        return nil
+    }
+
     private static func eggSize(from lowerName: String) -> EggSize? {
+        // English keywords first; extra large before large to avoid substring collision.
         if lowerName.contains("extra large") || lowerName.contains("extra-large") || lowerName.contains(" xl") {
             return .extraLarge
         }
@@ -108,7 +121,14 @@ enum ExtraIngredientConversion {
         if lowerName.contains("large") { return .large }
         if lowerName.contains("medium") { return .medium }
         if lowerName.contains("small") { return .small }
-        return nil
+
+        // Fallback: localized size names, longest first so e.g. "Extra Groß" is matched
+        // before "Groß" when both are substrings of the input.
+        return EggSize.allCases
+            .map { ($0, $0.localizedDisplayName.lowercased()) }
+            .sorted { $0.1.count > $1.1.count }
+            .first { lowerName.contains($0.1) }?
+            .0
     }
 
     /// Returns the `IngredientCategory` for the given ingredient display name, or `nil`
@@ -136,6 +156,7 @@ enum ExtraIngredientConversion {
             (.almondFlour, ["almond flour"]),
             (.buckwheatFlour, ["buckwheat flour"]),
             (.glutenFreeFlourBlend, ["gluten-free flour", "gluten free flour"]),
+            (.selfRisingFlour, ["self-rising flour", "self rising flour", "self-raising flour", "self raising flour"]),
             (.brownSugar, ["brown sugar"]),
             (.powderedSugar, ["powdered sugar", "confectioners sugar", "confectioner's sugar"]),
             (.granulatedSugar, ["granulated sugar", "white sugar", "sugar"]),
@@ -178,6 +199,11 @@ enum ExtraIngredientConversion {
                 return category
             }
         }
-        return nil
+
+        // Fallback: match against each category's localized display name so ingredient
+        // names entered in non-English locales (e.g. "Smjör", "Beurre") still resolve.
+        return IngredientCategory.allCases.first {
+            name.contains($0.localizedDisplayName.lowercased())
+        }
     }
 }

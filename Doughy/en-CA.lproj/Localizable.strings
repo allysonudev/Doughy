@@ -104,7 +104,6 @@
 /* Explicit app-code strings */
 "action.discard" = "Discard";
 "action.keep_editing" = "Keep Editing";
-"action.close" = "Close";
 "action.ok" = "OK";
 "alert.discard_changes.message" = "Your changes will be lost";
 "alert.discard_changes.title" = "Discard changes?";
@@ -165,7 +164,6 @@
 "share.error.prepare_file" = "Could not prepare the recipe file.";
 "settings.error.convert_temperatures" = "Could not convert recipe temperatures.";
 "settings.footer.volume_system" = "Weight is always in grams — volume is just open to negotiation.";
-"source_photo.open" = "Open source photo";
 "temperature.celsius" = "Celsius";
 "temperature.fahrenheit" = "Fahrenheit";
 "unit.count" = "Count";
@@ -259,8 +257,8 @@
 "Preferment Details" = "Preferment Details";
 "Preview" = "Preview";
 "Recipe" = "Recipe";
-"Reset" = "Reset";
 "Restart Required" = "Restart Required";
+"Reset" = "Reset";
 "Restore" = "Restore";
 "Restore the recipe to this version? The current state will be saved to history first." = "Restore the recipe to this version? The current state will be saved to history first.";
 "Restore Version" = "Restore Version";

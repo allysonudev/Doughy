@@ -11,6 +11,15 @@ import UIKit
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
+    override init() {
+        super.init()
+        // Apply any in-app language override before the first bundle lookup.
+        // AppleLanguages is read once at launch; changes take effect on next start.
+        if let code = UserDefaults.standard.string(forKey: Settings.preferredLanguageKey) {
+            UserDefaults.standard.set([code, "en"], forKey: "AppleLanguages")
+        }
+    }
+
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         return true
     }

@@ -40,6 +40,8 @@ enum IngredientCategoryGroup: String, CaseIterable, Identifiable {
 /// always stored canonically as grams-per-cup; this is purely a display preference.
 enum DensityUnit: String, CaseIterable, Identifiable {
     case cup
+    case deciliter
+    case liter
     case milliliter
     case tablespoon
     case teaspoon
@@ -50,19 +52,53 @@ enum DensityUnit: String, CaseIterable, Identifiable {
     /// canonical grams-per-cup storage.
     var unitsPerCup: Double {
         switch self {
-        case .cup: return 1
+        case .cup:        return 1
         case .tablespoon: return 16
-        case .teaspoon: return 48
+        case .teaspoon:   return 48
         case .milliliter: return UnitConversion.millilitersPerUSCup
+        case .deciliter:  return 2.36588
+        case .liter:      return 0.236588
         }
     }
 
     var label: String {
         switch self {
-        case .cup: return "g/cup"
+        case .cup:        return "g/cup"
         case .tablespoon: return "g/tbsp"
-        case .teaspoon: return "g/tsp"
+        case .teaspoon:   return "g/tsp"
         case .milliliter: return "g/ml"
+        case .deciliter:  return "g/dl"
+        case .liter:      return "g/l"
+        }
+    }
+
+    var localizedLabel: String {
+        switch self {
+        case .cup:        return String(localized: "density.unit.cup",        defaultValue: "g/cup")
+        case .tablespoon: return String(localized: "density.unit.tablespoon",  defaultValue: "g/tbsp")
+        case .teaspoon:   return String(localized: "density.unit.teaspoon",    defaultValue: "g/tsp")
+        case .milliliter: return String(localized: "density.unit.milliliter",  defaultValue: "g/ml")
+        case .deciliter:  return String(localized: "density.unit.deciliter",   defaultValue: "g/dl")
+        case .liter:      return String(localized: "density.unit.liter",       defaultValue: "g/l")
+        }
+    }
+
+    /// Maps a category's natural display unit to the closest equivalent for the given
+    /// volume system. Used when the user hasn't explicitly saved a unit for a category.
+    static func systemDefault(for natural: DensityUnit, in system: VolumeSystem) -> DensityUnit {
+        switch system {
+        case .imperial:
+            switch natural {
+            case .cup, .tablespoon, .teaspoon: return natural
+            case .deciliter, .liter:           return .cup
+            case .milliliter:                  return .teaspoon
+            }
+        case .metric:
+            switch natural {
+            case .deciliter, .liter, .milliliter: return natural
+            case .cup:                            return .deciliter
+            case .tablespoon, .teaspoon:          return .milliliter
+            }
         }
     }
 
@@ -202,6 +238,7 @@ enum IngredientCategory: String, CaseIterable, Identifiable {
     case almondFlour
     case buckwheatFlour
     case glutenFreeFlourBlend
+    case selfRisingFlour
 
     // Sweeteners
     case granulatedSugar
@@ -253,7 +290,7 @@ enum IngredientCategory: String, CaseIterable, Identifiable {
         switch self {
         case .breadFlour, .allPurposeFlour, .cakeFlour, .wholeWheatFlour, .ryeFlour,
              .speltFlour, .semolinaFlour, .oatFlour, .cornmeal, .riceFlour, .almondFlour,
-             .buckwheatFlour, .glutenFreeFlourBlend:
+             .buckwheatFlour, .glutenFreeFlourBlend, .selfRisingFlour:
             return .flours
         case .granulatedSugar, .brownSugar, .powderedSugar, .honey, .mapleSyrup, .molasses:
             return .sweeteners
@@ -285,6 +322,7 @@ enum IngredientCategory: String, CaseIterable, Identifiable {
         case .almondFlour: return "Almond Flour"
         case .buckwheatFlour: return "Buckwheat Flour"
         case .glutenFreeFlourBlend: return "Gluten-Free Flour Blend"
+        case .selfRisingFlour: return "Self-Rising Flour"
 
         case .granulatedSugar: return "Granulated Sugar"
         case .brownSugar: return "Brown Sugar"
@@ -341,6 +379,7 @@ enum IngredientCategory: String, CaseIterable, Identifiable {
         case .almondFlour: return String(localized: "density.ingredient.almond_flour", defaultValue: "Almond Flour")
         case .buckwheatFlour: return String(localized: "density.ingredient.buckwheat_flour", defaultValue: "Buckwheat Flour")
         case .glutenFreeFlourBlend: return String(localized: "density.ingredient.gluten_free_flour_blend", defaultValue: "Gluten-Free Flour Blend")
+        case .selfRisingFlour: return String(localized: "density.ingredient.self_rising_flour", defaultValue: "Self-Rising Flour")
 
         case .granulatedSugar: return String(localized: "density.ingredient.granulated_sugar", defaultValue: "Granulated Sugar")
         case .brownSugar: return String(localized: "density.ingredient.brown_sugar", defaultValue: "Brown Sugar")
@@ -401,6 +440,7 @@ enum IngredientCategory: String, CaseIterable, Identifiable {
         case .almondFlour: return 96
         case .buckwheatFlour: return 120
         case .glutenFreeFlourBlend: return 156
+        case .selfRisingFlour: return 120 // same density as all-purpose (King Arthur: 120g/cup)
 
         case .granulatedSugar: return 198
         case .brownSugar: return 213
@@ -492,10 +532,15 @@ class IngredientDensityStore: NSObject {
         set { userDefaults.set(newValue, forKey: eggOverridesStorageKey) }
     }
 
-    /// Returns the unit `category`'s density should be displayed/edited in, defaulting
-    /// to `category.defaultDisplayUnit`.
+    /// Returns the unit `category`'s density should be displayed/edited in. If the user
+    /// has saved an explicit choice it is always honoured; otherwise falls back to the
+    /// system-appropriate equivalent of the category's natural unit.
     func displayUnit(for category: IngredientCategory) -> DensityUnit {
-        displayUnits[category.rawValue].flatMap(DensityUnit.init(rawValue:)) ?? category.defaultDisplayUnit
+        if let stored = displayUnits[category.rawValue].flatMap(DensityUnit.init(rawValue:)) {
+            return stored
+        }
+        return DensityUnit.systemDefault(for: category.defaultDisplayUnit,
+                                        in: Settings.shared.preferredVolumeSystem())
     }
 
     /// Remembers the unit `category`'s density should be displayed/edited in.
