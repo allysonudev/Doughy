@@ -128,6 +128,7 @@
 "create.flours.main.percent_remaining" = "%.4g%% remaining to reach 100%%";
 "create.flours.preferment.percent_remaining" = "%.4g%% remaining to reach 100%% of the preferment's flour.";
 "create.ingredient_name" = "Ingredient Name";
+"create.ingredients.percent_total" = "%.4g%% total";
 "create.mode.percent.description" = "Best for flour-based doughs where ingredients scale from total flour";
 "create.mode.percent.title" = "By Baker's Percentage";
 "create.mode.scan.description" = "Use Apple Intelligence to read a recipe from a photo or screenshot, entirely on-device and offline";

@@ -129,6 +129,7 @@
 "create.flours.main.percent_remaining" = "%.4g %% manquant pour atteindre 100 %%";
 "create.flours.preferment.percent_remaining" = "%.4g %% manquant pour atteindre 100 %% de la farine du pré-ferment.";
 "create.ingredient_name" = "Nom de l'ingrédient";
+"create.ingredients.percent_total" = "%.4g %% au total";
 "create.mode.percent.description" = "Idéal pour les pâtes à base de farine où les ingrédients sont proportionnels à la quantité totale de farine";
 "create.mode.percent.title" = "Par pourcentage du boulanger";
 "create.mode.scan.description" = "Utilisez Apple Intelligence pour lire une recette depuis une photo ou une capture d'écran, entièrement sur l'appareil et hors ligne";

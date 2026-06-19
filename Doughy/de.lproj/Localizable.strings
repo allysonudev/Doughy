@@ -136,6 +136,7 @@
 "create.flours.main.percent_remaining" = "Noch %.4g %% bis 100 %%";
 "create.flours.preferment.percent_remaining" = "Noch %.4g %% bis 100 %% des Vorteig-Mehls.";
 "create.ingredient_name" = "Zutatname";
+"create.ingredients.percent_total" = "%.4g %% insgesamt";
 "create.mode.percent.description" = "Am besten für mehlbasierte Teige, bei denen Zutaten vom Gesamtmehl skaliert werden";
 "create.mode.percent.title" = "Nach Bäckerprozent";
 "create.mode.scan.description" = "Apple Intelligence verwenden, um ein Rezept aus einem Foto oder Screenshot zu lesen – vollständig auf dem Gerät und offline";

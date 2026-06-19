@@ -136,6 +136,7 @@
 "create.flours.main.percent_remaining" = "100%%まであと%.4g%%";
 "create.flours.preferment.percent_remaining" = "前種の小麦粉100%%まであと%.4g%%。";
 "create.ingredient_name" = "食材名";
+"create.ingredients.percent_total" = "合計 %.4g%%";
 "create.mode.percent.description" = "小麦粉を基準に食材を配合する、粉を使った生地に最適";
 "create.mode.percent.title" = "ベーカーズパーセントで入力";
 "create.mode.scan.description" = "Apple Intelligenceを使って写真やスクリーンショットからレシピを読み取ります。完全にオンデバイスでオフラインで処理されます";

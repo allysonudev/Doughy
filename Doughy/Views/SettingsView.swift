@@ -78,9 +78,6 @@ struct SettingsView: View {
                     Settings.shared.setPreferredLanguageCode(new.isEmpty ? nil : new)
                     showRestartAlert = true
                 }
-            } footer: {
-                Text(String(localized: "settings.footer.volume_system",
-                            defaultValue: "Weight is always in grams — volume is just open to negotiation."))
             }
 
             Section {
@@ -88,8 +85,6 @@ struct SettingsView: View {
                     IngredientConversionsView()
                 }
                 .accessibilityIdentifier("ingredientConversionsLink")
-            } footer: {
-                Text("Adjust the gram conversions Doughy uses for cup, tablespoon, and teaspoon measurements when scanning recipes.")
             }
 
             Section("About") {

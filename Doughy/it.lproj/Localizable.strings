@@ -136,6 +136,7 @@
 "create.flours.main.percent_remaining" = "%.4g %% mancanti per raggiungere 100 %%";
 "create.flours.preferment.percent_remaining" = "%.4g %% mancanti per raggiungere 100 %% della farina del prefermento.";
 "create.ingredient_name" = "Nome ingrediente";
+"create.ingredients.percent_total" = "%.4g %% in totale";
 "create.mode.percent.description" = "Ideale per impasti a base di farina in cui gli ingredienti si scalano dalla farina totale";
 "create.mode.percent.title" = "Per percentuale del panettiere";
 "create.mode.scan.description" = "Usa Apple Intelligence per leggere una ricetta da una foto o screenshot, interamente sul dispositivo e offline";

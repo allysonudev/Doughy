@@ -127,6 +127,7 @@
 "create.flours.main.percent_remaining" = "%.4g%% faltando para atingir 100%%";
 "create.flours.preferment.percent_remaining" = "%.4g%% faltando para atingir 100%% da farinha do pré-fermento.";
 "create.ingredient_name" = "Nome do ingrediente";
+"create.ingredients.percent_total" = "%.4g%% no total";
 "create.mode.percent.description" = "Ideal para massas à base de farinha onde os ingredientes são escalados a partir do total de farinha";
 "create.mode.percent.title" = "Por porcentagem do padeiro";
 "create.mode.scan.description" = "Use o Apple Intelligence para ler uma receita de uma foto ou captura de tela, totalmente no dispositivo e sem conexão";

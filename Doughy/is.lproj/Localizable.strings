@@ -129,6 +129,7 @@
 "create.flours.main.percent_remaining" = "%.4g%% eftir til 100%%";
 "create.flours.preferment.percent_remaining" = "%.4g%% eftir til 100%% af mjöli fordeigs.";
 "create.ingredient_name" = "Nafn hráefnis";
+"create.ingredients.percent_total" = "%.4g%% samtals";
 "create.mode.percent.description" = "Best fyrir mjölbasað deig þar sem hráefni skala frá heildarmagni mjöls";
 "create.mode.percent.title" = "Með bakarahlutfalli";
 "create.mode.scan.description" = "Notaðu Apple Intelligence til að lesa uppskrift af mynd eða skjámynd, alfarið á tækinu án nettengingar";

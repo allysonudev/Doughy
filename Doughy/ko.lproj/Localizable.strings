@@ -127,6 +127,7 @@
 "create.flours.main.percent_remaining" = "100%%까지 %.4g%% 남음";
 "create.flours.preferment.percent_remaining" = "프리퍼먼트 밀가루의 100%%까지 %.4g%% 남음.";
 "create.ingredient_name" = "재료 이름";
+"create.ingredients.percent_total" = "%.4g%% 합계";
 "create.mode.percent.description" = "밀가루 총량 대비 재료 비율을 사용하는 밀가루 기반 반죽에 최적";
 "create.mode.percent.title" = "베이커스 퍼센트로";
 "create.mode.scan.description" = "Apple Intelligence를 사용해 사진이나 스크린샷에서 레시피를 읽어옵니다 — 완전히 기기 내에서, 오프라인으로 처리";

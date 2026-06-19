@@ -34,6 +34,11 @@ private struct IngredientRow: Identifiable, Equatable {
     }
 }
 
+private struct InstructionRow: Identifiable {
+    var id = UUID()
+    var text: String
+}
+
 /// An ingredient with a quantity that isn't converted to grams (e.g. "2 tablespoons" of
 /// rosemary leaves). Kept separate from the percent-based flours/ingredients and scaled
 /// by the recipe's scaling ratio when calculated.
@@ -323,7 +328,7 @@ struct CreateRecipeView: View {
     @State private var prefermentIngredientRows: [IngredientRow] = [IngredientRow()]
 
     // Preview + save
-    @State private var instructions: [String] = []
+    @State private var instructions: [InstructionRow] = []
     @State private var newStepText = ""
     @State private var saveError: String?
 
@@ -350,7 +355,7 @@ struct CreateRecipeView: View {
         _recipeName = State(initialValue: recipeName)
         _collectionName = State(initialValue: recipe.collection)
         _defaultWeight = State(initialValue: recipe.defaultWeight)
-        _instructions = State(initialValue: recipe.instructions.map(\.step))
+        _instructions = State(initialValue: recipe.instructions.map { InstructionRow(text: $0.step) })
 
         let flourRows = recipe.ingredients.filter(\.isFlour)
             .map { FlourRow(name: $0.name, value: isWeightRecipe ? ($0.defaultWeight ?? 0) : $0.defaultPercentage) }
@@ -479,7 +484,7 @@ struct CreateRecipeView: View {
             prefermentFlourPercent: prefermentFlourPercent,
             prefermentFlours: prefermentFlours,
             prefermentIngredientRows: prefermentIngredientRows,
-            instructions: instructions
+            instructions: instructions.map(\.text)
         )
     }
 
@@ -1015,13 +1020,28 @@ struct CreateRecipeView: View {
                                             pendingValueRowID: $pendingValueRowID,
                                             exclude: Set(ingredients.map { $0.name.lowercased() }.filter { !$0.isEmpty }))
                         Spacer()
-                        TextField("0", value: $ingredients[index].value, format: .number.precision(.fractionLength(0...4)))
-                            .multilineTextAlignment(.trailing)
-                            .keyboardType(.decimalPad)
-                            .frame(width: 70)
-                            .accessibilityIdentifier("ingredientValueField_\(index)")
-                            .focused($focusedValueRowID, equals: ingredients[index].id)
-                        Text(isPercent ? "%" : "g").foregroundStyle(.secondary)
+                        VStack(alignment: .trailing, spacing: 2) {
+                            HStack(spacing: 4) {
+                                TextField("0", value: $ingredients[index].value, format: .number.precision(.fractionLength(0...4)))
+                                    .multilineTextAlignment(.trailing)
+                                    .keyboardType(.decimalPad)
+                                    .frame(width: 70)
+                                    .accessibilityIdentifier("ingredientValueField_\(index)")
+                                    .focused($focusedValueRowID, equals: ingredients[index].id)
+                                Text(isPercent ? "%" : "g").foregroundStyle(.secondary)
+                            }
+                            if isPercent && containsPreferment {
+                                let name = ingredients[index].name
+                                let prefVal = prefermentIngredientRows
+                                    .first { $0.name.caseInsensitiveCompare(name) == .orderedSame }?.value
+                                if let prefVal, prefVal > 0.001, !name.isEmpty {
+                                    let combined = prefermentContribution(prefVal) + (ingredients[index].value ?? 0)
+                                    Text(String(format: String(localized: "create.ingredients.percent_total", defaultValue: "%.4g%% total"), combined))
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
+                        }
                     }
                     HStack {
                         Text("Temperature (optional)")
@@ -1603,10 +1623,10 @@ struct CreateRecipeView: View {
             }
 
             Section {
-                ForEach(Array(instructions.enumerated()), id: \.offset) { index, step in
+                ForEach(Array(instructions.enumerated()), id: \.element.id) { index, row in
                     HStack(alignment: .top, spacing: 12) {
                         Text("\(index + 1).").foregroundStyle(.secondary)
-                        Text(step)
+                        Text(row.text)
                     }
                 }
                 .onDelete { instructions.remove(atOffsets: $0) }
@@ -1625,7 +1645,7 @@ struct CreateRecipeView: View {
                     let trimmed = newStepText.trimmingCharacters(in: .whitespaces)
                     guard !trimmed.isEmpty else { return }
                     isNewStepFocused = false
-                    instructions.append(trimmed)
+                    instructions.append(InstructionRow(text: trimmed))
                     newStepText = ""
                 }
                 .disabled(newStepText.trimmingCharacters(in: .whitespaces).isEmpty)
@@ -1729,7 +1749,7 @@ struct CreateRecipeView: View {
         queueNameChoices(source: mainOthers, rows: ingredients, kind: .ingredient)
         if ingredients.isEmpty { ingredients = [IngredientRow()] }
 
-        instructions = parsed.instructions
+        instructions = parsed.instructions.map { InstructionRow(text: $0) }
 
         var diagPreferment: ScanDiagnostics.DiagFinalRecipe.DiagPreferment? = nil
         if parsed.hasPreferment && totalPrefFlourWeight > 0 {
@@ -1970,7 +1990,7 @@ struct CreateRecipeView: View {
         let builder = RecipeBuilder()
         builder.name = recipeName.trimmingCharacters(in: .whitespaces)
         builder.collection = effectiveCollection.trimmingCharacters(in: .whitespaces)
-        builder.instructions = instructions.map { Instruction(step: $0) }
+        builder.instructions = instructions.map { Instruction(step: $0.text) }
         builder.containsPreferment = containsPreferment
         builder.measurementMode = inputMode == .byWeight ? .weight : .percent
         builder.mainDoughBuilder = MainDoughBuilder()

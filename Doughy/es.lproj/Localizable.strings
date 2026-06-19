@@ -127,6 +127,7 @@
 "create.flours.main.percent_remaining" = "%.4g%% restante para alcanzar 100%%";
 "create.flours.preferment.percent_remaining" = "%.4g%% restante para alcanzar 100%% de la harina del prefermento.";
 "create.ingredient_name" = "Nombre del ingrediente";
+"create.ingredients.percent_total" = "%.4g %% en total";
 "create.mode.percent.description" = "Ideal para masas a base de harina en las que los ingredientes escalan a partir del total de harina";
 "create.mode.percent.title" = "Por porcentaje del panadero";
 "create.mode.scan.description" = "Usa Apple Intelligence para leer una receta desde una foto o captura de pantalla, completamente en el dispositivo y sin conexión";
