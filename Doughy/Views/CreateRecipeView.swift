@@ -5,12 +5,32 @@
 import SwiftUI
 import PhotosUI
 import UIKit
+#if canImport(VisionKit)
+import VisionKit
+#endif
 
 // MARK: - Types
 
 private enum RecipeInputMode {
     case byPercent
     case byWeight
+}
+
+private enum SourcePhotoCorner: CaseIterable {
+    case topLeading
+    case topTrailing
+    case bottomLeading
+    case bottomTrailing
+}
+
+private enum SourcePhotoHiddenEdge: Equatable {
+    case leading
+    case trailing
+}
+
+private struct SourcePhotoEdgeAttachment: Equatable {
+    var edge: SourcePhotoHiddenEdge
+    var y: CGFloat
 }
 
 private struct FlourRow: Identifiable, Equatable {
@@ -117,6 +137,39 @@ private struct IngredientNameField: View {
     }
 }
 
+private struct ScanAlternativeReviewRow: View {
+    let primaryName: String
+    let alternativeName: String
+    @Binding var selectedName: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("\(primaryName) or \(alternativeName)")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+
+            HStack {
+                Button(primaryName) {
+                    selectedName = primaryName
+                }
+                .buttonStyle(.bordered)
+                .tint(selectedName == primaryName ? .accentColor : .secondary)
+
+                Button(alternativeName) {
+                    selectedName = alternativeName
+                }
+                .buttonStyle(.bordered)
+                .tint(selectedName == alternativeName ? .accentColor : .secondary)
+            }
+
+            TextField("Correct ingredient name", text: $selectedName)
+                .autocorrectionDisabled()
+                .textInputAutocapitalization(.words)
+        }
+        .padding(.vertical, 4)
+    }
+}
+
 /// A suggestion to convert an "additional ingredient" (e.g. "2 large eggs") to a
 /// weight-based ingredient, presented to the user with a toggle before continuing
 /// past the Ingredients step.
@@ -164,9 +217,11 @@ private struct PendingNameChoice: Identifiable {
     var kind: IngredientRowKind
     var primaryName: String
     var alternativeName: String
+    var selectedName: String
 }
 
 private enum CreateStep: Hashable {
+    case scanReview
     case details
     case ingredients
     case preferment
@@ -276,6 +331,9 @@ struct CreateRecipeView: View {
     @State private var scanError: String?
     @State private var lastScanDiagnostics: String?
     @State private var didOpenInitialScanOptions = false
+    @State private var sourcePhotoImage: UIImage?
+    @State private var sourcePhotoCorner: SourcePhotoCorner = .bottomLeading
+    @State private var showSourcePhotoViewer = false
 
     // Details
     @State private var recipeName = ""
@@ -306,6 +364,7 @@ struct CreateRecipeView: View {
 
     // Conversion prompts for scanned "extra" ingredients
     @State private var pendingConversions: [PendingConversion] = []
+    @State private var activeConversion: PendingConversion?
     @State private var conversionGramsText: String = ""
 
     // Name-alternative prompts for scanned ingredients with two listed options
@@ -502,6 +561,21 @@ struct CreateRecipeView: View {
     var body: some View {
         coreView
             .overlay { if isScanning { scanningOverlay } }
+            .overlay {
+                if let image = sourcePhotoImage, !isScanning {
+                    SourcePhotoPipView(
+                        image: image,
+                        corner: $sourcePhotoCorner
+                    ) {
+                        showSourcePhotoViewer = true
+                    }
+                }
+            }
+            .fullScreenCover(isPresented: $showSourcePhotoViewer) {
+                if let image = sourcePhotoImage {
+                    SourcePhotoViewer(image: image)
+                }
+            }
             .task {
                 openInitialScanOptionsIfNeeded()
                 guard let image = initialScanImage else { return }
@@ -539,12 +613,12 @@ struct CreateRecipeView: View {
                 Text(scanError ?? "")
             }
             .alert("Unknown Ingredient", isPresented: Binding(
-                get: { pendingConversions.first != nil },
-                set: { _ in }
+                get: { activeConversion != nil },
+                set: { if !$0 { activeConversion = nil; scheduleNextScanPrompt(after: 0.4) } }
             )) {
                 TextField(String(
                     format: String(localized: "create.unknown_ingredient.grams_per_unit", defaultValue: "Grams per %@"),
-                    pendingConversions.first.map { VolumeUnitFormatter.label(unit: $0.unit, amount: 1) }
+                    activeConversion.map { VolumeUnitFormatter.label(unit: $0.unit, amount: 1) }
                         ?? String(localized: "create.unknown_ingredient.unit_fallback", defaultValue: "unit")
                 ),
                           text: $conversionGramsText)
@@ -552,29 +626,12 @@ struct CreateRecipeView: View {
                 Button("Save & Use") { resolveConversionPrompt(useGrams: true) }
                 Button("Keep Original Unit", role: .cancel) { resolveConversionPrompt(useGrams: false) }
             } message: {
-                if let pending = pendingConversions.first {
+                if let pending = activeConversion {
                     Text(String(
                         format: String(localized: "create.unknown_ingredient.message", defaultValue: "We don't have a gram conversion for \"%@\" (%@). If you know how many grams are in one %@, enter it to use it now and remember it for future scans."),
                         pending.name,
                         VolumeUnitFormatter.format(amount: pending.amount, unit: pending.unit),
                         VolumeUnitFormatter.label(unit: pending.unit, amount: 1)
-                    ))
-                }
-            }
-            .alert("Ingredient Has an Alternative", isPresented: Binding(
-                get: { pendingConversions.isEmpty && pendingNameChoices.first != nil },
-                set: { _ in }
-            )) {
-                if let pending = pendingNameChoices.first {
-                    Button(pending.primaryName) { resolveNameChoice(useAlternative: false) }
-                    Button(pending.alternativeName) { resolveNameChoice(useAlternative: true) }
-                }
-            } message: {
-                if let pending = pendingNameChoices.first {
-                    Text(String(
-                        format: String(localized: "create.alternative_ingredient.message", defaultValue: "This recipe lists \"%@\" or \"%@\" — which would you like to use?"),
-                        pending.primaryName,
-                        pending.alternativeName
                     ))
                 }
             }
@@ -638,6 +695,7 @@ struct CreateRecipeView: View {
             }
             .navigationDestination(for: CreateStep.self) { step in
                 switch step {
+                case .scanReview:  scanReviewForm
                 case .details:     detailsForm
                 case .ingredients: ingredientsForm
                 case .preferment:  prefermentForm
@@ -757,6 +815,48 @@ struct CreateRecipeView: View {
             enabled: false
         ) {}
         #endif
+    }
+
+    // MARK: - Scan Review
+
+    private var scanReviewForm: some View {
+        Form {
+            Section {
+                ForEach(pendingNameChoices.indices, id: \.self) { index in
+                    ScanAlternativeReviewRow(
+                        primaryName: pendingNameChoices[index].primaryName,
+                        alternativeName: pendingNameChoices[index].alternativeName,
+                        selectedName: $pendingNameChoices[index].selectedName
+                    )
+                    .accessibilityIdentifier("scanAlternativeReviewRow_\(index)")
+                }
+            } header: {
+                Text("Ingredient Choices")
+            } footer: {
+                Text("Pick the ingredient name to use, or enter the corrected name from the source recipe.")
+            }
+        }
+        .navigationTitle("Review Scan")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button("Cancel") { requestDismiss() }
+                    .accessibilityIdentifier("scanReviewCancelButton")
+            }
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Continue") {
+                    applyNameChoices()
+                    navPath.append(.details)
+                    scheduleNextScanPrompt()
+                }
+                .disabled(!scanReviewReady)
+                .accessibilityIdentifier("scanReviewContinueButton")
+            }
+        }
+    }
+
+    private var scanReviewReady: Bool {
+        pendingNameChoices.allSatisfy { !$0.selectedName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
     }
 
     // MARK: - Step 1: Details
@@ -1662,6 +1762,7 @@ struct CreateRecipeView: View {
                 scanError = String(localized: "scan.error.load_selected_image", defaultValue: "Could not load the selected image.")
                 return
             }
+            sourcePhotoImage = image
             let result = try await RecipeScanner.shared.scan(image: image)
             try applyParsed(result)
         } catch {
@@ -1672,6 +1773,7 @@ struct CreateRecipeView: View {
     @available(iOS 26, *)
     private func processImage(_ image: UIImage) async {
         isScanning = true
+        sourcePhotoImage = image
         defer { isScanning = false }
         do {
             let result = try await RecipeScanner.shared.scan(image: image)
@@ -1705,6 +1807,7 @@ struct CreateRecipeView: View {
         defaultWeight = valid.reduce(0) { $0 + $1.weightGrams }
 
         pendingNameChoices = []
+        activeConversion = nil
 
         flours = mainFlours.map {
             FlourRow(name: $0.name, value: $0.weightGrams)
@@ -1752,6 +1855,8 @@ struct CreateRecipeView: View {
             containsPreferment = false
         }
 
+        logScanAlternatives(in: parsed.ingredients, queuedPromptCount: pendingNameChoices.count)
+
         // Extra ingredients with no reliable gram conversion: queue a prompt for each so
         // the user can teach us the conversion (used now and remembered for next time)
         // or leave it in its original unit.
@@ -1779,7 +1884,12 @@ struct CreateRecipeView: View {
         )
 
         inputMode = .byWeight
-        navPath.append(.details)
+        if pendingNameChoices.isEmpty {
+            navPath.append(.details)
+            scheduleNextScanPrompt()
+        } else {
+            navPath.append(.scanReview)
+        }
     }
 
     /// Converts a resolved ingredient's water-temperature descriptor (e.g. "lukewarm"),
@@ -1800,7 +1910,41 @@ struct CreateRecipeView: View {
         for (resolved, row) in zip(source, rows) {
             guard let alt = resolved.alternativeName, !alt.isEmpty else { continue }
             pendingNameChoices.append(PendingNameChoice(rowID: row.id, kind: kind,
-                                                          primaryName: resolved.name, alternativeName: alt))
+                                                          primaryName: resolved.name,
+                                                          alternativeName: alt,
+                                                          selectedName: resolved.name))
+        }
+    }
+
+    @available(iOS 26, *)
+    private func logScanAlternatives(in ingredients: [ResolvedIngredient], queuedPromptCount: Int) {
+        let alternatives = ingredients.compactMap { ingredient -> String? in
+            guard let alternative = ingredient.alternativeName,
+                  !alternative.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            else {
+                return nil
+            }
+
+            return "\(ingredient.name) or \(alternative)"
+        }
+
+        guard !alternatives.isEmpty else { return }
+
+        print("Scan alternative ingredient pairs found: \(alternatives.count); queued prompts: \(queuedPromptCount); pairs: \(alternatives.joined(separator: " | "))")
+    }
+
+    private func scheduleNextScanPrompt(after delay: TimeInterval = 0) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+            presentNextScanPrompt()
+        }
+    }
+
+    private func presentNextScanPrompt() {
+        guard activeConversion == nil else { return }
+
+        if !pendingConversions.isEmpty {
+            activeConversion = pendingConversions.removeFirst()
+            return
         }
     }
 
@@ -1852,9 +1996,12 @@ struct CreateRecipeView: View {
     /// saves the provided gram conversion and folds the ingredient into the regular
     /// percent-based ingredients, or keeps it as an "extra" ingredient in its original unit.
     private func resolveConversionPrompt(useGrams: Bool) {
-        guard let pending = pendingConversions.first else { return }
-        pendingConversions.removeFirst()
-        defer { conversionGramsText = "" }
+        guard let pending = activeConversion else { return }
+        activeConversion = nil
+        defer {
+            conversionGramsText = ""
+            scheduleNextScanPrompt(after: 0.4)
+        }
 
         if useGrams, let perUnit = Double(conversionGramsText), perUnit > 0 {
             IngredientConversionStore.shared.save(name: pending.name, unit: pending.unit, gramsPerUnit: perUnit)
@@ -1892,30 +2039,28 @@ struct CreateRecipeView: View {
         }
     }
 
-    /// Handles the user's response to an "ingredient has an alternative" prompt: updates
-    /// the corresponding row's name to whichever option the user picked (no-op if they kept
-    /// the primary name, since that's already what's in the row).
-    private func resolveNameChoice(useAlternative: Bool) {
-        guard let pending = pendingNameChoices.first else { return }
-        pendingNameChoices.removeFirst()
-        guard useAlternative else { return }
+    private func applyNameChoices() {
+        for pending in pendingNameChoices {
+            let selected = pending.selectedName.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !selected.isEmpty else { continue }
 
-        switch pending.kind {
-        case .flour:
-            if let index = flours.firstIndex(where: { $0.id == pending.rowID }) {
-                flours[index].name = pending.alternativeName
-            }
-        case .ingredient:
-            if let index = ingredients.firstIndex(where: { $0.id == pending.rowID }) {
-                ingredients[index].name = pending.alternativeName
-            }
-        case .prefermentFlour:
-            if let index = prefermentFlours.firstIndex(where: { $0.id == pending.rowID }) {
-                prefermentFlours[index].name = pending.alternativeName
-            }
-        case .prefermentIngredient:
-            if let index = prefermentIngredientRows.firstIndex(where: { $0.id == pending.rowID }) {
-                prefermentIngredientRows[index].name = pending.alternativeName
+            switch pending.kind {
+            case .flour:
+                if let index = flours.firstIndex(where: { $0.id == pending.rowID }) {
+                    flours[index].name = selected
+                }
+            case .ingredient:
+                if let index = ingredients.firstIndex(where: { $0.id == pending.rowID }) {
+                    ingredients[index].name = selected
+                }
+            case .prefermentFlour:
+                if let index = prefermentFlours.firstIndex(where: { $0.id == pending.rowID }) {
+                    prefermentFlours[index].name = selected
+                }
+            case .prefermentIngredient:
+                if let index = prefermentIngredientRows.firstIndex(where: { $0.id == pending.rowID }) {
+                    prefermentIngredientRows[index].name = selected
+                }
             }
         }
     }
@@ -2160,6 +2305,394 @@ private struct OptionalAccessibilityIdentifier: ViewModifier {
         } else {
             content
         }
+    }
+}
+
+// MARK: - Source photo PiP
+
+private struct SourcePhotoPipView: View {
+    let image: UIImage
+    @Binding var corner: SourcePhotoCorner
+    let action: () -> Void
+
+    @State private var dragOffset: CGSize = .zero
+    @State private var keyboardHeight: CGFloat = 0
+    @State private var edgeAttachment: SourcePhotoEdgeAttachment?
+    @State private var isEdgeHidden = false
+
+    private let margin: CGFloat = 16
+    private let revealWidth: CGFloat = 22
+    private let thumbnailSize = CGSize(width: 104, height: 132)
+
+    var body: some View {
+        GeometryReader { proxy in
+            Image(uiImage: image)
+                .resizable()
+                .scaledToFill()
+                .frame(width: thumbnailSize.width, height: thumbnailSize.height)
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .stroke(.white.opacity(0.85), lineWidth: 2)
+                }
+                .shadow(color: .black.opacity(0.28), radius: 12, x: 0, y: 6)
+                .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .accessibilityLabel(String(localized: "source_photo.open", defaultValue: "Open source photo"))
+                .accessibilityAddTraits(.isButton)
+                .position(currentPosition(in: proxy))
+                .offset(dragOffset)
+                .gesture(
+                    DragGesture(minimumDistance: 0)
+                        .onChanged { value in
+                            dragOffset = value.translation
+                        }
+                        .onEnded { value in
+                            guard !isTap(value.translation) else {
+                                handleTap()
+                                return
+                            }
+
+                            let base = currentPosition(in: proxy)
+                            let projected = CGPoint(
+                                x: base.x + value.predictedEndTranslation.width,
+                                y: base.y + value.predictedEndTranslation.height
+                            )
+                            withAnimation(.spring(response: 0.28, dampingFraction: 0.82)) {
+                                if let edge = hiddenEdge(for: projected, in: proxy) {
+                                    edgeAttachment = SourcePhotoEdgeAttachment(
+                                        edge: edge,
+                                        y: clampedY(projected.y, in: proxy)
+                                    )
+                                    isEdgeHidden = true
+                                } else if let edge = attachedEdge(for: projected, in: proxy) {
+                                    edgeAttachment = SourcePhotoEdgeAttachment(
+                                        edge: edge,
+                                        y: clampedY(projected.y, in: proxy)
+                                    )
+                                    isEdgeHidden = false
+                                } else {
+                                    edgeAttachment = nil
+                                    isEdgeHidden = false
+                                    corner = nearestCorner(to: projected, in: proxy)
+                                }
+                                dragOffset = .zero
+                            }
+                        }
+                )
+                .animation(.spring(response: 0.28, dampingFraction: 0.82), value: corner)
+                .animation(.spring(response: 0.28, dampingFraction: 0.82), value: edgeAttachment)
+                .animation(.spring(response: 0.28, dampingFraction: 0.82), value: isEdgeHidden)
+        }
+        .ignoresSafeArea(.keyboard)
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillChangeFrameNotification)) { note in
+            updateKeyboardHeight(from: note)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
+            keyboardHeight = 0
+        }
+    }
+
+    private func currentPosition(in proxy: GeometryProxy) -> CGPoint {
+        if let edgeAttachment {
+            return edgePosition(
+                for: edgeAttachment.edge,
+                y: edgeAttachment.y,
+                hidden: isEdgeHidden,
+                in: proxy
+            )
+        }
+
+        return position(for: corner, in: proxy)
+    }
+
+    private func edgePosition(for edge: SourcePhotoHiddenEdge, y: CGFloat, hidden: Bool, in proxy: GeometryProxy) -> CGPoint {
+        let x: CGFloat
+        switch edge {
+        case .leading:
+            x = hidden ? revealWidth - thumbnailSize.width / 2 : visibleEdgeX(for: .leading, in: proxy)
+        case .trailing:
+            x = hidden ? proxy.size.width - revealWidth + thumbnailSize.width / 2 : visibleEdgeX(for: .trailing, in: proxy)
+        }
+        return CGPoint(x: x, y: clampedY(y, in: proxy))
+    }
+
+    private func position(for corner: SourcePhotoCorner, in proxy: GeometryProxy) -> CGPoint {
+        let x: CGFloat
+        let y: CGFloat
+        let bounds = verticalBounds(in: proxy)
+
+        switch corner {
+        case .topLeading, .bottomLeading:
+            x = visibleEdgeX(for: .leading, in: proxy)
+        case .topTrailing, .bottomTrailing:
+            x = visibleEdgeX(for: .trailing, in: proxy)
+        }
+
+        switch corner {
+        case .topLeading, .topTrailing:
+            y = bounds.top
+        case .bottomLeading, .bottomTrailing:
+            y = bounds.bottom
+        }
+
+        return CGPoint(x: x, y: y)
+    }
+
+    private func visibleEdgeX(for edge: SourcePhotoHiddenEdge, in proxy: GeometryProxy) -> CGFloat {
+        switch edge {
+        case .leading:
+            return margin + thumbnailSize.width / 2
+        case .trailing:
+            return proxy.size.width - margin - thumbnailSize.width / 2
+        }
+    }
+
+    private func verticalBounds(in proxy: GeometryProxy) -> (top: CGFloat, bottom: CGFloat) {
+        let top = proxy.safeAreaInsets.top + margin + thumbnailSize.height / 2
+        let keyboardInset = max(proxy.safeAreaInsets.bottom, keyboardHeight)
+        let bottom = max(top, proxy.size.height - keyboardInset - margin - thumbnailSize.height / 2)
+        return (top, bottom)
+    }
+
+    private func clampedY(_ y: CGFloat, in proxy: GeometryProxy) -> CGFloat {
+        let bounds = verticalBounds(in: proxy)
+        return min(max(y, bounds.top), bounds.bottom)
+    }
+
+    private func hiddenEdge(for point: CGPoint, in proxy: GeometryProxy) -> SourcePhotoHiddenEdge? {
+        let dockThreshold = thumbnailSize.width * 0.35
+        if point.x <= dockThreshold {
+            return .leading
+        }
+        if point.x >= proxy.size.width - dockThreshold {
+            return .trailing
+        }
+        return nil
+    }
+
+    private func attachedEdge(for point: CGPoint, in proxy: GeometryProxy) -> SourcePhotoHiddenEdge? {
+        if let edge = edgeAttachment?.edge {
+            let edgeLaneWidth = thumbnailSize.width * 0.75
+            if abs(point.x - visibleEdgeX(for: edge, in: proxy)) <= edgeLaneWidth {
+                return edge
+            }
+        }
+
+        return nil
+    }
+
+    private func nearestCorner(to point: CGPoint, in proxy: GeometryProxy) -> SourcePhotoCorner {
+        SourcePhotoCorner.allCases.min { lhs, rhs in
+            distanceSquared(from: point, to: position(for: lhs, in: proxy))
+                < distanceSquared(from: point, to: position(for: rhs, in: proxy))
+        } ?? .topTrailing
+    }
+
+    private func distanceSquared(from lhs: CGPoint, to rhs: CGPoint) -> CGFloat {
+        let dx = lhs.x - rhs.x
+        let dy = lhs.y - rhs.y
+        return dx * dx + dy * dy
+    }
+
+    private func isTap(_ translation: CGSize) -> Bool {
+        abs(translation.width) < 6 && abs(translation.height) < 6
+    }
+
+    private func handleTap() {
+        withAnimation(.spring(response: 0.28, dampingFraction: 0.82)) {
+            dragOffset = .zero
+            if isEdgeHidden {
+                isEdgeHidden = false
+            } else {
+                action()
+            }
+        }
+    }
+
+    private func updateKeyboardHeight(from note: Notification) {
+        guard let frame = note.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect,
+              let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = windowScene.keyWindow
+        else {
+            keyboardHeight = 0
+            return
+        }
+
+        let converted = window.convert(frame, from: nil)
+        keyboardHeight = max(0, window.bounds.maxY - converted.minY)
+    }
+}
+
+private struct SourcePhotoViewer: View {
+    let image: UIImage
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        ZStack(alignment: .topTrailing) {
+            Color.black.ignoresSafeArea()
+
+            SourcePhotoLiveTextView(image: image)
+                .ignoresSafeArea()
+
+            Button {
+                dismiss()
+            } label: {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.system(size: 34, weight: .semibold))
+                    .symbolRenderingMode(.hierarchical)
+                    .foregroundStyle(.white)
+                    .shadow(radius: 8)
+                    .padding(18)
+            }
+            .accessibilityLabel(String(localized: "action.close", defaultValue: "Close"))
+        }
+    }
+}
+
+private struct SourcePhotoLiveTextView: UIViewControllerRepresentable {
+    let image: UIImage
+
+    func makeUIViewController(context: Context) -> SourcePhotoViewController {
+        SourcePhotoViewController(image: image)
+    }
+
+    func updateUIViewController(_ viewController: SourcePhotoViewController, context: Context) {
+        viewController.setImage(image)
+    }
+}
+
+private final class SourcePhotoViewController: UIViewController, UIScrollViewDelegate {
+    private let scrollView = UIScrollView()
+    private let imageView = UIImageView()
+    private var currentImage: UIImage?
+    private var shouldResetZoom = true
+    private var lastLayoutBounds: CGSize = .zero
+
+    #if canImport(VisionKit)
+    private let analyzer = ImageAnalyzer()
+    private let interaction = ImageAnalysisInteraction()
+    private var analysisTask: Task<Void, Never>?
+    #endif
+
+    init(image: UIImage) {
+        self.currentImage = image
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = .black
+
+        scrollView.delegate = self
+        scrollView.showsHorizontalScrollIndicator = false
+        scrollView.showsVerticalScrollIndicator = false
+        scrollView.bouncesZoom = true
+        scrollView.maximumZoomScale = 5
+        scrollView.contentInsetAdjustmentBehavior = .never
+        view.addSubview(scrollView)
+
+        imageView.contentMode = .scaleAspectFit
+        imageView.isUserInteractionEnabled = true
+        scrollView.addSubview(imageView)
+
+        #if canImport(VisionKit)
+        imageView.addInteraction(interaction)
+        interaction.preferredInteractionTypes = .textSelection
+        #endif
+
+        if let currentImage {
+            setImage(currentImage)
+        }
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        scrollView.frame = view.bounds
+        layoutImage()
+    }
+
+    func setImage(_ image: UIImage) {
+        guard currentImage !== image || imageView.image == nil else { return }
+        currentImage = image
+        imageView.image = image
+        shouldResetZoom = true
+        view.setNeedsLayout()
+        analyzeImage(image)
+    }
+
+    func viewForZooming(in scrollView: UIScrollView) -> UIView? {
+        imageView
+    }
+
+    func scrollViewDidZoom(_ scrollView: UIScrollView) {
+        centerImage()
+    }
+
+    deinit {
+        #if canImport(VisionKit)
+        analysisTask?.cancel()
+        #endif
+    }
+
+    private func layoutImage() {
+        guard let image = imageView.image, scrollView.bounds.width > 0, scrollView.bounds.height > 0 else { return }
+
+        let boundsSize = scrollView.bounds.size
+        let layoutBoundsChanged = lastLayoutBounds != boundsSize
+        lastLayoutBounds = boundsSize
+
+        let fittedSize = aspectFitSize(for: image.size, in: boundsSize)
+        imageView.bounds = CGRect(origin: .zero, size: fittedSize)
+        imageView.center = CGPoint(x: fittedSize.width / 2, y: fittedSize.height / 2)
+        scrollView.contentSize = fittedSize
+        scrollView.minimumZoomScale = 1
+        scrollView.maximumZoomScale = 5
+
+        if shouldResetZoom || layoutBoundsChanged {
+            scrollView.zoomScale = 1
+            shouldResetZoom = false
+        } else if scrollView.zoomScale < scrollView.minimumZoomScale {
+            scrollView.zoomScale = scrollView.minimumZoomScale
+        }
+
+        centerImage()
+    }
+
+    private func aspectFitSize(for imageSize: CGSize, in boundsSize: CGSize) -> CGSize {
+        guard imageSize.width > 0, imageSize.height > 0 else { return boundsSize }
+        let scale = min(boundsSize.width / imageSize.width, boundsSize.height / imageSize.height)
+        return CGSize(width: imageSize.width * scale, height: imageSize.height * scale)
+    }
+
+    private func centerImage() {
+        let horizontalInset = max(0, (scrollView.bounds.width - scrollView.contentSize.width) / 2)
+        let verticalInset = max(0, (scrollView.bounds.height - scrollView.contentSize.height) / 2)
+        scrollView.contentInset = UIEdgeInsets(top: verticalInset, left: horizontalInset, bottom: verticalInset, right: horizontalInset)
+    }
+
+    private func analyzeImage(_ image: UIImage) {
+        #if canImport(VisionKit)
+        guard ImageAnalyzer.isSupported else { return }
+        analysisTask?.cancel()
+        interaction.analysis = nil
+        analysisTask = Task { [analyzer, interaction] in
+            do {
+                let analysis = try await analyzer.analyze(image, configuration: ImageAnalyzer.Configuration([.text]))
+                guard !Task.isCancelled else { return }
+                await MainActor.run {
+                    interaction.analysis = analysis
+                    interaction.preferredInteractionTypes = .textSelection
+                }
+            } catch {
+                // The image remains zoomable even when Live Text analysis is unavailable.
+            }
+        }
+        #endif
     }
 }
 
