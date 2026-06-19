@@ -64,6 +64,7 @@
 "density.ingredient.rye_flour" = "Harina de centeno";
 "density.ingredient.sea_salt" = "Sal marina";
 "density.ingredient.seeds" = "Semillas";
+"density.ingredient.self_rising_flour" = "Harina leudante";
 "density.ingredient.semolina_flour" = "Harina de sémola";
 "density.ingredient.shortening" = "Manteca vegetal";
 "density.ingredient.sour_cream" = "Crema agria";
@@ -158,6 +159,7 @@
 "scan.error.model_unavailable" = "Apple Intelligence no está disponible en este dispositivo o región.";
 "scan.error.no_flour_found" = "No se pudo identificar ninguna harina en la receta. Por favor, introduce la receta manualmente.";
 "scan.error.no_text_found" = "No se encontró texto legible en la imagen.";
+"scan.detected_language" = "Receta detectada en %@. Los nombres de los ingredientes han sido traducidos.";
 "share.error.prepare_file" = "No se pudo preparar el archivo de la receta.";
 "settings.error.convert_temperatures" = "No se pudieron convertir las temperaturas de la receta.";
 "settings.footer.volume_system" = "El peso siempre es en gramos — el volumen es más flexible.";

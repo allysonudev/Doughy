@@ -66,6 +66,7 @@
 "density.ingredient.rye_flour" = "Rúgmjöl";
 "density.ingredient.sea_salt" = "Sjávarsalt";
 "density.ingredient.seeds" = "Fræ";
+"density.ingredient.self_rising_flour" = "Sjálfsrísandi hveiti";
 "density.ingredient.semolina_flour" = "Semolina-mjöl";
 "density.ingredient.shortening" = "Bakstursfita";
 "density.ingredient.sour_cream" = "Sýrður rjómi";
@@ -160,6 +161,7 @@
 "scan.error.model_unavailable" = "Apple Intelligence er ekki tiltækt á þessu tæki eða á þessum svæðum.";
 "scan.error.no_flour_found" = "Tókst ekki að finna mjöl í uppskriftinni. Vinsamlegast sláðu inn uppskriftina handvirkt.";
 "scan.error.no_text_found" = "Enginn lesanlegur texti fannst á myndinni.";
+"scan.detected_language" = "Uppskrift greind á %@. Heiti hráefna hafa verið þýdd.";
 "share.error.prepare_file" = "Tókst ekki að undirbúa uppskriftarskrána.";
 "settings.error.convert_temperatures" = "Tókst ekki að breyta hitastigum uppskriftar.";
 "settings.footer.volume_system" = "Þyngd er alltaf í grömmum — rúmmálið er svolítið sveigjanlegra.";

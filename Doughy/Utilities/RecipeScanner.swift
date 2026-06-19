@@ -14,7 +14,13 @@ import FoundationModels
 @available(iOS 26, *)
 @Generable
 struct ParsedRecipe: Sendable {
-    /// Recipe name.
+    @Guide(description: """
+        The recipe's title or name, exactly as it appears in the text (e.g. "Sourdough \
+        Boule", "Grandma's Rye Bread"). Use an empty string if no recipe title or name \
+        is explicitly written — do NOT invent or infer a name from the ingredients or \
+        instructions. Most recipe screenshots show only an ingredient list with no title, \
+        in which case this must be "".
+        """)
     var name: String
     /// True when the recipe contains a preferment (poolish, biga, levain, sponge, starter, etc.).
     var hasPreferment: Bool
@@ -85,6 +91,7 @@ enum ParsedIngredientCategory: String, Sendable {
     case almondFlour
     case buckwheatFlour
     case glutenFreeFlourBlend
+    case selfRisingFlour
 
     // Sweeteners
     case granulatedSugar
@@ -162,7 +169,8 @@ struct ParsedIngredient: Sendable {
         sugar" or "icing sugar" -> powderedSugar, "caster sugar" or "superfine sugar" -> \
         granulatedSugar, "demerara sugar", "turbinado sugar", or "raw sugar" -> brownSugar, \
         cocoa or cocoa powder -> cocoaPowder, chocolate chips/chunks/disks/fèves -> \
-        chocolateChips. Use "other" only if nothing reasonably matches.
+        chocolateChips, "masa harina", "masa de maíz", "harina de maíz", or any nixtamalized \
+        corn flour (e.g. Maseca) -> cornmeal. Use "other" only if nothing reasonably matches.
         """)
     var category: ParsedIngredientCategory
     @Guide(description: """
@@ -174,8 +182,10 @@ struct ParsedIngredient: Sendable {
         if no other unit is given for this ingredient. Extract this independently of \
         volumeAmount: if the recipe shows both a cup/tablespoon/teaspoon/ounce amount AND \
         a gram amount for the same ingredient, set weightGrams to the gram value exactly \
-        as written — do NOT compute or convert it from the other amount. Set this to 0 \
-        only if the recipe gives no gram amount at all for this ingredient.
+        as written — do NOT compute or convert it from the other amount. CRITICAL: never \
+        compute, estimate, or infer a gram value from a volume — if the recipe text \
+        contains no "g" or "grams" for this ingredient, weightGrams MUST be exactly 0, \
+        even if you can calculate an approximate weight from the volume.
         """)
     var weightGrams: Double
     @Guide(description: """
@@ -200,7 +210,22 @@ struct ParsedIngredient: Sendable {
         amounts (common in Nordic and Icelandic recipes, e.g. "2 dl mjöl" -> 2, \
         deciliter). Use "liter" for "l"/"liter"/"litre" amounts. Use "egg" when the \
         quantity is a count of eggs, egg whites, or egg yolks (e.g. "2 large eggs" -> \
-        volumeAmount: 2, volumeUnit: egg). Use "none" if volumeAmount is 0.
+        volumeAmount: 2, volumeUnit: egg). Use "none" if volumeAmount is 0. \
+        When the recipe uses a non-English unit name, map it to the closest standard unit \
+        and keep volumeAmount as the EXACT number written before that unit — do NOT \
+        convert the quantity to ml or any other unit, do NOT divide or scale it. The \
+        number in the recipe is always volumeAmount; only the unit name changes \
+        (e.g. "1 cucharadita sal" -> volumeAmount: 1, volumeUnit: teaspoon — NOT \
+        volumeAmount: 0.04 or 5; "1.5 tazas agua" -> volumeAmount: 1.5, volumeUnit: cup \
+        — NOT volumeAmount: 354 or 150). Common mappings: Spanish taza/tazas -> cup, \
+        cucharada/cucharadas -> tablespoon, cucharadita/cucharaditas -> teaspoon; French tasse -> cup, cuillère à soupe -> \
+        tablespoon, cuillère à café -> teaspoon; German Tasse -> cup, Esslöffel -> \
+        tablespoon, Teelöffel -> teaspoon; Italian tazza -> cup, cucchiaio -> tablespoon, \
+        cucchiaino -> teaspoon; Portuguese xícara/chávena -> cup, colher de sopa -> \
+        tablespoon, colher de chá -> teaspoon; Icelandic bolli -> cup, matskeið -> \
+        tablespoon, teskeið/teskeiðar -> teaspoon; Japanese カップ -> cup, 大さじ/大匙 -> \
+        tablespoon, 小さじ/小匙 -> teaspoon; Korean 컵 -> cup, 큰술 -> tablespoon, \
+        작은술 -> teaspoon.
         """)
     var volumeUnit: ParsedVolumeUnit
     @Guide(description: """
@@ -219,8 +244,8 @@ struct ParsedIngredient: Sendable {
     var eggPart: ParsedEggPart
     @Guide(description: """
         True only if this ingredient IS a flour (bread flour, all-purpose flour, whole wheat \
-        flour, rye flour, semolina, etc.). Water, salt, yeast, sugar, oil, butter, eggs, milk, \
-        seeds, and every other ingredient are NOT flour and must be false.
+        flour, rye flour, semolina, self-rising flour, etc.). Water, salt, yeast, sugar, oil, \
+        butter, eggs, milk, seeds, and every other ingredient are NOT flour and must be false.
         """)
     var isFlour: Bool
     @Guide(description: """

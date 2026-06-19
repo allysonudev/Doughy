@@ -70,6 +70,7 @@
 "density.ingredient.rye_flour" = "Farina di segale";
 "density.ingredient.sea_salt" = "Sale marino";
 "density.ingredient.seeds" = "Semi";
+"density.ingredient.self_rising_flour" = "Farina autolievitante";
 "density.ingredient.semolina_flour" = "Semola";
 "density.ingredient.shortening" = "Grasso vegetale";
 "density.ingredient.sour_cream" = "Panna acida";
@@ -167,6 +168,7 @@
 "scan.error.model_unavailable" = "Apple Intelligence non è disponibile su questo dispositivo o in questa regione.";
 "scan.error.no_flour_found" = "Impossibile identificare alcuna farina nella ricetta. Inserisci la ricetta manualmente.";
 "scan.error.no_text_found" = "Nessun testo leggibile trovato nell'immagine.";
+"scan.detected_language" = "Ricetta rilevata in %@. I nomi degli ingredienti sono stati tradotti.";
 "share.error.prepare_file" = "Impossibile preparare il file della ricetta.";
 "settings.error.convert_temperatures" = "Impossibile convertire le temperature della ricetta.";
 "settings.footer.volume_system" = "Il peso è sempre in grammi — il volume è più disposto a trattare.";

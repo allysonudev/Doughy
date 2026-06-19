@@ -5,6 +5,7 @@
 import SwiftUI
 import PhotosUI
 import UIKit
+import NaturalLanguage
 
 // MARK: - Types
 
@@ -37,6 +38,38 @@ private struct IngredientRow: Identifiable, Equatable {
 private struct InstructionRow: Identifiable {
     var id = UUID()
     var text: String
+}
+
+/// A ParseableFormatStyle for decimal number fields (.decimalPad keyboard) that displays
+/// with the app language's decimal separator but accepts both "." and "," when parsing,
+/// so hardware-keyboard input works correctly in any locale (e.g. German/Icelandic where
+/// "." is a grouping separator and would otherwise be misread as a thousands separator).
+private struct FlexibleDecimalStyle: ParseableFormatStyle {
+    typealias FormatInput = Double
+    typealias FormatOutput = String
+
+    var fractionDigits: ClosedRange<Int>
+
+    func format(_ value: Double) -> String {
+        // Use the app's selected language (not the device region) to pick the decimal
+        // separator. This keeps "." for English-language users even when their device
+        // region is set to a comma-decimal locale, while correctly showing "," for
+        // users running the app in German, French, etc.
+        let lang = Bundle.main.preferredLocalizations.first ?? "en"
+        return value.formatted(.number.locale(Locale(identifier: lang)).precision(.fractionLength(fractionDigits)))
+    }
+
+    var parseStrategy: FlexibleDecimalParseStrategy { FlexibleDecimalParseStrategy() }
+}
+
+private struct FlexibleDecimalParseStrategy: ParseStrategy {
+    func parse(_ value: String) throws -> Double {
+        // Swift's Double() always uses "." as decimal — handles en-US and hardware keyboards
+        if let d = Double(value) { return d }
+        // Also accept comma as decimal separator (locale-native decimal pad)
+        if let d = Double(value.replacingOccurrences(of: ",", with: ".")) { return d }
+        throw CocoaError(.formatting)
+    }
 }
 
 /// An ingredient with a quantity that isn't converted to grams (e.g. "2 tablespoons" of
@@ -280,6 +313,7 @@ struct CreateRecipeView: View {
     @State private var isScanning = false
     @State private var scanError: String?
     @State private var lastScanDiagnostics: String?
+    @State private var detectedRecipeLanguage: String? = nil
     @State private var didOpenInitialScanOptions = false
 
     // Details
@@ -650,6 +684,16 @@ struct CreateRecipeView: View {
                 }
             }
         }
+        .onChange(of: inputMode) { oldValue, newValue in
+            guard let oldValue, let newValue, oldValue != newValue else { return }
+            defaultWeight = nil
+            for i in flours.indices { flours[i].value = nil }
+            for i in ingredients.indices { ingredients[i].value = nil }
+            prefermentFlourPercent = nil
+            for i in prefermentFlours.indices { prefermentFlours[i].value = nil }
+            for i in prefermentIngredientRows.indices { prefermentIngredientRows[i].value = nil }
+            detectedRecipeLanguage = nil
+        }
     }
 
     // MARK: - Scanning overlay
@@ -769,11 +813,18 @@ struct CreateRecipeView: View {
     private var detailsForm: some View {
         let collections = store.collectionNames
         return Form {
-            Section("Recipe") {
+            Section {
                 TextField("Name", text: $recipeName)
                     .autocorrectionDisabled()
                     .focused($isRecipeNameFocused)
                     .accessibilityIdentifier("recipeNameField")
+            } header: {
+                Text("Recipe")
+            } footer: {
+                if let lang = detectedRecipeLanguage {
+                    Label(String(format: String(localized: "scan.detected_language", defaultValue: "Recipe detected in %@. Ingredient names have been translated."), lang), systemImage: "globe")
+                        .font(.footnote)
+                }
             }
 
             Section("Collection") {
@@ -814,7 +865,7 @@ struct CreateRecipeView: View {
                     HStack {
                         Text("Default Dough Weight")
                         Spacer()
-                        TextField("500", value: $defaultWeight, format: .number)
+                        TextField("500", value: $defaultWeight, format: FlexibleDecimalStyle(fractionDigits: 0...2))
                             .multilineTextAlignment(.trailing)
                             .keyboardType(.decimalPad)
                             .frame(width: 80)
@@ -950,7 +1001,7 @@ struct CreateRecipeView: View {
                                             pendingValueRowID: $pendingValueRowID,
                                             exclude: Set(flours.map { $0.name.lowercased() }.filter { !$0.isEmpty }))
                         Spacer()
-                        TextField("0", value: $flours[index].value, format: .number.precision(.fractionLength(0...4)))
+                        TextField("0", value: $flours[index].value, format: FlexibleDecimalStyle(fractionDigits: 0...4))
                             .multilineTextAlignment(.trailing)
                             .keyboardType(.decimalPad)
                             .frame(width: 70)
@@ -1022,7 +1073,7 @@ struct CreateRecipeView: View {
                         Spacer()
                         VStack(alignment: .trailing, spacing: 2) {
                             HStack(spacing: 4) {
-                                TextField("0", value: $ingredients[index].value, format: .number.precision(.fractionLength(0...4)))
+                                TextField("0", value: $ingredients[index].value, format: FlexibleDecimalStyle(fractionDigits: 0...4))
                                     .multilineTextAlignment(.trailing)
                                     .keyboardType(.decimalPad)
                                     .frame(width: 70)
@@ -1048,7 +1099,7 @@ struct CreateRecipeView: View {
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                         Spacer()
-                        TextField("–", value: $ingredients[index].tempValue, format: .number)
+                        TextField("–", value: $ingredients[index].tempValue, format: FlexibleDecimalStyle(fractionDigits: 0...1))
                             .multilineTextAlignment(.trailing)
                             .keyboardType(.decimalPad)
                             .frame(width: 60)
@@ -1416,7 +1467,7 @@ struct CreateRecipeView: View {
                     HStack {
                         Text("% of Total Flour")
                         Spacer()
-                        TextField("0", value: $prefermentFlourPercent, format: .number)
+                        TextField("0", value: $prefermentFlourPercent, format: FlexibleDecimalStyle(fractionDigits: 0...4))
                             .multilineTextAlignment(.trailing)
                             .keyboardType(.decimalPad)
                             .frame(width: 70)
@@ -1437,7 +1488,7 @@ struct CreateRecipeView: View {
                                             pendingValueRowID: $pendingValueRowID,
                                             exclude: Set(prefermentFlours.map { $0.name.lowercased() }.filter { !$0.isEmpty }))
                         Spacer()
-                        TextField("0", value: $prefermentFlours[index].value, format: .number.precision(.fractionLength(0...4)))
+                        TextField("0", value: $prefermentFlours[index].value, format: FlexibleDecimalStyle(fractionDigits: 0...4))
                             .multilineTextAlignment(.trailing)
                             .keyboardType(.decimalPad)
                             .frame(width: 70)
@@ -1483,7 +1534,7 @@ struct CreateRecipeView: View {
                                             pendingValueRowID: $pendingValueRowID,
                                             exclude: Set(prefermentIngredientRows.map { $0.name.lowercased() }.filter { !$0.isEmpty }))
                         Spacer()
-                        TextField("0", value: $prefermentIngredientRows[index].value, format: .number.precision(.fractionLength(0...4)))
+                        TextField("0", value: $prefermentIngredientRows[index].value, format: FlexibleDecimalStyle(fractionDigits: 0...4))
                             .multilineTextAlignment(.trailing)
                             .keyboardType(.decimalPad)
                             .frame(width: 70)
@@ -1712,6 +1763,26 @@ struct CreateRecipeView: View {
         }
     }
 
+    /// Returns the localized display name for a scanned ingredient when its category is a
+    /// known enum case, falling back to the raw scanned name for `.other`.
+    @available(iOS 26, *)
+    private func localizedIngredientName(for ingredient: ResolvedIngredient) -> String {
+        guard ingredient.category != .other,
+              let cat = IngredientCategory(rawValue: ingredient.category.rawValue) else {
+            return ingredient.name
+        }
+        return cat.localizedDisplayName
+    }
+
+    /// Reverse-looks-up an IngredientCategory by its English display name and returns the
+    /// localized name, falling back to `name` when no match is found. Used to localize
+    /// alternative ingredient names from the scanner (e.g. "Bread Flour" → "Harina de fuerza").
+    private func localizedAltName(_ name: String) -> String {
+        IngredientCategory.allCases
+            .first { $0.displayName.caseInsensitiveCompare(name) == .orderedSame }
+            .map(\.localizedDisplayName) ?? name
+    }
+
     @available(iOS 26, *)
     private func applyParsed(_ result: ScanResult) throws {
         let parsed = result.resolvedRecipe
@@ -1732,19 +1803,34 @@ struct CreateRecipeView: View {
             throw ScanError.noFlourFound
         }
 
+        let langRecognizer = NLLanguageRecognizer()
+        langRecognizer.processString(result.ocrText)
+        if let detected = langRecognizer.dominantLanguage {
+            let appLang = Bundle.main.preferredLocalizations.first ?? "en"
+            let appPrimary = appLang.components(separatedBy: "-").first ?? appLang
+            let detectedPrimary = detected.rawValue.components(separatedBy: "-").first ?? detected.rawValue
+            if appPrimary != detectedPrimary {
+                detectedRecipeLanguage = Locale(identifier: appLang).localizedString(forLanguageCode: detected.rawValue)
+            } else {
+                detectedRecipeLanguage = nil
+            }
+        } else {
+            detectedRecipeLanguage = nil
+        }
+
         recipeName = parsed.name
         defaultWeight = valid.reduce(0) { $0 + $1.weightGrams }
 
         pendingNameChoices = []
 
         flours = mainFlours.map {
-            FlourRow(name: $0.name, value: $0.weightGrams)
+            FlourRow(name: localizedIngredientName(for: $0), value: $0.weightGrams)
         }
         queueNameChoices(source: mainFlours, rows: flours, kind: .flour)
         if flours.isEmpty { flours = [FlourRow()] }
 
         ingredients = mainOthers.map {
-            IngredientRow(name: $0.name, value: $0.weightGrams, tempValue: scannedTempValue(for: $0))
+            IngredientRow(name: localizedIngredientName(for: $0), value: $0.weightGrams, tempValue: scannedTempValue(for: $0))
         }
         queueNameChoices(source: mainOthers, rows: ingredients, kind: .ingredient)
         if ingredients.isEmpty { ingredients = [IngredientRow()] }
@@ -1758,13 +1844,13 @@ struct CreateRecipeView: View {
             prefermentFlourPercent = totalPrefFlourWeight / totalFlourWeight * 100
 
             let prefFlourRows = prefFlours.map {
-                FlourRow(name: $0.name, value: $0.weightGrams)
+                FlourRow(name: localizedIngredientName(for: $0), value: $0.weightGrams)
             }
             queueNameChoices(source: prefFlours, rows: prefFlourRows, kind: .prefermentFlour)
             prefermentFlours = prefFlourRows.isEmpty ? [FlourRow()] : prefFlourRows
 
             let prefIngRows = prefOthers.map {
-                IngredientRow(name: $0.name, value: $0.weightGrams, tempValue: scannedTempValue(for: $0))
+                IngredientRow(name: localizedIngredientName(for: $0), value: $0.weightGrams, tempValue: scannedTempValue(for: $0))
             }
             queueNameChoices(source: prefOthers, rows: prefIngRows, kind: .prefermentIngredient)
             prefermentIngredientRows = prefIngRows.isEmpty ? [IngredientRow()] : prefIngRows
@@ -1831,7 +1917,8 @@ struct CreateRecipeView: View {
         for (resolved, row) in zip(source, rows) {
             guard let alt = resolved.alternativeName, !alt.isEmpty else { continue }
             pendingNameChoices.append(PendingNameChoice(rowID: row.id, kind: kind,
-                                                          primaryName: resolved.name, alternativeName: alt))
+                                                          primaryName: localizedIngredientName(for: resolved),
+                                                          alternativeName: localizedAltName(alt)))
         }
     }
 

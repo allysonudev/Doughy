@@ -66,6 +66,7 @@
 "density.ingredient.rye_flour" = "Farine de seigle";
 "density.ingredient.sea_salt" = "Sel de mer";
 "density.ingredient.seeds" = "Graines";
+"density.ingredient.self_rising_flour" = "Farine levante";
 "density.ingredient.semolina_flour" = "Semoule";
 "density.ingredient.shortening" = "Graisse végétale";
 "density.ingredient.sour_cream" = "Crème aigre";
@@ -160,6 +161,7 @@
 "scan.error.model_unavailable" = "Apple Intelligence n'est pas disponible sur cet appareil ou dans cette région.";
 "scan.error.no_flour_found" = "Aucune farine n'a pu être identifiée dans la recette. Veuillez saisir la recette manuellement.";
 "scan.error.no_text_found" = "Aucun texte lisible n'a été trouvé dans l'image.";
+"scan.detected_language" = "Recette détectée en %@. Les noms des ingrédients ont été traduits.";
 "share.error.prepare_file" = "Impossible de préparer le fichier de recette.";
 "settings.error.convert_temperatures" = "Impossible de convertir les températures de la recette.";
 "settings.footer.volume_system" = "Le poids est toujours en grammes — le volume, lui, est ouvert à la négociation.";

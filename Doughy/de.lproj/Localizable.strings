@@ -70,6 +70,7 @@
 "density.ingredient.rye_flour" = "Roggenmehl";
 "density.ingredient.sea_salt" = "Meersalz";
 "density.ingredient.seeds" = "Samen";
+"density.ingredient.self_rising_flour" = "Selbstaufgehendes Mehl";
 "density.ingredient.semolina_flour" = "Grießmehl";
 "density.ingredient.shortening" = "Pflanzenfett";
 "density.ingredient.sour_cream" = "Sauerrahm";
@@ -167,6 +168,7 @@
 "scan.error.model_unavailable" = "Apple Intelligence ist auf diesem Gerät oder in dieser Region nicht verfügbar.";
 "scan.error.no_flour_found" = "Es konnte kein Mehl im Rezept identifiziert werden. Bitte geben Sie das Rezept manuell ein.";
 "scan.error.no_text_found" = "Im Bild wurde kein lesbarer Text gefunden.";
+"scan.detected_language" = "Rezept auf %@ erkannt. Zutatenbezeichnungen wurden übersetzt.";
 "share.error.prepare_file" = "Die Rezeptdatei konnte nicht vorbereitet werden.";
 "settings.error.convert_temperatures" = "Rezepttemperaturen konnten nicht umgerechnet werden.";
 "settings.footer.volume_system" = "Das Gewicht wird immer in Gramm angegeben — das Volumen ist da etwas gesprächsbereiter.";

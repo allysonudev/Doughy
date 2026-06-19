@@ -64,6 +64,7 @@
 "density.ingredient.rye_flour" = "호밀가루";
 "density.ingredient.sea_salt" = "천일염";
 "density.ingredient.seeds" = "씨앗류";
+"density.ingredient.self_rising_flour" = "셀프라이징 밀가루";
 "density.ingredient.semolina_flour" = "세몰리나 밀가루";
 "density.ingredient.shortening" = "쇼트닝";
 "density.ingredient.sour_cream" = "사워크림";
@@ -158,6 +159,7 @@
 "scan.error.model_unavailable" = "Apple Intelligence는 이 기기 또는 지역에서 사용할 수 없습니다.";
 "scan.error.no_flour_found" = "레시피에서 밀가루를 확인할 수 없습니다. 레시피를 직접 입력해 주세요.";
 "scan.error.no_text_found" = "이미지에서 읽을 수 있는 텍스트를 찾을 수 없습니다.";
+"scan.detected_language" = "%@ 레시피가 감지되었습니다. 재료 이름이 번역되었습니다.";
 "share.error.prepare_file" = "레시피 파일을 준비할 수 없습니다.";
 "settings.error.convert_temperatures" = "레시피 온도를 변환할 수 없습니다.";
 "settings.footer.volume_system" = "무게는 항상 그램입니다 — 부피는 그나마 협상이 가능해요.";

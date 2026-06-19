@@ -222,6 +222,7 @@ enum IngredientCategory: String, CaseIterable, Identifiable {
     case almondFlour
     case buckwheatFlour
     case glutenFreeFlourBlend
+    case selfRisingFlour
 
     // Sweeteners
     case granulatedSugar
@@ -273,7 +274,7 @@ enum IngredientCategory: String, CaseIterable, Identifiable {
         switch self {
         case .breadFlour, .allPurposeFlour, .cakeFlour, .wholeWheatFlour, .ryeFlour,
              .speltFlour, .semolinaFlour, .oatFlour, .cornmeal, .riceFlour, .almondFlour,
-             .buckwheatFlour, .glutenFreeFlourBlend:
+             .buckwheatFlour, .glutenFreeFlourBlend, .selfRisingFlour:
             return .flours
         case .granulatedSugar, .brownSugar, .powderedSugar, .honey, .mapleSyrup, .molasses:
             return .sweeteners
@@ -305,6 +306,7 @@ enum IngredientCategory: String, CaseIterable, Identifiable {
         case .almondFlour: return "Almond Flour"
         case .buckwheatFlour: return "Buckwheat Flour"
         case .glutenFreeFlourBlend: return "Gluten-Free Flour Blend"
+        case .selfRisingFlour: return "Self-Rising Flour"
 
         case .granulatedSugar: return "Granulated Sugar"
         case .brownSugar: return "Brown Sugar"
@@ -361,6 +363,7 @@ enum IngredientCategory: String, CaseIterable, Identifiable {
         case .almondFlour: return String(localized: "density.ingredient.almond_flour", defaultValue: "Almond Flour")
         case .buckwheatFlour: return String(localized: "density.ingredient.buckwheat_flour", defaultValue: "Buckwheat Flour")
         case .glutenFreeFlourBlend: return String(localized: "density.ingredient.gluten_free_flour_blend", defaultValue: "Gluten-Free Flour Blend")
+        case .selfRisingFlour: return String(localized: "density.ingredient.self_rising_flour", defaultValue: "Self-Rising Flour")
 
         case .granulatedSugar: return String(localized: "density.ingredient.granulated_sugar", defaultValue: "Granulated Sugar")
         case .brownSugar: return String(localized: "density.ingredient.brown_sugar", defaultValue: "Brown Sugar")
@@ -421,6 +424,7 @@ enum IngredientCategory: String, CaseIterable, Identifiable {
         case .almondFlour: return 96
         case .buckwheatFlour: return 120
         case .glutenFreeFlourBlend: return 156
+        case .selfRisingFlour: return 120 // same density as all-purpose (King Arthur: 120g/cup)
 
         case .granulatedSugar: return 198
         case .brownSugar: return 213

@@ -120,9 +120,10 @@ struct SettingsView: View {
             Text(tempUpdateError ?? "")
         }
         .alert("Restart Required", isPresented: $showRestartAlert) {
-            Button("OK", role: .cancel) {}
+            Button("Quit App") { exit(0) }
+            Button("Later", role: .cancel) {}
         } message: {
-            Text("Please close and reopen Doughy to apply the language change.")
+            Text("Please reopen Doughy to apply the language change.")
         }
     }
 }

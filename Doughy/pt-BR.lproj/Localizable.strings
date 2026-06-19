@@ -64,6 +64,7 @@
 "density.ingredient.rye_flour" = "Farinha de centeio";
 "density.ingredient.sea_salt" = "Sal marinho";
 "density.ingredient.seeds" = "Sementes";
+"density.ingredient.self_rising_flour" = "Farinha com Fermento";
 "density.ingredient.semolina_flour" = "Farinha de sêmola";
 "density.ingredient.shortening" = "Gordura vegetal";
 "density.ingredient.sour_cream" = "Creme azedo";
@@ -158,6 +159,7 @@
 "scan.error.model_unavailable" = "O Apple Intelligence não está disponível neste dispositivo ou região.";
 "scan.error.no_flour_found" = "Não foi possível identificar nenhuma farinha na receita. Insira a receita manualmente.";
 "scan.error.no_text_found" = "Nenhum texto legível foi encontrado na imagem.";
+"scan.detected_language" = "Receita detectada em %@. Os nomes dos ingredientes foram traduzidos.";
 "share.error.prepare_file" = "Não foi possível preparar o arquivo da receita.";
 "settings.error.convert_temperatures" = "Não foi possível converter as temperaturas da receita.";
 "settings.footer.volume_system" = "O peso é sempre em gramas — o volume, esse sim, está aberto a negociações.";

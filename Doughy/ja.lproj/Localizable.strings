@@ -70,6 +70,7 @@
 "density.ingredient.rye_flour" = "ライ麦粉";
 "density.ingredient.sea_salt" = "海塩";
 "density.ingredient.seeds" = "種実類";
+"density.ingredient.self_rising_flour" = "薄力粉（ベーキングパウダー入り）";
 "density.ingredient.semolina_flour" = "セモリナ粉";
 "density.ingredient.shortening" = "ショートニング";
 "density.ingredient.sour_cream" = "サワークリーム";
@@ -167,6 +168,7 @@
 "scan.error.model_unavailable" = "Apple Intelligenceはこのデバイスまたは地域では利用できません。";
 "scan.error.no_flour_found" = "レシピ内の小麦粉を特定できませんでした。レシピを手動で入力してください。";
 "scan.error.no_text_found" = "画像内に読み取れるテキストがありませんでした。";
+"scan.detected_language" = "%@のレシピを検出しました。食材名は翻訳されています。";
 "share.error.prepare_file" = "レシピファイルを準備できませんでした。";
 "settings.error.convert_temperatures" = "レシピの温度を変換できませんでした。";
 "settings.footer.volume_system" = "重さは常にグラムです — 体積はまあ、融通が利きます。";

@@ -156,6 +156,7 @@ enum ExtraIngredientConversion {
             (.almondFlour, ["almond flour"]),
             (.buckwheatFlour, ["buckwheat flour"]),
             (.glutenFreeFlourBlend, ["gluten-free flour", "gluten free flour"]),
+            (.selfRisingFlour, ["self-rising flour", "self rising flour", "self-raising flour", "self raising flour"]),
             (.brownSugar, ["brown sugar"]),
             (.powderedSugar, ["powdered sugar", "confectioners sugar", "confectioner's sugar"]),
             (.granulatedSugar, ["granulated sugar", "white sugar", "sugar"]),
