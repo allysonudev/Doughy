@@ -27,16 +27,11 @@ extension String {
 }
 
 extension XCUIElement {
-    /// Waits for the field to actually gain keyboard focus after a tap. On
-    /// loaded machines (e.g. running several simulators in parallel), the tap
-    /// can be processed before the field's focus/keyboard animation completes,
-    /// and `typeText` then fails with "Neither element nor any descendant has
-    /// keyboard focus." Polling `hasFocus` avoids that race.
-    func waitForKeyboardFocus(timeout: TimeInterval = 3) {
-        let deadline = Date().addingTimeInterval(timeout)
-        while !hasFocus && Date() < deadline {
-            RunLoop.current.run(until: Date().addingTimeInterval(0.05))
-        }
+    /// Gives the keyboard/focus animation a brief chance to settle after a tap.
+    /// Xcode 27's managed UI-test devices do not report `hasFocus` reliably, and
+    /// polling it can fail with a stale app snapshot even when typing would work.
+    func waitForKeyboardFocus(timeout: TimeInterval = 0.3) {
+        RunLoop.current.run(until: Date().addingTimeInterval(timeout))
     }
 
     /// Taps the field, clears any existing text, then types `text`.
@@ -96,12 +91,20 @@ extension XCUIApplication {
         }
     }
 
+    /// Gives SwiftUI navigation/presentation a short moment to settle before
+    /// the next accessibility snapshot. Xcode 27 can otherwise throw kAXError
+    /// while the managed UI-test device is between screens.
+    func waitForUITransition(timeout: TimeInterval = 0.5) {
+        RunLoop.current.run(until: Date().addingTimeInterval(timeout))
+    }
+
     // MARK: - Recipe list
 
     func startCreateRecipe() {
         let addButton = buttons["addRecipeButton"]
         XCTAssertTrue(addButton.waitForExistence(timeout: 5), "Add recipe button not found")
         addButton.tap()
+        waitForUITransition()
     }
 
     /// Swipes a recipe row left and taps "Edit".
@@ -218,6 +221,7 @@ extension XCUIApplication {
         let card = buttons[byPercent ? "byPercentModeCard" : "byWeightModeCard"]
         XCTAssertTrue(card.waitForExistence(timeout: 5), "Mode card not found")
         card.tap()
+        waitForUITransition()
     }
 
     // MARK: - Details step
@@ -293,12 +297,23 @@ extension XCUIApplication {
         button.tap()
     }
 
-    /// Taps "Add Ingredient" to append a new (empty) ingredient row.
+    /// Taps "Add Ingredient" to append a new regular ingredient row.
     func addIngredient() {
         let button = buttons["addIngredientButton"]
         XCTAssertTrue(button.waitForExistence(timeout: 5), "Add Ingredient button not found")
         scrollToElement(button)
         button.tap()
+
+        let byPercent = buttons["By Percentage"].firstMatch
+        if byPercent.waitForExistence(timeout: 1) {
+            byPercent.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+            return
+        }
+
+        let byWeight = buttons["By Weight"].firstMatch
+        if byWeight.waitForExistence(timeout: 1) {
+            byWeight.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        }
     }
 
     /// Swipes the flour row at `index` left and taps "Delete".

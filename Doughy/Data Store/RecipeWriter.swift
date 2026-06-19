@@ -76,6 +76,36 @@ class RecipeWriter: NSObject {
             throw RecipeWritingError.noRecipeToDelete
         }
         
+        deleteCoreDataRecipe(coreDataRecipe)
+        
+        do {
+            try self.coreDataGateway.managedObjectConext.save()
+        }
+        catch {
+            print("Failed to delete recipe due to error \(error)")
+            throw RecipeWritingError.couldNotSave
+        }
+    }
+
+    func replaceLibrary(with recipes: [RecipeProtocol]) throws {
+        print("Replacing recipe library with \(recipes.count) recipes")
+
+        recipeReader.getRecipes().forEach(deleteCoreDataRecipe)
+        recipes.forEach {
+            _ = recipeConverter.convertToCoreData(recipe: $0)
+        }
+
+        do {
+            try self.coreDataGateway.managedObjectConext.save()
+        }
+        catch {
+            print("Failed to replace recipe library due to error \(error)")
+            self.coreDataGateway.managedObjectConext.rollback()
+            throw RecipeWritingError.couldNotSave
+        }
+    }
+
+    private func deleteCoreDataRecipe(_ coreDataRecipe: XCRecipe) {
         self.coreDataGateway.managedObjectConext.delete(coreDataRecipe)
         let ingredients = coreDataRecipe.ingredients!.array as! [XCIngredient]
         ingredients.forEach {
@@ -91,14 +121,6 @@ class RecipeWriter: NSObject {
                 self.coreDataGateway.managedObjectConext.delete($0)
             }
             self.coreDataGateway.managedObjectConext.delete(preferment)
-        }
-        
-        do {
-            try self.coreDataGateway.managedObjectConext.save()
-        }
-        catch {
-            print("Failed to delete recipe due to error \(error)")
-            throw RecipeWritingError.couldNotSave
         }
     }
 

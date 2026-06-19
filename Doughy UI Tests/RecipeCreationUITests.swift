@@ -50,7 +50,7 @@ final class RecipeCreationUITests: DoughyUITestCase {
         let sheetTitle = app.navigationBars["Additional Ingredients"]
         XCTAssertTrue(sheetTitle.waitForExistence(timeout: 5), "Conversion sheet should appear")
         XCTAssertTrue(app.staticTexts["Water"].waitForExistence(timeout: 5), "Candidate name should be shown")
-        XCTAssertTrue(app.staticTexts["1 cup Water ≈ 227 g"].waitForExistence(timeout: 5),
+        XCTAssertTrue(app.staticTexts["1 cup Water ≈ 236 g"].waitForExistence(timeout: 5),
                        "Candidate description should be shown")
         XCTAssertTrue(app.switches["Convert to weight"].waitForExistence(timeout: 5),
                        "Convert to weight toggle should be shown")

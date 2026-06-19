@@ -5,6 +5,13 @@
 
 import Foundation
 
+/// Shared physical/unit conversion constants used by density tables, scanner
+/// resolution, and extra-ingredient conversion suggestions.
+enum UnitConversion {
+    static let gramsPerOunce = 28.3495
+    static let millilitersPerUSCup = 236.588
+}
+
 /// Groups `IngredientCategory` cases for display in the conversions settings screen.
 enum IngredientCategoryGroup: String, CaseIterable, Identifiable {
     var id: String { rawValue }
@@ -46,7 +53,7 @@ enum DensityUnit: String, CaseIterable, Identifiable {
         case .cup: return 1
         case .tablespoon: return 16
         case .teaspoon: return 48
-        case .milliliter: return 236.588
+        case .milliliter: return UnitConversion.millilitersPerUSCup
         }
     }
 
@@ -426,7 +433,7 @@ enum IngredientCategory: String, CaseIterable, Identifiable {
         case .diamondCrystalKosherSalt: return 140 // ~2.9g/tsp (much fluffier than Morton's)
         case .seaSalt: return 240 // 5g/tsp
 
-        case .water: return 236
+        case .water: return UnitConversion.millilitersPerUSCup
         case .seeds: return 160
         case .nuts: return 120
         case .spices: return 100

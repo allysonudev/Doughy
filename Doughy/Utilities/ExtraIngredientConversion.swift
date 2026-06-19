@@ -27,7 +27,7 @@ enum ExtraIngredientConversion {
         }
 
         if unit == "ounce" {
-            let grams = amount * 28.3495
+            let grams = amount * UnitConversion.gramsPerOunce
             return ExtraIngredientConversionSuggestion(
                 grams: grams,
                 description: String(

@@ -13,6 +13,13 @@ struct RecipeFilePayload: Codable, Identifiable, Equatable {
     let recipe: RecipeFileData
 }
 
+struct RecipeLibraryBackup: Codable, Equatable {
+    let version: Int
+    let type: String
+    let exportedAt: Date
+    let recipes: [RecipeFilePayload]
+}
+
 struct RecipeFileData: Codable, Equatable {
     let name: String
     let collection: String
@@ -136,5 +143,44 @@ enum RecipeFile {
                       defaultWeight: data.defaultWeight, ingredients: ingredients,
                       instructions: instructions,
                       measurementMode: data.measurementMode ?? .percent)
+    }
+}
+
+enum RecipeLibraryBackupFile {
+    static let fileExtension = "doughylibrary"
+    static let type = "doughy.recipe-library"
+    private static let version = 1
+
+    static func backup(from recipes: [any RecipeProtocol]) -> RecipeLibraryBackup {
+        RecipeLibraryBackup(
+            version: version,
+            type: type,
+            exportedAt: Date(),
+            recipes: recipes.map { RecipeFile.payload(from: $0, author: nil) }
+        )
+    }
+
+    static func write(_ backup: RecipeLibraryBackup) throws -> URL {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .prettyPrinted
+        encoder.dateEncodingStrategy = .iso8601
+        let data = try encoder.encode(backup)
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        let dateString = formatter.string(from: backup.exportedAt)
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("Doughy Library Backup \(dateString)")
+            .appendingPathExtension(fileExtension)
+        try data.write(to: url, options: .atomic)
+        return url
+    }
+
+    static func load(from url: URL) -> RecipeLibraryBackup? {
+        let accessing = url.startAccessingSecurityScopedResource()
+        defer { if accessing { url.stopAccessingSecurityScopedResource() } }
+        guard let data = try? Data(contentsOf: url) else { return nil }
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return try? decoder.decode(RecipeLibraryBackup.self, from: data)
     }
 }

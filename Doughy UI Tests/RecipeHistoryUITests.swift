@@ -37,7 +37,7 @@ final class RecipeHistoryUITests: DoughyUITestCase {
         // Change Salt from 2% to 2.2%.
         app.editRecipe(named: name)
         app.tapDetailsNext()
-        app.textFields["ingredientValueField_1"].clearAndType("2.2", app: app)
+        app.textFields["ingredientValueField_1"].replaceNumericValue("2.2", app: app)
         app.tapIngredientsNext()
         app.saveRecipe()
         XCTAssertTrue(app.staticTexts[name].waitForExistence(timeout: 5))
@@ -162,7 +162,7 @@ final class RecipeHistoryUITests: DoughyUITestCase {
         // Edit the recipe to record a version entry, then delete it.
         app.editRecipe(named: name)
         app.tapDetailsNext()
-        app.textFields["ingredientValueField_1"].clearAndType("2.5", app: app)
+        app.textFields["ingredientValueField_1"].replaceNumericValue("2.5", app: app)
         app.tapIngredientsNext()
         app.saveRecipe()
         XCTAssertTrue(app.staticTexts[name].waitForExistence(timeout: 5))
