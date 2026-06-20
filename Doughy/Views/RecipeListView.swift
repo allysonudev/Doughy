@@ -18,6 +18,8 @@ struct RecipeListView: View {
     @State private var collapsedCollections: Set<String> = {
         Set(UserDefaults.standard.array(forKey: "collapsedCollections") as? [String] ?? [])
     }()
+    @State private var showingNewUserOnboarding = false
+    @State private var showingWhatsNew = false
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -75,6 +77,7 @@ struct RecipeListView: View {
             Text(deletionError ?? "")
         }
         .onAppear {
+            checkOnboarding()
             openPendingScanShortcutIfNeeded()
         }
         .onChange(of: store.pendingIntentImage) { _, image in
@@ -103,6 +106,41 @@ struct RecipeListView: View {
             guard let col = store.collections.first(where: { $0.name == pending.collection }),
                   let recipe = col.recipes.first(where: { $0.name == pending.recipeName }) else { return }
             path = [RecipeWrapper(recipe: recipe)]
+        }
+        .fullScreenCover(isPresented: $showingNewUserOnboarding) {
+            OnboardingView()
+        }
+        .sheet(isPresented: $showingWhatsNew) {
+            WhatsNewView()
+        }
+    }
+
+    private func checkOnboarding() {
+        let args = ProcessInfo.processInfo.arguments
+        guard !args.contains("-UITesting") else { return }
+
+        if args.contains("-ForceNewUserOnboarding") {
+            showingNewUserOnboarding = true
+            return
+        }
+        if args.contains("-ForceWhatsNew") {
+            showingWhatsNew = true
+            return
+        }
+
+        guard let current = UIApplication.appVersion else { return }
+        let seen = UserDefaults.standard.string(forKey: Settings.lastOnboardingVersionKey)
+
+        defer { UserDefaults.standard.set(current, forKey: Settings.lastOnboardingVersionKey) }
+
+        if seen == nil {
+            if store.isNewInstall {
+                showingNewUserOnboarding = true
+            } else {
+                showingWhatsNew = true
+            }
+        } else if seen != current {
+            showingWhatsNew = true
         }
     }
 

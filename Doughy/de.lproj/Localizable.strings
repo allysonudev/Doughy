@@ -320,3 +320,29 @@
 "Your name (optional)" = "Ihr Name (optional)";
 
 "density.unit.deciliter" = "g/dl";
+/* Onboarding & What's New */
+"Welcome to Doughy" = "Willkommen bei Doughy";
+"The offline recipe calculator. Precisely make bread, pizza, crepes, frosting, burritos, or anything you want!" = "Der Offline-Rezeptrechner. Mache präzise Brötchen, Brezeln, Strudel, Marzipan, Bratwurst oder alles, was du willst!";
+"Scale Any Batch" = "Jede Menge skalieren";
+"Enter how much you're making and Doughy tells you exactly how much of each ingredient you need." = "Gib an, wie viel du herstellen möchtest, und Doughy sagt dir genau, wie viel du von jeder Zutat brauchst.";
+"Convert to Volume" = "In Volumen umrechnen";
+"Not everything is easily weighed. Common ingredients have standard mass to volume conversions. Add your own any time." = "Nicht alles lässt sich leicht abwiegen. Gängige Zutaten haben Standardumrechnungen von Masse zu Volumen. Füge jederzeit eigene hinzu.";
+"Create or Scan Recipes" = "Rezepte erstellen oder scannen";
+"Type a recipe by percentage or by weight — or use Apple Intelligence On-Device models to photograph a recipe or scan a screenshot and create your recipe in seconds. Requires iPhone 15 or later." = "Gib ein Rezept nach Prozentsatz oder Gewicht ein – oder nutze Apple Intelligence, um ein Rezept zu fotografieren oder einen Screenshot zu scannen und dein Rezept in Sekunden zu erstellen. Erfordert iPhone 15 oder neuer.";
+"Totally Free. Totally Private." = "Völlig kostenlos. Völlig privat.";
+"Doughy isn't interested in taking your money or your information. Doughy doesn't track your usage or use the internet." = "Doughy ist nicht daran interessiert, dein Geld oder deine Daten zu nehmen. Doughy verfolgt deine Nutzung nicht und verwendet kein Internet.";
+"Share & Back Up" = "Teilen & Sichern";
+"Export recipes and send them to other Doughy users with a personal note. Backup and restore your entire library to a file any time." = "Exportiere Rezepte und sende sie mit einer persönlichen Notiz an andere Doughy-Nutzer. Sichere und stelle deine gesamte Bibliothek jederzeit in einer Datei wieder her.";
+"Get Started" = "Loslegen";
+"What's New in Doughy" = "Neues in Doughy";
+"On-Device AI Recipe Scanning" = "KI-Rezept-Scan auf dem Gerät";
+"Use Apple Intelligence On-Device models to photograph a recipe or scan a screenshot and create your recipe in seconds. Requires iPhone 15 or later." = "Nutze Apple Intelligence auf dem Gerät, um ein Rezept zu fotografieren oder einen Screenshot zu scannen und dein Rezept in Sekunden zu erstellen. Erfordert iPhone 15 oder neuer.";
+"Recipe History" = "Rezeptverlauf";
+"Every edit is saved. Browse and restore past versions using the clock icon on any recipe's calculator screen." = "Jede Änderung wird gespeichert. Stöbere in früheren Versionen und stelle sie über das Uhr-Symbol auf dem Rechnerbildschirm eines Rezepts wieder her.";
+"Share Recipes" = "Rezepte teilen";
+"Send a recipe to another Doughy user. Include a personal note they'll see when they open it." = "Sende ein Rezept an einen anderen Doughy-Nutzer. Füge eine persönliche Notiz hinzu, die dieser beim Öffnen sieht.";
+"Backup & Restore" = "Sichern & Wiederherstellen";
+"Export your full recipe library and restore it on any device. Find it under Settings." = "Exportiere deine gesamte Rezeptbibliothek und stelle sie auf jedem Gerät wieder her. Zu finden unter Einstellungen.";
+"Recently Deleted" = "Kürzlich gelöscht";
+"Deleted recipes stay in Settings → Recently Deleted for 30 days before they're permanently removed." = "Gelöschte Rezepte bleiben 30 Tage lang unter Einstellungen → Kürzlich gelöscht, bevor sie dauerhaft entfernt werden.";
+"Got it" = "Verstanden";

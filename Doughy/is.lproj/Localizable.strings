@@ -313,3 +313,29 @@
 
 "Adjust the gram conversions Doughy uses for cup, tablespoon, and teaspoon measurements when scanning recipes." = "Stilltu gramm-umreikninga sem Doughy notar fyrir bolla, matskeið og teskeið þegar verið er að skanna uppskriftir.";
 "density.unit.deciliter" = "g/dl";
+/* Onboarding & What's New */
+"Welcome to Doughy" = "Velkomin í Doughy";
+"The offline recipe calculator. Precisely make bread, pizza, crepes, frosting, burritos, or anything you want!" = "Uppskriftarreiknarinn án nettengingar. Gerðu nákvæmlega brauð, kleinur, pönnukökur, skyr, kjötsúpu eða hvað sem þér líður!";
+"Scale Any Batch" = "Stækkaðu hvaða uppskrift sem er";
+"Enter how much you're making and Doughy tells you exactly how much of each ingredient you need." = "Sláðu inn hversu mikið þú ert að gera og Doughy segir þér nákvæmlega hversu mikið þú þarft af hverri hráefni.";
+"Convert to Volume" = "Breyta í rúmmál";
+"Not everything is easily weighed. Common ingredients have standard mass to volume conversions. Add your own any time." = "Ekki er allt auðvelt að vega. Algengar hráefni hafa staðlaðar umbreytingar úr massa í rúmmál. Bættu við þínum hvenær sem er.";
+"Create or Scan Recipes" = "Búðu til eða skannaðu uppskriftir";
+"Type a recipe by percentage or by weight — or use Apple Intelligence On-Device models to photograph a recipe or scan a screenshot and create your recipe in seconds. Requires iPhone 15 or later." = "Sláðu inn uppskrift eftir hlutfalli eða þyngd – eða notaðu Apple Intelligence til að mynda uppskrift eða skanna skjámynd og búðu til uppskriftina þína á sekúndum. Krefst iPhone 15 eða nýrra.";
+"Totally Free. Totally Private." = "Alveg gjaldfrjálst. Alveg einkamál.";
+"Doughy isn't interested in taking your money or your information. Doughy doesn't track your usage or use the internet." = "Doughy hefur engan áhuga á að taka peninga þína eða upplýsingar þínar. Doughy fylgist ekki með notkun þinni og notar ekki internetið.";
+"Share & Back Up" = "Deila og geyma";
+"Export recipes and send them to other Doughy users with a personal note. Backup and restore your entire library to a file any time." = "Fluttu út uppskriftir og sendu þær til annarra Doughy-notenda með persónulegri athugasemd. Taktu öryggisafrit og endurheimtu alla bókasafnið þitt í skrá hvenær sem er.";
+"Get Started" = "Hefjast handa";
+"What's New in Doughy" = "Nýjungar í Doughy";
+"On-Device AI Recipe Scanning" = "Gervigreind-uppskriftarskönnun á tækinu";
+"Use Apple Intelligence On-Device models to photograph a recipe or scan a screenshot and create your recipe in seconds. Requires iPhone 15 or later." = "Notaðu Apple Intelligence á tækinu til að mynda uppskrift eða skanna skjámynd og búðu til uppskriftina þína á sekúndum. Krefst iPhone 15 eða nýrra.";
+"Recipe History" = "Uppskriftasaga";
+"Every edit is saved. Browse and restore past versions using the clock icon on any recipe's calculator screen." = "Sérhver breyting er vistuð. Flettu í gegnum og endurheimtu eldri útgáfur með klukku-tákninu á reikniskjá hvaða uppskriftar sem er.";
+"Share Recipes" = "Deila uppskriftum";
+"Send a recipe to another Doughy user. Include a personal note they'll see when they open it." = "Sendu uppskrift til annars Doughy-notanda. Láttu fylgja persónulega athugasemd sem þeir sjá þegar þeir opna hana.";
+"Backup & Restore" = "Öryggisafrit og endurheimt";
+"Export your full recipe library and restore it on any device. Find it under Settings." = "Fluttu út alla uppskriftabókasafnið þitt og endurheimtu það á hvaða tæki sem er. Fáðu það undir Stillingar.";
+"Recently Deleted" = "Nýlega eytt";
+"Deleted recipes stay in Settings → Recently Deleted for 30 days before they're permanently removed." = "Eyddum uppskriftum er haldið í Stillingar → Nýlega eytt í 30 daga áður en þær eru fjarlægðar endanlega.";
+"Got it" = "Skilið";

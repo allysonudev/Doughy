@@ -30,6 +30,10 @@ class RecipeStore {
     var pendingOpenIntent: PendingOpenRecipeRequest? = nil
     var pendingScanShortcut = false
 
+    /// True only when the store was created before any default recipes existed —
+    /// i.e., this is a genuine first install, not an upgrade from 1.0.
+    let isNewInstall: Bool
+
     private let writer = RecipeWriter.shared
     private let predicates = RecipePredicates.shared
     private let historyWriter = HistoryWriter.shared
@@ -37,7 +41,8 @@ class RecipeStore {
     private let recentRecipeShortcutsKey = "recentRecipeShortcuts"
     private let maxRecentRecipeShortcuts = 3
 
-    init() {
+    init(isNewInstall: Bool = false) {
+        self.isNewInstall = isNewInstall
         refresh()
         updateRecentRecipeShortcutItems()
     }

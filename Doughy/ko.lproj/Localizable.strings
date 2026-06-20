@@ -311,3 +311,29 @@
 
 "Adjust the gram conversions Doughy uses for cup, tablespoon, and teaspoon measurements when scanning recipes." = "레시피를 스캔할 때 Doughy가 컵, 큰술, 작은술 단위에 사용하는 그램 환산값을 조정합니다.";
 "density.unit.deciliter" = "g/dl";
+/* Onboarding & What's New */
+"Welcome to Doughy" = "Doughy에 오신 것을 환영합니다";
+"The offline recipe calculator. Precisely make bread, pizza, crepes, frosting, burritos, or anything you want!" = "오프라인 레시피 계산기. 식빵, 소금빵, 호떡, 찹쌀떡, 불고기 양념 등 원하는 것을 정확하게 만드세요!";
+"Scale Any Batch" = "어떤 양이든 스케일 조정";
+"Enter how much you're making and Doughy tells you exactly how much of each ingredient you need." = "얼마나 만들지 입력하면 Doughy가 각 재료의 정확한 양을 알려드립니다.";
+"Convert to Volume" = "부피로 변환";
+"Not everything is easily weighed. Common ingredients have standard mass to volume conversions. Add your own any time." = "모든 것을 쉽게 무게로 잴 수는 없습니다. 일반적인 재료에는 표준 질량-부피 변환이 있습니다. 언제든지 직접 추가할 수 있습니다.";
+"Create or Scan Recipes" = "레시피 만들기 또는 스캔";
+"Type a recipe by percentage or by weight — or use Apple Intelligence On-Device models to photograph a recipe or scan a screenshot and create your recipe in seconds. Requires iPhone 15 or later." = "레시피를 백분율이나 무게로 입력하거나, Apple Intelligence를 사용하여 레시피를 촬영하거나 스크린샷을 스캔하여 몇 초 만에 레시피를 만들 수 있습니다. iPhone 15 이상 필요.";
+"Totally Free. Totally Private." = "완전 무료. 완전 프라이빗.";
+"Doughy isn't interested in taking your money or your information. Doughy doesn't track your usage or use the internet." = "Doughy는 당신의 돈이나 정보를 가져가는 데 관심이 없습니다. Doughy는 사용 내역을 추적하지 않으며 인터넷을 사용하지 않습니다.";
+"Share & Back Up" = "공유 및 백업";
+"Export recipes and send them to other Doughy users with a personal note. Backup and restore your entire library to a file any time." = "레시피를 내보내고 개인 메모와 함께 다른 Doughy 사용자에게 보내세요. 언제든지 전체 라이브러리를 파일로 백업하고 복원할 수 있습니다.";
+"Get Started" = "시작하기";
+"What's New in Doughy" = "Doughy의 새로운 기능";
+"On-Device AI Recipe Scanning" = "기기 내 AI 레시피 스캔";
+"Use Apple Intelligence On-Device models to photograph a recipe or scan a screenshot and create your recipe in seconds. Requires iPhone 15 or later." = "Apple Intelligence 온디바이스 모델을 사용하여 레시피를 촬영하거나 스크린샷을 스캔하여 몇 초 만에 레시피를 만들 수 있습니다. iPhone 15 이상 필요.";
+"Recipe History" = "레시피 기록";
+"Every edit is saved. Browse and restore past versions using the clock icon on any recipe's calculator screen." = "모든 편집 내용이 저장됩니다. 레시피 계산기 화면의 시계 아이콘을 사용하여 이전 버전을 탐색하고 복원하세요.";
+"Share Recipes" = "레시피 공유";
+"Send a recipe to another Doughy user. Include a personal note they'll see when they open it." = "다른 Doughy 사용자에게 레시피를 보내세요. 열었을 때 볼 수 있는 개인 메모를 포함할 수 있습니다.";
+"Backup & Restore" = "백업 및 복원";
+"Export your full recipe library and restore it on any device. Find it under Settings." = "전체 레시피 라이브러리를 내보내고 모든 기기에서 복원하세요. 설정에서 찾을 수 있습니다.";
+"Recently Deleted" = "최근 삭제됨";
+"Deleted recipes stay in Settings → Recently Deleted for 30 days before they're permanently removed." = "삭제된 레시피는 설정 → 최근 삭제됨에 30일 동안 보관된 후 영구적으로 삭제됩니다.";
+"Got it" = "확인";

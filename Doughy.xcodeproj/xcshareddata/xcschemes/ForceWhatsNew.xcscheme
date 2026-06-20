@@ -4,7 +4,8 @@
    version = "1.7">
    <BuildAction
       parallelizeBuildables = "YES"
-      buildImplicitDependencies = "YES">
+      buildImplicitDependencies = "YES"
+      buildArchitectures = "Automatic">
       <BuildActionEntries>
          <BuildActionEntry
             buildForTesting = "YES"
@@ -16,35 +17,6 @@
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "BB30DECB2425B83D00BFD472"
                BuildableName = "Doughy.app"
-               BlueprintName = "Doughy"
-               ReferencedContainer = "container:Doughy.xcodeproj">
-            </BuildableReference>
-         </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "YES"
-            buildForRunning = "NO"
-            buildForProfiling = "NO"
-            buildForArchiving = "NO"
-            buildForAnalyzing = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "BB30DEE42425B83F00BFD472"
-               BuildableName = "Doughy Tests.xctest"
-               BlueprintName = "Doughy Tests"
-               ReferencedContainer = "container:Doughy.xcodeproj">
-            </BuildableReference>
-         </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "YES"
-            buildForRunning = "NO"
-            buildForProfiling = "NO"
-            buildForArchiving = "NO"
-            buildForAnalyzing = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "AA000000000000000000000A"
-               BuildableName = "Doughy UI Tests.xctest"
-               BlueprintName = "Doughy UI Tests"
                ReferencedContainer = "container:Doughy.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -54,13 +26,28 @@
       buildConfiguration = "Debug"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
-      shouldUseLaunchSchemeArgsEnv = "YES">
-      <TestPlans>
-         <TestPlanReference
-            reference = "container:Test Plans/Doughy.xctestplan"
-            default = "YES">
-         </TestPlanReference>
-      </TestPlans>
+      shouldUseLaunchSchemeArgsEnv = "YES"
+      shouldAutocreateTestPlan = "YES">
+      <Testables>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "AA000000000000000000000A"
+               BuildableName = "Doughy UI Tests.xctest"
+               ReferencedContainer = "container:Doughy.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "BB30DEE42425B83F00BFD472"
+               BuildableName = "Doughy Tests.xctest"
+               ReferencedContainer = "container:Doughy.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+      </Testables>
    </TestAction>
    <LaunchAction
       buildConfiguration = "Debug"
@@ -71,17 +58,23 @@
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
       debugServiceExtension = "internal"
-      allowLocationSimulation = "YES">
+      allowLocationSimulation = "YES"
+      queueDebuggingEnabled = "No">
       <BuildableProductRunnable
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "BB30DECB2425B83D00BFD472"
             BuildableName = "Doughy.app"
-            BlueprintName = "Doughy"
             ReferencedContainer = "container:Doughy.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
+      <CommandLineArguments>
+         <CommandLineArgument
+            argument = "-ForceWhatsNew"
+            isEnabled = "YES">
+         </CommandLineArgument>
+      </CommandLineArguments>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"
@@ -95,7 +88,6 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "BB30DECB2425B83D00BFD472"
             BuildableName = "Doughy.app"
-            BlueprintName = "Doughy"
             ReferencedContainer = "container:Doughy.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

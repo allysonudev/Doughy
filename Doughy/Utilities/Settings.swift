@@ -155,3 +155,13 @@ extension Settings {
         try self.coreDataGateway.managedObjectConext.save()
     }
 }
+
+extension Settings {
+    static let lastOnboardingVersionKey = "doughy.lastOnboardingVersion"
+
+    /// Call this BEFORE `Settings.shared` is first accessed (i.e., before
+    /// `RecipeStore()` in SceneDelegate) to detect a genuine first install.
+    static func isFirstInstall() -> Bool {
+        !UserDefaults.standard.bool(forKey: hasInitializedDefaultsKey)
+    }
+}

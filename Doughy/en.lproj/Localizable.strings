@@ -312,3 +312,30 @@
 "Volume Units" = "Volume Units";
 "Weight" = "Weight";
 "Your name (optional)" = "Your name (optional)";
+
+/* Onboarding & What's New */
+"Welcome to Doughy" = "Welcome to Doughy";
+"The offline recipe calculator. Precisely make bread, pizza, crepes, frosting, burritos, or anything you want!" = "The offline recipe calculator. Precisely make bread, pizza, crepes, frosting, burritos, or anything you want!";
+"Scale Any Batch" = "Scale Any Batch";
+"Enter how much you're making and Doughy tells you exactly how much of each ingredient you need." = "Enter how much you're making and Doughy tells you exactly how much of each ingredient you need.";
+"Convert to Volume" = "Convert to Volume";
+"Not everything is easily weighed. Common ingredients have standard mass to volume conversions. Add your own any time." = "Not everything is easily weighed. Common ingredients have standard mass to volume conversions. Add your own any time.";
+"Create or Scan Recipes" = "Create or Scan Recipes";
+"Type a recipe by percentage or by weight — or use Apple Intelligence On-Device models to photograph a recipe or scan a screenshot and create your recipe in seconds. Requires iPhone 15 or later." = "Type a recipe by percentage or by weight — or use Apple Intelligence On-Device models to photograph a recipe or scan a screenshot and create your recipe in seconds. Requires iPhone 15 or later.";
+"Totally Free. Totally Private." = "Totally Free. Totally Private.";
+"Doughy isn't interested in taking your money or your information. Doughy doesn't track your usage or use the internet." = "Doughy isn't interested in taking your money or your information. Doughy doesn't track your usage or use the internet.";
+"Share & Back Up" = "Share & Back Up";
+"Export recipes and send them to other Doughy users with a personal note. Backup and restore your entire library to a file any time." = "Export recipes and send them to other Doughy users with a personal note. Backup and restore your entire library to a file any time.";
+"Get Started" = "Get Started";
+"What's New in Doughy" = "What's New in Doughy";
+"On-Device AI Recipe Scanning" = "On-Device AI Recipe Scanning";
+"Use Apple Intelligence On-Device models to photograph a recipe or scan a screenshot and create your recipe in seconds. Requires iPhone 15 or later." = "Use Apple Intelligence On-Device models to photograph a recipe or scan a screenshot and create your recipe in seconds. Requires iPhone 15 or later.";
+"Recipe History" = "Recipe History";
+"Every edit is saved. Browse and restore past versions using the clock icon on any recipe's calculator screen." = "Every edit is saved. Browse and restore past versions using the clock icon on any recipe's calculator screen.";
+"Share Recipes" = "Share Recipes";
+"Send a recipe to another Doughy user. Include a personal note they'll see when they open it." = "Send a recipe to another Doughy user. Include a personal note they'll see when they open it.";
+"Backup & Restore" = "Backup & Restore";
+"Export your full recipe library and restore it on any device. Find it under Settings." = "Export your full recipe library and restore it on any device. Find it under Settings.";
+"Recently Deleted" = "Recently Deleted";
+"Deleted recipes stay in Settings → Recently Deleted for 30 days before they're permanently removed." = "Deleted recipes stay in Settings → Recently Deleted for 30 days before they're permanently removed.";
+"Got it" = "Got it";

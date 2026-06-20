@@ -23,7 +23,10 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         guard let windowScene = scene as? UIWindowScene else { return }
 
-        let store = RecipeStore()
+        // Must be checked before RecipeStore() triggers Settings.shared init,
+        // which sets hasInitializedDefaultsKey and would mask a true first install.
+        let isNewInstall = Settings.isFirstInstall()
+        let store = RecipeStore(isNewInstall: isNewInstall)
         self.store = store
         intentScanObserver = NotificationCenter.default.addObserver(
             forName: .doughyScanFromIntent, object: nil, queue: .main
