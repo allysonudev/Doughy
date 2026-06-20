@@ -53,6 +53,7 @@
 "density.ingredient.cornmeal" = "コーンミール";
 "density.ingredient.cream" = "クリーム";
 "density.ingredient.diamond_crystal_kosher_salt" = "Diamond Crystal コーシャーソルト";
+"density.ingredient.diastatic_malt" = "活性モルト";
 "density.ingredient.fresh_yeast" = "生イースト";
 "density.ingredient.gluten_free_flour_blend" = "グルテンフリー粉ブレンド";
 "density.ingredient.granulated_sugar" = "グラニュー糖";
@@ -62,6 +63,7 @@
 "density.ingredient.milk" = "牛乳";
 "density.ingredient.molasses" = "糖蜜";
 "density.ingredient.morton_kosher_salt" = "Morton コーシャーソルト";
+"density.ingredient.non_diastatic_malt" = "非活性モルト";
 "density.ingredient.nuts" = "ナッツ";
 "density.ingredient.oat_flour" = "オート麦粉";
 "density.ingredient.olive_oil" = "オリーブオイル";
@@ -78,6 +80,7 @@
 "density.ingredient.spelt_flour" = "スペルト小麦粉";
 "density.ingredient.spices" = "スパイス";
 "density.ingredient.table_salt" = "食塩";
+"density.ingredient.tipo_00_flour" = "ティポ00粉";
 "density.ingredient.vegetable_oil" = "植物油";
 "density.ingredient.water" = "水";
 "density.ingredient.whole_wheat_flour" = "全粒粉";
@@ -152,6 +155,7 @@
 "create.preferment.other_ingredients.footer.percent" = "前種の小麦粉に対する各食材の割合を入力してください（例：50 = 加水率50%）。残りの生地の追加量は次のステップで入力します。";
 "create.preferment.other_ingredients.footer.weight" = "前種で使用する各食材の重量を入力してください。残りの生地の追加量は次のステップで入力します。";
 "create.title.edit" = "レシピを編集";
+"create.title.copy" = "レシピをコピー";
 "create.title.ingredients" = "食材";
 "create.title.main_dough" = "メイン生地";
 "create.title.new" = "新しいレシピ";

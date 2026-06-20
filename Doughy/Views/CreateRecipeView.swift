@@ -448,6 +448,7 @@ struct CreateRecipeView: View {
     @FocusState private var isNewStepFocused: Bool
     @FocusState private var isStepEditFocused: Bool
     @FocusState private var focusedValueRowID: UUID?
+    @FocusState private var focusedTempRowID: UUID?
     @State private var pendingValueRowID: UUID? = nil
     @State private var ingredientsFormHasFocused = false
     @State private var prefermentFormHasFocused = false
@@ -750,12 +751,6 @@ struct CreateRecipeView: View {
                     onDismiss: { showMoveStepAlert = false }
                 )
             }
-            .confirmationDialog("Are you sure? You will lose unsaved changes", isPresented: $showDiscardConfirmation, titleVisibility: .visible) {
-                Button("action.discard", role: .destructive) { dismiss() }
-                    .accessibilityIdentifier("discardChangesButton")
-                Button("action.keep_editing", role: .cancel) {}
-                    .accessibilityIdentifier("keepEditingButton")
-            }
             .interactiveDismissDisabled(isDirty)
     }
 
@@ -907,9 +902,21 @@ struct CreateRecipeView: View {
         }
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
-                Button("Cancel") { requestDismiss() }
+                closeButton
                     .accessibilityIdentifier("modeSelectionCancelButton")
             }
+        }
+    }
+    
+    private var closeButton: some View {
+        Button("", systemImage: "xmark") {
+            requestDismiss()
+        }
+        .confirmationDialog("Are you sure? You will lose unsaved changes", isPresented: $showDiscardConfirmation, titleVisibility: .visible) {
+            Button("action.discard", role: .destructive) { dismiss() }
+                .accessibilityIdentifier("discardChangesButton")
+            Button("action.keep_editing", role: .cancel) {}
+                .accessibilityIdentifier("keepEditingButton")
         }
     }
 
@@ -998,8 +1005,10 @@ struct CreateRecipeView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
-                Button("Cancel") { requestDismiss() }
-                    .accessibilityIdentifier("scanReviewCancelButton")
+                Button("", systemImage: "xmark") {
+                    requestDismiss()
+                }
+                .accessibilityIdentifier("scanReviewCancelButton")
             }
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Continue") {
@@ -1011,6 +1020,7 @@ struct CreateRecipeView: View {
                 .accessibilityIdentifier("scanReviewContinueButton")
             }
         }
+        .keyboardDismissible()
     }
 
     private var scanReviewReady: Bool {
@@ -1100,12 +1110,14 @@ struct CreateRecipeView: View {
         }
         .navigationTitle(editingRecipe != nil
                          ? String(localized: "create.title.edit", defaultValue: "Edit Recipe")
+                         : copyingRecipe != nil
+                         ? String(localized: "create.title.copy", defaultValue: "Copy Recipe")
                          : String(localized: "create.title.new", defaultValue: "New Recipe"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             if editingRecipe != nil || copyingRecipe != nil {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Cancel") { requestDismiss() }
+                    closeButton
                         .accessibilityIdentifier("detailsCancelButton")
                 }
             }
@@ -1117,6 +1129,7 @@ struct CreateRecipeView: View {
                 .accessibilityIdentifier("detailsNextButton")
             }
         }
+        .keyboardDismissible()
     }
 
     private var detailsReady: Bool {
@@ -1312,9 +1325,12 @@ struct CreateRecipeView: View {
                             .multilineTextAlignment(.trailing)
                             .keyboardType(.decimalPad)
                             .frame(width: 60)
+                            .focused($focusedTempRowID, equals: ingredients[index].id)
                             .accessibilityIdentifier("ingredientTempField_\(index)")
                         Text("°\(useCelsius ? "C" : "F")").foregroundStyle(.secondary)
                     }
+                    .contentShape(Rectangle())
+                    .onTapGesture { focusedTempRowID = ingredients[index].id }
                 }
                 .onDelete { ingredients.remove(atOffsets: $0) }
                 Button { showingAddIngredientDialog = true } label: {
@@ -1414,6 +1430,7 @@ struct CreateRecipeView: View {
         .sheet(item: $conversionSheetData) { data in
             extraIngredientConversionSheet(for: data)
         }
+        .keyboardDismissible()
     }
 
     // MARK: - Convert additional ingredients to weight
@@ -1791,6 +1808,7 @@ struct CreateRecipeView: View {
                 .accessibilityIdentifier("prefermentNextButton")
             }
         }
+        .keyboardDismissible()
     }
 
     private var prefermentReady: Bool {
@@ -1975,6 +1993,7 @@ struct CreateRecipeView: View {
                 .accessibilityIdentifier("saveRecipeButton")
             }
         }
+        .keyboardDismissible()
     }
 
     // MARK: - AI scan processing
@@ -2511,6 +2530,14 @@ struct CreateRecipeView: View {
         }
 
         return try builder.build()
+    }
+}
+
+// MARK: - Keyboard dismiss
+
+private extension View {
+    func keyboardDismissible() -> some View {
+        scrollDismissesKeyboard(.interactively)
     }
 }
 

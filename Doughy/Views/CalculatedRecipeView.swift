@@ -69,6 +69,9 @@ struct CalculatedRecipeView: View {
                 ForEach(doughIngredients, id: \.name) { ingredient in
                     finalDoughRow(ingredient)
                 }
+                if let preferment = prefermentRecipe?.preferment {
+                    finalDoughRow(preferment.toCalculatedIngredient())
+                }
             } header: {
                 HStack {
                     Text(prefermentRecipe != nil ? "Final Dough" : "Dough")
@@ -107,6 +110,7 @@ struct CalculatedRecipeView: View {
                                 .foregroundStyle(.secondary)
                                 .frame(width: 28, alignment: .leading)
                             Text(instruction.step)
+                                .textSelection(.enabled)
                         }
                     }
                 }
@@ -387,10 +391,11 @@ struct CalculatedRecipeView: View {
                 Text(weightText)
                     .foregroundStyle(units != nil ? Color.blue : Color.primary)
                     .accessibilityIdentifier("ingredientWeight_\(ingredient.name)")
-                Text(percentFormatter.format(percent: ingredient.percentage))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .accessibilityIdentifier("ingredientPercent_\(ingredient.name)")
+                Text(
+                    ingredient.percentage > 0 && ingredient.totalPercentage > 0 ? percentFormatter.format(percent: ingredient.percentage) : "")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .accessibilityIdentifier("ingredientPercent_\(ingredient.name)")
             }
         }
         .contentShape(Rectangle())
@@ -398,5 +403,11 @@ struct CalculatedRecipeView: View {
             guard units != nil else { return }
             advanceUnit(key: key, name: ingredient.name, grams: ingredient.weight)
         }
+    }
+}
+
+fileprivate extension CalculatedPreferment {
+    func toCalculatedIngredient() -> CalculatedIngredient {
+        return .init(name: name, isFlour: false, percentage: 0, totalPercentage: 0, temperature: nil, weight: weight)
     }
 }

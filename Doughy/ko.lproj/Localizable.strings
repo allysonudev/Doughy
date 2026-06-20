@@ -47,6 +47,7 @@
 "density.ingredient.cornmeal" = "옥수수가루";
 "density.ingredient.cream" = "생크림";
 "density.ingredient.diamond_crystal_kosher_salt" = "Diamond Crystal 코셔 소금";
+"density.ingredient.diastatic_malt" = "효소성 맥아";
 "density.ingredient.fresh_yeast" = "생이스트";
 "density.ingredient.gluten_free_flour_blend" = "글루텐 프리 밀가루 혼합";
 "density.ingredient.granulated_sugar" = "백설탕";
@@ -56,6 +57,7 @@
 "density.ingredient.milk" = "우유";
 "density.ingredient.molasses" = "당밀";
 "density.ingredient.morton_kosher_salt" = "Morton 코셔 소금";
+"density.ingredient.non_diastatic_malt" = "비효소성 맥아";
 "density.ingredient.nuts" = "견과류";
 "density.ingredient.oat_flour" = "귀리 가루";
 "density.ingredient.olive_oil" = "올리브 오일";
@@ -72,6 +74,7 @@
 "density.ingredient.spelt_flour" = "스펠트 밀가루";
 "density.ingredient.spices" = "향신료";
 "density.ingredient.table_salt" = "정제 소금";
+"density.ingredient.tipo_00_flour" = "티포 00 밀가루";
 "density.ingredient.vegetable_oil" = "식용유";
 "density.ingredient.water" = "물";
 "density.ingredient.whole_wheat_flour" = "통밀가루";
@@ -143,6 +146,7 @@
 "create.preferment.other_ingredients.footer.percent" = "발효 반죽 자체의 밀가루 대비 각 재료의 비율을 입력하세요 (예: 50 = 수화율 50%). 본 반죽의 추가 사용량은 다음 단계에서 입력합니다.";
 "create.preferment.other_ingredients.footer.weight" = "발효 반죽에서 각 재료의 무게를 입력하세요. 본 반죽의 추가 사용량은 다음 단계에서 입력합니다.";
 "create.title.edit" = "레시피 편집";
+"create.title.copy" = "레시피 복사";
 "create.title.ingredients" = "재료";
 "create.title.main_dough" = "본 반죽";
 "create.title.new" = "새 레시피";

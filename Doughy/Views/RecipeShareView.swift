@@ -9,6 +9,7 @@ struct RecipeShareView: View {
     let recipe: any RecipeProtocol
     @Environment(\.dismiss) private var dismiss
     @State private var authorName: String
+    @State private var shareNote: String = ""
     @State private var errorMessage: String?
 
     init(recipe: any RecipeProtocol, initialAuthorName: String = "") {
@@ -26,6 +27,15 @@ struct RecipeShareView: View {
                     Text("From")
                 } footer: {
                     Text("The recipient will see this when they open the shared recipe. Doughy does not know or store anything about you.")
+                }
+
+                Section {
+                    TextField("Add a note (optional)", text: $shareNote, axis: .vertical)
+                        .lineLimit(3...6)
+                } header: {
+                    Text("Note")
+                } footer: {
+                    Text("A personal note the recipient can read from the recipe.")
                 }
 
                 Section("Recipe") {
@@ -63,7 +73,12 @@ struct RecipeShareView: View {
 
     private func share() {
         let trimmed = authorName.trimmingCharacters(in: .whitespaces)
-        let payload = RecipeFile.payload(from: recipe, author: trimmed.isEmpty ? nil : trimmed)
+        let trimmedNote = shareNote.trimmingCharacters(in: .whitespaces)
+        let payload = RecipeFile.payload(
+            from: recipe,
+            author: trimmed.isEmpty ? nil : trimmed,
+            note: trimmedNote.isEmpty ? nil : trimmedNote
+        )
         guard let url = try? RecipeFile.write(payload) else {
             errorMessage = String(localized: "share.error.prepare_file", defaultValue: "Could not prepare the recipe file.")
             return

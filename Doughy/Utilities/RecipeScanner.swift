@@ -108,6 +108,7 @@ enum ParsedIngredientCategory: String, Sendable {
     case buckwheatFlour
     case glutenFreeFlourBlend
     case selfRisingFlour
+    case tipo00Flour
 
     // Sweeteners
     case granulatedSugar
@@ -116,6 +117,7 @@ enum ParsedIngredientCategory: String, Sendable {
     case honey
     case mapleSyrup
     case molasses
+    case nonDiastaticMalt
 
     // Fats and oils
     case butter
@@ -138,6 +140,7 @@ enum ParsedIngredientCategory: String, Sendable {
     case sourdoughStarter
     case bakingPowder
     case bakingSoda
+    case diastaticMalt
 
     // Salt
     case tableSalt
@@ -1190,7 +1193,8 @@ struct RecipeScanner {
         let lower = name.lowercased()
         if lower == "flour" { return .allPurposeFlour }
         if lower.contains("all-purpose flour") || lower.contains("all purpose flour") { return .allPurposeFlour }
-        if lower.contains("bread flour") || lower.contains("00 flour") || lower.contains("pizza flour") { return .breadFlour }
+        if lower.contains("tipo 00") || lower.contains("tipo00") || lower.contains("00 flour") { return .tipo00Flour }
+        if lower.contains("bread flour") || lower.contains("pizza flour") { return .breadFlour }
         if lower.contains("cake flour") { return .cakeFlour }
         if lower.contains("whole wheat") || lower.contains("wholemeal") { return .wholeWheatFlour }
         if lower.contains("rye flour") { return .ryeFlour }
@@ -1210,6 +1214,9 @@ struct RecipeScanner {
         if lower.contains("fresh yeast") { return .freshYeast }
         if lower.contains("baking powder") { return .bakingPowder }
         if lower.contains("baking soda") { return .bakingSoda }
+        if lower.contains("non-diastatic malt") || lower.contains("nondiastatic malt") { return .nonDiastaticMalt }
+        if lower.contains("diastatic malt") { return .diastaticMalt }
+        if lower.contains("malt") { return .nonDiastaticMalt }
         if lower.contains("diamond") && lower.contains("kosher salt") { return .diamondCrystalKosherSalt }
         if lower.contains("kosher salt") { return .mortonKosherSalt }
         if lower.contains("sea salt") { return .seaSalt }
@@ -1243,7 +1250,7 @@ struct RecipeScanner {
         switch category {
         case .breadFlour, .allPurposeFlour, .cakeFlour, .wholeWheatFlour, .ryeFlour,
              .speltFlour, .semolinaFlour, .oatFlour, .cornmeal, .riceFlour, .almondFlour,
-             .buckwheatFlour, .glutenFreeFlourBlend:
+             .buckwheatFlour, .glutenFreeFlourBlend, .tipo00Flour:
             return true
         default:
             return name.lowercased().contains("flour")

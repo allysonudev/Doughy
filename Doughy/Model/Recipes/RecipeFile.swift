@@ -10,6 +10,7 @@ struct RecipeFilePayload: Codable, Identifiable, Equatable {
     var id: String { recipe.name }
     let version: Int
     let author: String?
+    let note: String?
     let recipe: RecipeFileData
 }
 
@@ -99,11 +100,15 @@ enum RecipeFile {
     static let fileExtension = "doughy"
     static let uti = "org.georgie.doughy.recipe"
 
-    static func payload(from recipe: any RecipeProtocol, author: String?) -> RecipeFilePayload {
-        let trimmed = author?.trimmingCharacters(in: .whitespaces)
-        return RecipeFilePayload(version: 2,
-                                 author: trimmed.flatMap { $0.isEmpty ? nil : $0 },
-                                 recipe: RecipeFileData(from: recipe))
+    static func payload(from recipe: any RecipeProtocol, author: String?, note: String? = nil) -> RecipeFilePayload {
+        let trimmedAuthor = author?.trimmingCharacters(in: .whitespaces)
+        let trimmedNote = note?.trimmingCharacters(in: .whitespaces)
+        return RecipeFilePayload(
+            version: 2,
+            author: trimmedAuthor.flatMap { $0.isEmpty ? nil : $0 },
+            note: trimmedNote.flatMap { $0.isEmpty ? nil : $0 },
+            recipe: RecipeFileData(from: recipe)
+        )
     }
 
     /// Encodes `payload` and writes it to a uniquely-named temp file. Returns the URL.

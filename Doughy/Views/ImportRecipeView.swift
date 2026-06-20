@@ -22,12 +22,19 @@ struct ImportRecipeView: View {
     var body: some View {
         NavigationStack {
             Form {
-                if let author = payload.author {
+                if payload.author != nil || payload.note != nil {
                     Section {
-                        HStack(spacing: 8) {
-                            Image(systemName: "person.circle")
-                                .foregroundStyle(.secondary)
-                            Text("Shared by \(author)")
+                        if let author = payload.author {
+                            HStack(spacing: 8) {
+                                Image(systemName: "person.circle")
+                                    .foregroundStyle(.secondary)
+                                Text("Shared by \(author)")
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        if let note = payload.note {
+                            Text(note)
+                                .font(.callout)
                                 .foregroundStyle(.secondary)
                         }
                     }
@@ -92,6 +99,9 @@ struct ImportRecipeView: View {
             try store.save(recipe: recipe)
             if let author = payload.author {
                 try? store.addNote("Shared by \(author)", to: recipe)
+            }
+            if let note = payload.note {
+                try? store.addNote("Share note: \(note)", to: recipe)
             }
             store.pendingImport = nil
         } catch {

@@ -49,6 +49,7 @@
 "density.ingredient.cornmeal" = "Maísgrjón";
 "density.ingredient.cream" = "Rjómi";
 "density.ingredient.diamond_crystal_kosher_salt" = "Diamond Crystal Kóshersalt";
+"density.ingredient.diastatic_malt" = "Diastatískt malt";
 "density.ingredient.fresh_yeast" = "Ferskt ger";
 "density.ingredient.gluten_free_flour_blend" = "Glúteinlaus mjölblanda";
 "density.ingredient.granulated_sugar" = "Kristalsykur";
@@ -58,6 +59,7 @@
 "density.ingredient.milk" = "Mjólk";
 "density.ingredient.molasses" = "Melassi";
 "density.ingredient.morton_kosher_salt" = "Morton Kóshersalt";
+"density.ingredient.non_diastatic_malt" = "Ekki-diastatískt malt";
 "density.ingredient.nuts" = "Hnetur";
 "density.ingredient.oat_flour" = "Hafragrjónamjöl";
 "density.ingredient.olive_oil" = "Ólífuolía";
@@ -74,6 +76,7 @@
 "density.ingredient.spelt_flour" = "Speltmjöl";
 "density.ingredient.spices" = "Krydd";
 "density.ingredient.table_salt" = "Matarsalt";
+"density.ingredient.tipo_00_flour" = "Tipo 00 hveiti";
 "density.ingredient.vegetable_oil" = "Jurtaolía";
 "density.ingredient.water" = "Vatn";
 "density.ingredient.whole_wheat_flour" = "Heilhveitimjöl";
@@ -145,6 +148,7 @@
 "create.preferment.other_ingredients.footer.percent" = "Sláðu inn hlutfall hvers hráefnis miðað við mjöl fordeigs (t.d. 50 = 50% rakastig). Þú bætir við viðbótarmagni fyrir afganginn af deiginu á næsta skrefi.";
 "create.preferment.other_ingredients.footer.weight" = "Sláðu inn þyngd hvers hráefnis eins og það er notað í fordeiginu. Þú bætir við viðbótarmagni fyrir afganginn af deiginu á næsta skrefi.";
 "create.title.edit" = "Breyta uppskrift";
+"create.title.copy" = "Afrita uppskrift";
 "create.title.ingredients" = "Hráefni";
 "create.title.main_dough" = "Aðaldeig";
 "create.title.new" = "Ný uppskrift";

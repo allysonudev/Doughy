@@ -231,6 +231,7 @@ enum IngredientCategory: String, CaseIterable, Identifiable {
     case buckwheatFlour
     case glutenFreeFlourBlend
     case selfRisingFlour
+    case tipo00Flour
 
     // Sweeteners
     case granulatedSugar
@@ -239,6 +240,7 @@ enum IngredientCategory: String, CaseIterable, Identifiable {
     case honey
     case mapleSyrup
     case molasses
+    case nonDiastaticMalt
 
     // Fats and oils
     case butter
@@ -261,6 +263,7 @@ enum IngredientCategory: String, CaseIterable, Identifiable {
     case sourdoughStarter
     case bakingPowder
     case bakingSoda
+    case diastaticMalt
 
     // Salt
     case tableSalt
@@ -282,15 +285,15 @@ enum IngredientCategory: String, CaseIterable, Identifiable {
         switch self {
         case .breadFlour, .allPurposeFlour, .cakeFlour, .wholeWheatFlour, .ryeFlour,
              .speltFlour, .semolinaFlour, .oatFlour, .cornmeal, .riceFlour, .almondFlour,
-             .buckwheatFlour, .glutenFreeFlourBlend, .selfRisingFlour:
+             .buckwheatFlour, .glutenFreeFlourBlend, .selfRisingFlour, .tipo00Flour:
             return .flours
-        case .granulatedSugar, .brownSugar, .powderedSugar, .honey, .mapleSyrup, .molasses:
+        case .granulatedSugar, .brownSugar, .powderedSugar, .honey, .mapleSyrup, .molasses, .nonDiastaticMalt:
             return .sweeteners
         case .butter, .oliveOil, .vegetableOil, .coconutOil, .shortening:
             return .fatsAndOils
         case .milk, .buttermilk, .yogurt, .cream, .sourCream:
             return .dairy
-        case .instantYeast, .activeDryYeast, .freshYeast, .sourdoughStarter, .bakingPowder, .bakingSoda:
+        case .instantYeast, .activeDryYeast, .freshYeast, .sourdoughStarter, .bakingPowder, .bakingSoda, .diastaticMalt:
             return .leaveningAndStarters
         case .tableSalt, .mortonKosherSalt, .diamondCrystalKosherSalt, .seaSalt:
             return .salts
@@ -315,6 +318,7 @@ enum IngredientCategory: String, CaseIterable, Identifiable {
         case .buckwheatFlour: return "Buckwheat Flour"
         case .glutenFreeFlourBlend: return "Gluten-Free Flour Blend"
         case .selfRisingFlour: return "Self-Rising Flour"
+        case .tipo00Flour: return "Tipo 00 Flour"
 
         case .granulatedSugar: return "Granulated Sugar"
         case .brownSugar: return "Brown Sugar"
@@ -322,6 +326,7 @@ enum IngredientCategory: String, CaseIterable, Identifiable {
         case .honey: return "Honey"
         case .mapleSyrup: return "Maple Syrup"
         case .molasses: return "Molasses"
+        case .nonDiastaticMalt: return "Non-Diastatic Malt"
 
         case .butter: return "Butter"
         case .oliveOil: return "Olive Oil"
@@ -341,6 +346,7 @@ enum IngredientCategory: String, CaseIterable, Identifiable {
         case .sourdoughStarter: return "Sourdough Starter"
         case .bakingPowder: return "Baking Powder"
         case .bakingSoda: return "Baking Soda"
+        case .diastaticMalt: return "Diastatic Malt"
 
         case .tableSalt: return "Table Salt"
         case .mortonKosherSalt: return "Morton Kosher Salt"
@@ -372,6 +378,7 @@ enum IngredientCategory: String, CaseIterable, Identifiable {
         case .buckwheatFlour: return String(localized: "density.ingredient.buckwheat_flour", defaultValue: "Buckwheat Flour")
         case .glutenFreeFlourBlend: return String(localized: "density.ingredient.gluten_free_flour_blend", defaultValue: "Gluten-Free Flour Blend")
         case .selfRisingFlour: return String(localized: "density.ingredient.self_rising_flour", defaultValue: "Self-Rising Flour")
+        case .tipo00Flour: return String(localized: "density.ingredient.tipo_00_flour", defaultValue: "Tipo 00 Flour")
 
         case .granulatedSugar: return String(localized: "density.ingredient.granulated_sugar", defaultValue: "Granulated Sugar")
         case .brownSugar: return String(localized: "density.ingredient.brown_sugar", defaultValue: "Brown Sugar")
@@ -379,6 +386,7 @@ enum IngredientCategory: String, CaseIterable, Identifiable {
         case .honey: return String(localized: "density.ingredient.honey", defaultValue: "Honey")
         case .mapleSyrup: return String(localized: "density.ingredient.maple_syrup", defaultValue: "Maple Syrup")
         case .molasses: return String(localized: "density.ingredient.molasses", defaultValue: "Molasses")
+        case .nonDiastaticMalt: return String(localized: "density.ingredient.non_diastatic_malt", defaultValue: "Non-Diastatic Malt")
 
         case .butter: return String(localized: "density.ingredient.butter", defaultValue: "Butter")
         case .oliveOil: return String(localized: "density.ingredient.olive_oil", defaultValue: "Olive Oil")
@@ -398,6 +406,7 @@ enum IngredientCategory: String, CaseIterable, Identifiable {
         case .sourdoughStarter: return String(localized: "density.ingredient.sourdough_starter", defaultValue: "Sourdough Starter")
         case .bakingPowder: return String(localized: "density.ingredient.baking_powder", defaultValue: "Baking Powder")
         case .bakingSoda: return String(localized: "density.ingredient.baking_soda", defaultValue: "Baking Soda")
+        case .diastaticMalt: return String(localized: "density.ingredient.diastatic_malt", defaultValue: "Diastatic Malt")
 
         case .tableSalt: return String(localized: "density.ingredient.table_salt", defaultValue: "Table Salt")
         case .mortonKosherSalt: return String(localized: "density.ingredient.morton_kosher_salt", defaultValue: "Morton Kosher Salt")
@@ -433,6 +442,7 @@ enum IngredientCategory: String, CaseIterable, Identifiable {
         case .buckwheatFlour: return 120
         case .glutenFreeFlourBlend: return 156
         case .selfRisingFlour: return 120 // same density as all-purpose (King Arthur: 120g/cup)
+        case .tipo00Flour: return 100 // King Arthur: 100g/cup
 
         case .granulatedSugar: return 198
         case .brownSugar: return 213
@@ -440,6 +450,7 @@ enum IngredientCategory: String, CaseIterable, Identifiable {
         case .honey: return 340
         case .mapleSyrup: return 322
         case .molasses: return 340
+        case .nonDiastaticMalt: return 128 // malt powder ~128g/cup
 
         case .butter: return 227
         case .oliveOil: return 216
@@ -459,6 +470,7 @@ enum IngredientCategory: String, CaseIterable, Identifiable {
         case .sourdoughStarter: return 240
         case .bakingPowder: return 192 // 4g/tsp
         case .bakingSoda: return 288 // 6g/tsp
+        case .diastaticMalt: return 128 // malt powder ~128g/cup
 
         case .tableSalt: return 288 // 6g/tsp
         case .mortonKosherSalt: return 240 // ~5g/tsp
@@ -481,9 +493,10 @@ enum IngredientCategory: String, CaseIterable, Identifiable {
     var defaultDisplayUnit: DensityUnit {
         switch self {
         case .instantYeast, .activeDryYeast, .freshYeast, .bakingPowder, .bakingSoda,
-             .tableSalt, .mortonKosherSalt, .diamondCrystalKosherSalt, .seaSalt:
+             .tableSalt, .mortonKosherSalt, .diamondCrystalKosherSalt, .seaSalt,
+             .diastaticMalt:
             return .teaspoon
-        case .honey:
+        case .honey, .nonDiastaticMalt:
             return .tablespoon
         default:
             return .cup

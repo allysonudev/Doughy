@@ -23,7 +23,13 @@ struct CalculatorView: View {
     @State private var calculatedResult: CalculatedWrapper?
     @State private var calculationError: String?
     @State private var showingEdit = false
+    @State private var showingCopy = false
     @State private var sharingRecipe: RecipeWrapper?
+    @State private var sharedBy: String? = nil
+    @State private var sharedNote: String? = nil
+    @State private var noteExpanded: Bool = true
+
+    private var noteExpandedKey: String { "sharedNoteExpanded_\(recipe.name)" }
 
     private let calculator = Calculator.shared
     private let settings = Settings.shared
@@ -50,6 +56,41 @@ struct CalculatorView: View {
 
     var body: some View {
         Form {
+            // MARK: - Shared by
+            if let author = sharedBy {
+                Section {
+                    if let note = sharedNote {
+                        DisclosureGroup(
+                            isExpanded: Binding(
+                                get: { noteExpanded },
+                                set: {
+                                    noteExpanded = $0
+                                    UserDefaults.standard.set($0, forKey: noteExpandedKey)
+                                }
+                            )
+                        ) {
+                            Text(note)
+                                .font(.callout)
+                                .foregroundStyle(.secondary)
+                        } label: {
+                            HStack(spacing: 8) {
+                                Image(systemName: "person.circle")
+                                    .foregroundStyle(.secondary)
+                                Text("Shared by \(author)")
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    } else {
+                        HStack(spacing: 8) {
+                            Image(systemName: "person.circle")
+                                .foregroundStyle(.secondary)
+                            Text("Shared by \(author)")
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+            }
+
             // MARK: - Amounts
             Section("Batch") {
                 HStack {
@@ -142,6 +183,13 @@ struct CalculatorView: View {
                 .accessibilityIdentifier("historyButton")
 
                 Button {
+                    showingCopy = true
+                } label: {
+                    Image(systemName: "plus.square.on.square")
+                }
+                .accessibilityLabel("Copy")
+                .accessibilityIdentifier("calculatorCopyButton")
+                Button {
                     showingEdit = true
                 } label: {
                     Image(systemName: "pencil")
@@ -149,6 +197,10 @@ struct CalculatorView: View {
                 .accessibilityLabel("Edit")
                 .accessibilityIdentifier("calculatorEditButton")
             }
+        }
+        .sheet(isPresented: $showingCopy, onDismiss: { store.refresh() }) {
+            CreateRecipeView(copyingRecipe: currentRecipe)
+                .environment(store)
         }
         .sheet(isPresented: $showingEdit, onDismiss: { store.refresh() }) {
             CreateRecipeView(editingRecipe: currentRecipe)
@@ -167,6 +219,16 @@ struct CalculatorView: View {
         }
         .onAppear {
             store.recordOpened(recipe: currentRecipe)
+            let entries = store.historyEntries(for: currentRecipe)
+            sharedBy = entries
+                .first { $0.kind == .note && $0.text.hasPrefix("Shared by ") }
+                .map { String($0.text.dropFirst("Shared by ".count)) }
+            sharedNote = entries
+                .first { $0.kind == .note && $0.text.hasPrefix("Share note: ") }
+                .map { String($0.text.dropFirst("Share note: ".count)) }
+            if let saved = UserDefaults.standard.object(forKey: noteExpandedKey) as? Bool {
+                noteExpanded = saved
+            }
         }
     }
 

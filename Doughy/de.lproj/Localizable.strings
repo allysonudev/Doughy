@@ -53,6 +53,7 @@
 "density.ingredient.cornmeal" = "Maisgrieß";
 "density.ingredient.cream" = "Sahne";
 "density.ingredient.diamond_crystal_kosher_salt" = "Diamond Crystal Koscheres Salz";
+"density.ingredient.diastatic_malt" = "Diastatisches Malz";
 "density.ingredient.fresh_yeast" = "Frischhefe";
 "density.ingredient.gluten_free_flour_blend" = "Glutenfreie Mehlmischung";
 "density.ingredient.granulated_sugar" = "Kristallzucker";
@@ -62,6 +63,7 @@
 "density.ingredient.milk" = "Milch";
 "density.ingredient.molasses" = "Melasse";
 "density.ingredient.morton_kosher_salt" = "Morton Koscheres Salz";
+"density.ingredient.non_diastatic_malt" = "Nicht-diastatisches Malz";
 "density.ingredient.nuts" = "Nüsse";
 "density.ingredient.oat_flour" = "Hafermehl";
 "density.ingredient.olive_oil" = "Olivenöl";
@@ -78,6 +80,7 @@
 "density.ingredient.spelt_flour" = "Dinkelmehl";
 "density.ingredient.spices" = "Gewürze";
 "density.ingredient.table_salt" = "Tafelsalz";
+"density.ingredient.tipo_00_flour" = "Tipo-00-Mehl";
 "density.ingredient.vegetable_oil" = "Pflanzenöl";
 "density.ingredient.water" = "Wasser";
 "density.ingredient.whole_wheat_flour" = "Vollkornmehl";
@@ -152,6 +155,7 @@
 "create.preferment.other_ingredients.footer.percent" = "Geben Sie den Prozentsatz jeder Zutat relativ zum Mehl des Vorteigs ein (z. B. 50 = 50 % Hydration). Sie können anschließend zusätzliche Mengen für den restlichen Teig hinzufügen.";
 "create.preferment.other_ingredients.footer.weight" = "Geben Sie das Gewicht jeder Zutat so ein, wie sie im Vorteig verwendet wird. Sie können anschließend zusätzliche Mengen für den restlichen Teig hinzufügen.";
 "create.title.edit" = "Rezept bearbeiten";
+"create.title.copy" = "Rezept kopieren";
 "create.title.ingredients" = "Zutaten";
 "create.title.main_dough" = "Hauptteig";
 "create.title.new" = "Neues Rezept";

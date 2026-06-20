@@ -47,6 +47,7 @@
 "density.ingredient.cornmeal" = "Harina de maíz";
 "density.ingredient.cream" = "Crema";
 "density.ingredient.diamond_crystal_kosher_salt" = "Diamond Crystal Sal Kosher";
+"density.ingredient.diastatic_malt" = "Malta diastásica";
 "density.ingredient.fresh_yeast" = "Levadura fresca";
 "density.ingredient.gluten_free_flour_blend" = "Mezcla de harina sin gluten";
 "density.ingredient.granulated_sugar" = "Azúcar granulada";
@@ -56,6 +57,7 @@
 "density.ingredient.milk" = "Leche";
 "density.ingredient.molasses" = "Melaza";
 "density.ingredient.morton_kosher_salt" = "Morton Sal Kosher";
+"density.ingredient.non_diastatic_malt" = "Malta no diastásica";
 "density.ingredient.nuts" = "Nueces";
 "density.ingredient.oat_flour" = "Harina de avena";
 "density.ingredient.olive_oil" = "Aceite de oliva";
@@ -72,6 +74,7 @@
 "density.ingredient.spelt_flour" = "Harina de espelta";
 "density.ingredient.spices" = "Especias";
 "density.ingredient.table_salt" = "Sal de mesa";
+"density.ingredient.tipo_00_flour" = "Harina Tipo 00";
 "density.ingredient.vegetable_oil" = "Aceite vegetal";
 "density.ingredient.water" = "Agua";
 "density.ingredient.whole_wheat_flour" = "Harina de trigo integral";
@@ -143,6 +146,7 @@
 "create.preferment.other_ingredients.footer.percent" = "Introduce el porcentaje de cada ingrediente en relación con la harina propia del pre-fermento (p. ej. 50 = 50%% de hidratación). Luego añadirás las cantidades adicionales para el resto de la masa.";
 "create.preferment.other_ingredients.footer.weight" = "Introduce el peso de cada ingrediente tal como se usa en el pre-fermento. Luego añadirás las cantidades adicionales para el resto de la masa.";
 "create.title.edit" = "Editar receta";
+"create.title.copy" = "Copiar receta";
 "create.title.ingredients" = "Ingredientes";
 "create.title.main_dough" = "Masa principal";
 "create.title.new" = "Nueva receta";

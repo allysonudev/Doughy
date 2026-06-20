@@ -37,7 +37,7 @@
 
 /* Density ingredients */
 "density.ingredient.active_dry_yeast" = "Lievito secco attivo";
-"density.ingredient.all_purpose_flour" = "Farina 00";
+"density.ingredient.all_purpose_flour" = "Farina 0";
 "density.ingredient.almond_flour" = "Farina di mandorle";
 "density.ingredient.baking_powder" = "Lievito chimico in polvere";
 "density.ingredient.baking_soda" = "Bicarbonato di sodio";
@@ -53,6 +53,7 @@
 "density.ingredient.cornmeal" = "Farina di mais";
 "density.ingredient.cream" = "Panna";
 "density.ingredient.diamond_crystal_kosher_salt" = "Diamond Crystal Sale Kosher";
+"density.ingredient.diastatic_malt" = "Malto diastatico";
 "density.ingredient.fresh_yeast" = "Lievito fresco";
 "density.ingredient.gluten_free_flour_blend" = "Mix di farine senza glutine";
 "density.ingredient.granulated_sugar" = "Zucchero semolato";
@@ -62,6 +63,7 @@
 "density.ingredient.milk" = "Latte";
 "density.ingredient.molasses" = "Melassa";
 "density.ingredient.morton_kosher_salt" = "Morton Sale Kosher";
+"density.ingredient.non_diastatic_malt" = "Malto non diastatico";
 "density.ingredient.nuts" = "Frutta secca";
 "density.ingredient.oat_flour" = "Farina d'avena";
 "density.ingredient.olive_oil" = "Olio d'oliva";
@@ -78,6 +80,7 @@
 "density.ingredient.spelt_flour" = "Farina di farro";
 "density.ingredient.spices" = "Spezie";
 "density.ingredient.table_salt" = "Sale da cucina";
+"density.ingredient.tipo_00_flour" = "Farina 00";
 "density.ingredient.vegetable_oil" = "Olio di semi";
 "density.ingredient.water" = "Acqua";
 "density.ingredient.whole_wheat_flour" = "Farina integrale";
@@ -152,6 +155,7 @@
 "create.preferment.other_ingredients.footer.percent" = "Inserisci la percentuale di ogni ingrediente rispetto alla farina del pre-impasto (es. 50 = 50% di idratazione). Aggiungerai eventuali quantità aggiuntive per il resto dell'impasto nel passaggio successivo.";
 "create.preferment.other_ingredients.footer.weight" = "Inserisci il peso di ogni ingrediente così come viene usato nel pre-impasto. Aggiungerai eventuali quantità aggiuntive per il resto dell'impasto nel passaggio successivo.";
 "create.title.edit" = "Modifica ricetta";
+"create.title.copy" = "Copia ricetta";
 "create.title.ingredients" = "Ingredienti";
 "create.title.main_dough" = "Impasto principale";
 "create.title.new" = "Nuova ricetta";

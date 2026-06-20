@@ -47,6 +47,7 @@
 "density.ingredient.cornmeal" = "Cornmeal";
 "density.ingredient.cream" = "Cream";
 "density.ingredient.diamond_crystal_kosher_salt" = "Diamond Crystal Kosher Salt";
+"density.ingredient.diastatic_malt" = "Diastatic Malt";
 "density.ingredient.fresh_yeast" = "Fresh Yeast";
 "density.ingredient.gluten_free_flour_blend" = "Gluten-Free Flour Blend";
 "density.ingredient.granulated_sugar" = "Granulated Sugar";
@@ -56,6 +57,7 @@
 "density.ingredient.milk" = "Milk";
 "density.ingredient.molasses" = "Molasses";
 "density.ingredient.morton_kosher_salt" = "Morton Kosher Salt";
+"density.ingredient.non_diastatic_malt" = "Non-Diastatic Malt";
 "density.ingredient.nuts" = "Nuts";
 "density.ingredient.oat_flour" = "Oat Flour";
 "density.ingredient.olive_oil" = "Olive Oil";
@@ -72,6 +74,7 @@
 "density.ingredient.spelt_flour" = "Spelt Flour";
 "density.ingredient.spices" = "Spices";
 "density.ingredient.table_salt" = "Table Salt";
+"density.ingredient.tipo_00_flour" = "Tipo 00 Flour";
 "density.ingredient.vegetable_oil" = "Vegetable Oil";
 "density.ingredient.water" = "Water";
 "density.ingredient.whole_wheat_flour" = "Whole Wheat Flour";
@@ -145,6 +148,7 @@
 "create.preferment.other_ingredients.footer.percent" = "Enter each ingredient's percentage relative to the preferment's own flour (e.g. 50 = 50% hydration). You'll add any additional amounts for the rest of the dough next.";
 "create.preferment.other_ingredients.footer.weight" = "Enter the weight of each ingredient as it's used in the preferment. You'll add any additional amounts for the rest of the dough next.";
 "create.title.edit" = "Edit Recipe";
+"create.title.copy" = "Copy Recipe";
 "create.title.ingredients" = "Ingredients";
 "create.title.main_dough" = "Main Dough";
 "create.title.new" = "New Recipe";

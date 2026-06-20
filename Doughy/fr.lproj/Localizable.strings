@@ -49,6 +49,7 @@
 "density.ingredient.cornmeal" = "Semoule de maïs";
 "density.ingredient.cream" = "Crème";
 "density.ingredient.diamond_crystal_kosher_salt" = "Diamond Crystal Sel Casher";
+"density.ingredient.diastatic_malt" = "Malt diastatique";
 "density.ingredient.fresh_yeast" = "Levure fraîche";
 "density.ingredient.gluten_free_flour_blend" = "Mélange de farine sans gluten";
 "density.ingredient.granulated_sugar" = "Sucre cristallisé";
@@ -58,6 +59,7 @@
 "density.ingredient.milk" = "Lait";
 "density.ingredient.molasses" = "Mélasse";
 "density.ingredient.morton_kosher_salt" = "Morton Sel Casher";
+"density.ingredient.non_diastatic_malt" = "Malt non diastatique";
 "density.ingredient.nuts" = "Fruits à coque";
 "density.ingredient.oat_flour" = "Farine d'avoine";
 "density.ingredient.olive_oil" = "Huile d'olive";
@@ -74,6 +76,7 @@
 "density.ingredient.spelt_flour" = "Farine d'épeautre";
 "density.ingredient.spices" = "Épices";
 "density.ingredient.table_salt" = "Sel de table";
+"density.ingredient.tipo_00_flour" = "Farine tipo 00";
 "density.ingredient.vegetable_oil" = "Huile végétale";
 "density.ingredient.water" = "Eau";
 "density.ingredient.whole_wheat_flour" = "Farine de blé complet";
@@ -145,6 +148,7 @@
 "create.preferment.other_ingredients.footer.percent" = "Entrez le pourcentage de chaque ingrédient par rapport à la farine propre du pré-ferment (ex. 50 = 50 % d'hydratation). Vous ajouterez les quantités supplémentaires pour le reste de la pâte ensuite.";
 "create.preferment.other_ingredients.footer.weight" = "Entrez le poids de chaque ingrédient tel qu'il est utilisé dans le pré-ferment. Vous ajouterez les quantités supplémentaires pour le reste de la pâte ensuite.";
 "create.title.edit" = "Modifier la recette";
+"create.title.copy" = "Copier la recette";
 "create.title.ingredients" = "Ingrédients";
 "create.title.main_dough" = "Pâte principale";
 "create.title.new" = "Nouvelle recette";
