@@ -136,6 +136,9 @@
 "create.mode.scan.description" = "Utilisez Apple Intelligence pour lire une recette depuis une photo ou une capture d'écran, entièrement sur l'appareil et hors ligne";
 "create.mode.scan.title" = "Numériser une recette";
 "create.mode.scan.unavailable" = "Nécessite iOS 26 ou version ultérieure avec Apple Intelligence";
+"create.mode.scan.device_not_eligible" = "Nécessite un iPhone 15 ou ultérieur";
+"create.mode.scan.apple_intelligence_not_enabled" = "Activez Apple Intelligence dans Réglages > Apple Intelligence et Siri";
+"create.mode.scan.model_not_ready" = "Apple Intelligence est encore en cours de configuration";
 "create.mode.weight.description" = "Idéal pour les recettes sans farine, ou quand vous souhaitez conserver des quantités exactes en grammes";
 "create.mode.weight.title" = "Par poids";
 "create.other_ingredients.footer.preferment" = "Entrez la quantité supplémentaire de chaque ingrédient utilisé dans la pâte principale, en plus de ce qui se trouve dans le %@. Laissez à 0 (ou supprimez) s'il n'est utilisé que dans le pré-ferment.";
@@ -158,7 +161,9 @@
 "recipe_writer.error.save_failed" = "La recette n'a pas pu être enregistrée. Veuillez réessayer.";
 "scan.error.invalid_image" = "Impossible de lire l'image sélectionnée.";
 "scan.error.load_selected_image" = "Impossible de charger l'image sélectionnée.";
-"scan.error.model_unavailable" = "Apple Intelligence n'est pas disponible sur cet appareil ou dans cette région.";
+"scan.error.device_not_eligible" = "La numérisation de recettes nécessite un iPhone 15 ou ultérieur.";
+"scan.error.apple_intelligence_not_enabled" = "Apple Intelligence n'est pas activé. Activez-le dans Réglages > Apple Intelligence et Siri.";
+"scan.error.model_not_ready" = "Apple Intelligence est encore en cours de configuration. Veuillez réessayer dans quelques minutes.";
 "scan.error.no_flour_found" = "Aucune farine n'a pu être identifiée dans la recette. Veuillez saisir la recette manuellement.";
 "scan.error.no_text_found" = "Aucun texte lisible n'a été trouvé dans l'image.";
 "scan.detected_language" = "Recette détectée en %@. Les noms des ingrédients ont été traduits.";

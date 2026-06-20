@@ -9,6 +9,9 @@ import NaturalLanguage
 #if canImport(VisionKit)
 import VisionKit
 #endif
+#if canImport(FoundationModels)
+import FoundationModels
+#endif
 
 // MARK: - Types
 
@@ -153,6 +156,12 @@ private struct IngredientNameField: View {
                         focusedRowID.wrappedValue = nil
                     }
                 }
+                .onChange(of: focusedRowID.wrappedValue) { _, newID in
+                    if newID == rowID {
+                        isFocused = true
+                        focusedRowID.wrappedValue = nil
+                    }
+                }
 
             if isFocused && !filtered.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
@@ -172,6 +181,50 @@ private struct IngredientNameField: View {
                 }
             }
         }
+    }
+}
+
+private struct MoveStepSheet: View {
+    let total: Int
+    let currentIndex: Int
+    @Binding var text: String
+    let onMove: (Int) -> Void
+    let onDismiss: () -> Void
+
+    @FocusState private var isFocused: Bool
+
+    private var target: Int? { Int(text).map { $0 - 1 } }
+    private var isValid: Bool {
+        guard let t = target else { return false }
+        return t >= 0 && t < total && t != currentIndex
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Move Step")
+                .font(.headline)
+            Text("Enter a step number (1–\(total))")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+            TextField("Step number", text: $text)
+                .keyboardType(.numberPad)
+                .textFieldStyle(.roundedBorder)
+                .focused($isFocused)
+            HStack {
+                Spacer()
+                Button("Cancel") { onDismiss() }
+                Button("Move") {
+                    if isValid, let t = target { onMove(t) }
+                    onDismiss()
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(!isValid)
+            }
+        }
+        .padding(24)
+        .presentationDetents([.height(200)])
+        .presentationDragIndicator(.hidden)
+        .onAppear { isFocused = true }
     }
 }
 
@@ -393,6 +446,7 @@ struct CreateRecipeView: View {
     @FocusState private var isNewCollectionFocused: Bool
     @FocusState private var isPrefermentNameFocused: Bool
     @FocusState private var isNewStepFocused: Bool
+    @FocusState private var isStepEditFocused: Bool
     @FocusState private var focusedValueRowID: UUID?
     @State private var pendingValueRowID: UUID? = nil
     @State private var ingredientsFormHasFocused = false
@@ -423,6 +477,11 @@ struct CreateRecipeView: View {
     // Preview + save
     @State private var instructions: [InstructionRow] = []
     @State private var newStepText = ""
+    @State private var editingStepIndex: Int? = nil
+    @State private var editingStepText = ""
+    @State private var moveStepIndex: Int? = nil
+    @State private var moveStepText = ""
+    @State private var showMoveStepAlert = false
     @State private var saveError: String?
 
     // Discard safeguard
@@ -674,6 +733,23 @@ struct CreateRecipeView: View {
                     ))
                 }
             }
+            .sheet(isPresented: $showMoveStepAlert, onDismiss: {
+                moveStepIndex = nil
+                moveStepText = ""
+            }) {
+                MoveStepSheet(
+                    total: instructions.count,
+                    currentIndex: moveStepIndex ?? 0,
+                    text: $moveStepText,
+                    onMove: { target in
+                        if let midx = moveStepIndex {
+                            instructions.move(fromOffsets: IndexSet(integer: midx),
+                                              toOffset: target > midx ? target + 1 : target)
+                        }
+                    },
+                    onDismiss: { showMoveStepAlert = false }
+                )
+            }
             .confirmationDialog("Are you sure? You will lose unsaved changes", isPresented: $showDiscardConfirmation, titleVisibility: .visible) {
                 Button("action.discard", role: .destructive) { dismiss() }
                     .accessibilityIdentifier("discardChangesButton")
@@ -841,13 +917,7 @@ struct CreateRecipeView: View {
     private var scanCard: some View {
         #if canImport(FoundationModels)
         if #available(iOS 26, *) {
-            ModeCard(
-                icon: "camera.viewfinder",
-                title: String(localized: "create.mode.scan.title", defaultValue: "Scan a Recipe"),
-                description: String(localized: "create.mode.scan.description", defaultValue: "Use Apple Intelligence to read a recipe from a photo or screenshot, entirely on-device and offline")
-            ) {
-                showScanOptions = true
-            }
+            scanCardForAvailableOS
         } else {
             ModeCard(
                 icon: "camera.viewfinder",
@@ -864,6 +934,45 @@ struct CreateRecipeView: View {
             enabled: false
         ) {}
         #endif
+    }
+
+    @available(iOS 26, *)
+    @ViewBuilder
+    private var scanCardForAvailableOS: some View {
+        let aiUnavailable = ModeCard(
+            icon: "camera.viewfinder",
+            title: String(localized: "create.mode.scan.title", defaultValue: "Scan a Recipe"),
+            description: String(localized: "create.mode.scan.apple_intelligence_not_enabled", defaultValue: "Enable Apple Intelligence in Settings > Apple Intelligence & Siri"),
+            enabled: false
+        ) {}
+        switch SystemLanguageModel.default.availability {
+        case .available:
+            ModeCard(
+                icon: "camera.viewfinder",
+                title: String(localized: "create.mode.scan.title", defaultValue: "Scan a Recipe"),
+                description: String(localized: "create.mode.scan.description", defaultValue: "Use Apple Intelligence to read a recipe from a photo or screenshot, entirely on-device and offline")
+            ) {
+                showScanOptions = true
+            }
+        case .unavailable(.deviceNotEligible):
+            ModeCard(
+                icon: "camera.viewfinder",
+                title: String(localized: "create.mode.scan.title", defaultValue: "Scan a Recipe"),
+                description: String(localized: "create.mode.scan.device_not_eligible", defaultValue: "Requires iPhone 15 or later"),
+                enabled: false
+            ) {}
+        case .unavailable(.modelNotReady):
+            ModeCard(
+                icon: "camera.viewfinder",
+                title: String(localized: "create.mode.scan.title", defaultValue: "Scan a Recipe"),
+                description: String(localized: "create.mode.scan.model_not_ready", defaultValue: "Apple Intelligence is still setting up"),
+                enabled: false
+            ) {}
+        case .unavailable(.appleIntelligenceNotEnabled):
+            aiUnavailable
+        @unknown default:
+            aiUnavailable
+        }
     }
 
     // MARK: - Scan Review
@@ -1776,16 +1885,56 @@ struct CreateRecipeView: View {
             Section {
                 ForEach(Array(instructions.enumerated()), id: \.element.id) { index, row in
                     HStack(alignment: .top, spacing: 12) {
-                        Text("\(index + 1).").foregroundStyle(.secondary)
-                        Text(row.text)
+                        Text("\(index + 1).")
+                            .foregroundStyle(.secondary)
+                        if editingStepIndex == index {
+                            TextField("Step description", text: $editingStepText, axis: .vertical)
+                                .lineLimit(1...5)
+                                .focused($isStepEditFocused)
+                            Button {
+                                let trimmed = editingStepText.trimmingCharacters(in: .whitespaces)
+                                instructions[index].text = trimmed.isEmpty ? row.text : trimmed
+                                editingStepIndex = nil
+                            } label: {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .imageScale(.large)
+                            }
+                            .buttonStyle(.plain)
+                            .foregroundStyle(.tint)
+                        } else {
+                            Button {
+                                editingStepIndex = index
+                                editingStepText = row.text
+                                isStepEditFocused = true
+                            } label: {
+                                Text(row.text)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                            .contextMenu {
+                                Button {
+                                    moveStepIndex = index
+                                    moveStepText = ""
+                                    showMoveStepAlert = true
+                                } label: {
+                                    Label("Move to position…", systemImage: "arrow.up.arrow.down")
+                                }
+                                Button(role: .destructive) {
+                                    if editingStepIndex == index { editingStepIndex = nil }
+                                    instructions.remove(at: index)
+                                } label: {
+                                    Label("Delete", systemImage: "trash")
+                                }
+                            }
+                        }
                     }
                 }
-                .onDelete { instructions.remove(atOffsets: $0) }
                 .onMove { instructions.move(fromOffsets: $0, toOffset: $1) }
             } header: {
                 Text("Instructions (Optional)")
             } footer: {
-                Text("Swipe to delete, drag to reorder.")
+                Text("Tap to edit, hold to move or delete, drag to reorder.")
             }
 
             Section("Add Step") {

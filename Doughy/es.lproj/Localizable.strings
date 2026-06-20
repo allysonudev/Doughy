@@ -134,6 +134,9 @@
 "create.mode.scan.description" = "Usa Apple Intelligence para leer una receta desde una foto o captura de pantalla, completamente en el dispositivo y sin conexión";
 "create.mode.scan.title" = "Escanear una receta";
 "create.mode.scan.unavailable" = "Requiere iOS 26 o posterior con Apple Intelligence";
+"create.mode.scan.device_not_eligible" = "Requiere iPhone 15 o posterior";
+"create.mode.scan.apple_intelligence_not_enabled" = "Activa Apple Intelligence en Ajustes > Apple Intelligence y Siri";
+"create.mode.scan.model_not_ready" = "Apple Intelligence todavía se está configurando";
 "create.mode.weight.description" = "Ideal para recetas sin harina o cuando quieres mantener cantidades exactas en gramos";
 "create.mode.weight.title" = "Por peso";
 "create.other_ingredients.footer.preferment" = "Introduce la cantidad adicional de cada ingrediente usada en la masa principal, además de la que está en el %@. Deja en 0 (o elimina) si solo se usa en el pre-fermento.";
@@ -156,7 +159,9 @@
 "recipe_writer.error.save_failed" = "No se pudo guardar la receta. Por favor, inténtalo de nuevo.";
 "scan.error.invalid_image" = "No se pudo leer la imagen seleccionada.";
 "scan.error.load_selected_image" = "No se pudo cargar la imagen seleccionada.";
-"scan.error.model_unavailable" = "Apple Intelligence no está disponible en este dispositivo o región.";
+"scan.error.device_not_eligible" = "El escaneo de recetas requiere un iPhone 15 o posterior.";
+"scan.error.apple_intelligence_not_enabled" = "Apple Intelligence no está activado. Actívalo en Ajustes > Apple Intelligence y Siri.";
+"scan.error.model_not_ready" = "Apple Intelligence todavía se está configurando. Inténtalo de nuevo en unos minutos.";
 "scan.error.no_flour_found" = "No se pudo identificar ninguna harina en la receta. Por favor, introduce la receta manualmente.";
 "scan.error.no_text_found" = "No se encontró texto legible en la imagen.";
 "scan.detected_language" = "Receta detectada en %@. Los nombres de los ingredientes han sido traducidos.";

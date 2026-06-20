@@ -143,6 +143,9 @@
 "create.mode.scan.description" = "Apple Intelligenceを使って写真やスクリーンショットからレシピを読み取ります。完全にオンデバイスでオフラインで処理されます";
 "create.mode.scan.title" = "レシピをスキャン";
 "create.mode.scan.unavailable" = "Apple IntelligenceはiOS 26以降が必要です";
+"create.mode.scan.device_not_eligible" = "iPhone 15以降が必要です";
+"create.mode.scan.apple_intelligence_not_enabled" = "設定 > Apple IntelligenceとSiriでApple Intelligenceを有効にしてください";
+"create.mode.scan.model_not_ready" = "Apple Intelligenceはまだセットアップ中です";
 "create.mode.weight.description" = "小麦粉を使わないレシピや正確なグラム数を維持したい場合に最適";
 "create.mode.weight.title" = "重量で入力";
 "create.other_ingredients.footer.preferment" = "%@ に含まれる量に加えて、メインの生地で使用する各食材の追加量を入力してください。前種のみで使用する場合は0のまま（または削除）にしてください。";
@@ -165,7 +168,9 @@
 "recipe_writer.error.save_failed" = "レシピを保存できませんでした。もう一度お試しください。";
 "scan.error.invalid_image" = "選択した画像を読み取れませんでした。";
 "scan.error.load_selected_image" = "選択した画像を読み込めませんでした。";
-"scan.error.model_unavailable" = "Apple Intelligenceはこのデバイスまたは地域では利用できません。";
+"scan.error.device_not_eligible" = "レシピのスキャンにはiPhone 15以降が必要です。";
+"scan.error.apple_intelligence_not_enabled" = "Apple Intelligenceが有効になっていません。設定 > Apple IntelligenceとSiriでオンにしてください。";
+"scan.error.model_not_ready" = "Apple Intelligenceはまだセットアップ中です。数分後にもう一度お試しください。";
 "scan.error.no_flour_found" = "レシピ内の小麦粉を特定できませんでした。レシピを手動で入力してください。";
 "scan.error.no_text_found" = "画像内に読み取れるテキストがありませんでした。";
 "scan.detected_language" = "%@のレシピを検出しました。食材名は翻訳されています。";

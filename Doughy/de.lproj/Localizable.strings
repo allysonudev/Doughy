@@ -143,6 +143,9 @@
 "create.mode.scan.description" = "Apple Intelligence verwenden, um ein Rezept aus einem Foto oder Screenshot zu lesen – vollständig auf dem Gerät und offline";
 "create.mode.scan.title" = "Rezept scannen";
 "create.mode.scan.unavailable" = "Erfordert iOS 26 oder neuer mit Apple Intelligence";
+"create.mode.scan.device_not_eligible" = "Erfordert iPhone 15 oder neuer";
+"create.mode.scan.apple_intelligence_not_enabled" = "Apple Intelligence unter Einstellungen > Apple Intelligence & Siri aktivieren";
+"create.mode.scan.model_not_ready" = "Apple Intelligence wird noch eingerichtet";
 "create.mode.weight.description" = "Am besten für Rezepte ohne Mehl oder wenn Sie genaue Grammangaben beibehalten möchten";
 "create.mode.weight.title" = "Nach Gewicht";
 "create.other_ingredients.footer.preferment" = "Geben Sie die zusätzliche Menge jeder Zutat im Hauptteig ein, die über das im %@ enthaltene hinausgeht. Lassen Sie 0 (oder entfernen Sie sie), wenn sie nur im Vorteig verwendet wird.";
@@ -165,7 +168,9 @@
 "recipe_writer.error.save_failed" = "Das Rezept konnte nicht gespeichert werden. Bitte versuchen Sie es erneut.";
 "scan.error.invalid_image" = "Das ausgewählte Bild konnte nicht gelesen werden.";
 "scan.error.load_selected_image" = "Das ausgewählte Bild konnte nicht geladen werden.";
-"scan.error.model_unavailable" = "Apple Intelligence ist auf diesem Gerät oder in dieser Region nicht verfügbar.";
+"scan.error.device_not_eligible" = "Rezept-Scannen erfordert ein iPhone 15 oder neuer.";
+"scan.error.apple_intelligence_not_enabled" = "Apple Intelligence ist nicht aktiviert. Aktiviere es unter Einstellungen > Apple Intelligence & Siri.";
+"scan.error.model_not_ready" = "Apple Intelligence wird noch eingerichtet. Bitte versuche es in einigen Minuten erneut.";
 "scan.error.no_flour_found" = "Es konnte kein Mehl im Rezept identifiziert werden. Bitte geben Sie das Rezept manuell ein.";
 "scan.error.no_text_found" = "Im Bild wurde kein lesbarer Text gefunden.";
 "scan.detected_language" = "Rezept auf %@ erkannt. Zutatenbezeichnungen wurden übersetzt.";

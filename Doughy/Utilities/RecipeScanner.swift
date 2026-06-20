@@ -287,7 +287,9 @@ struct ParsedIngredient: Sendable {
 enum ScanError: LocalizedError {
     case invalidImage
     case noTextFound
-    case modelUnavailable
+    case deviceNotEligible
+    case appleIntelligenceNotEnabled
+    case modelNotReady
     case noFlourFound
 
     var errorDescription: String? {
@@ -296,8 +298,12 @@ enum ScanError: LocalizedError {
             return String(localized: "scan.error.invalid_image", defaultValue: "Could not read the selected image.")
         case .noTextFound:
             return String(localized: "scan.error.no_text_found", defaultValue: "No readable text was found in the image.")
-        case .modelUnavailable:
-            return String(localized: "scan.error.model_unavailable", defaultValue: "Apple Intelligence is not available on this device or region.")
+        case .deviceNotEligible:
+            return String(localized: "scan.error.device_not_eligible", defaultValue: "Recipe scanning requires iPhone 15 or later.")
+        case .appleIntelligenceNotEnabled:
+            return String(localized: "scan.error.apple_intelligence_not_enabled", defaultValue: "Apple Intelligence is not enabled. Turn it on in Settings > Apple Intelligence & Siri.")
+        case .modelNotReady:
+            return String(localized: "scan.error.model_not_ready", defaultValue: "Apple Intelligence is still setting up. Please try again in a few minutes.")
         case .noFlourFound:
             return String(localized: "scan.error.no_flour_found", defaultValue: "Could not identify any flour in the recipe. Please enter the recipe manually.")
         }
@@ -359,18 +365,30 @@ struct RecipeScanner {
     private init() {}
 
     func scan(image: UIImage) async throws -> ScanResult {
-        let text = try await extractText(from: image)
-        guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            throw ScanError.noTextFound
+        do {
+            let text = try await extractText(from: image)
+            guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                throw ScanError.noTextFound
+            }
+            let parsed = try await parseRecipe(from: text)
+            let resolvedIngredients = parsed.ingredients.map(Self.resolve)
+            let resolved = ResolvedRecipe(name: parsed.name,
+                                           hasPreferment: parsed.hasPreferment,
+                                           prefermentName: parsed.prefermentName,
+                                           ingredients: resolvedIngredients,
+                                           instructions: parsed.instructions)
+            return ScanResult(ocrText: text, rawRecipe: parsed, resolvedRecipe: resolved)
+        } catch {
+            // availability can incorrectly return .available on unsupported hardware
+            // (e.g. iPhone 13); assetsUnavailable is the true runtime signal in that case.
+            // Use as? rather than a typed catch in case the error bridges through ObjC.
+            if let genError = error as? LanguageModelSession.GenerationError,
+               case .assetsUnavailable = genError {
+                throw ScanError.deviceNotEligible
+            }
+            // ScanErrors (noTextFound, noFlourFound, etc.) propagate as-is
+            throw error
         }
-        let parsed = try await parseRecipe(from: text)
-        let resolvedIngredients = parsed.ingredients.map(Self.resolve)
-        let resolved = ResolvedRecipe(name: parsed.name,
-                                       hasPreferment: parsed.hasPreferment,
-                                       prefermentName: parsed.prefermentName,
-                                       ingredients: resolvedIngredients,
-                                       instructions: parsed.instructions)
-        return ScanResult(ocrText: text, rawRecipe: parsed, resolvedRecipe: resolved)
     }
 
     // MARK: - Volume conversion
@@ -671,8 +689,13 @@ struct RecipeScanner {
     // MARK: - LLM parsing
 
     private func parseRecipe(from text: String) async throws -> ParsedRecipe {
-        guard case .available = SystemLanguageModel.default.availability else {
-            throw ScanError.modelUnavailable
+        if case .unavailable(let reason) = SystemLanguageModel.default.availability {
+            switch reason {
+            case .deviceNotEligible: throw ScanError.deviceNotEligible
+            case .modelNotReady: throw ScanError.modelNotReady
+            case .appleIntelligenceNotEnabled: throw ScanError.appleIntelligenceNotEnabled
+            @unknown default: throw ScanError.appleIntelligenceNotEnabled
+            }
         }
 
         let localRecipe = Self.parseIngredientsLocally(from: text)

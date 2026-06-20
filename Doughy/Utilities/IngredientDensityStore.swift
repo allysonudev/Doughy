@@ -102,14 +102,6 @@ enum DensityUnit: String, CaseIterable, Identifiable {
         }
     }
 
-    var localizedLabel: String {
-        switch self {
-        case .cup: return String(localized: "density.unit.cup", defaultValue: "g/cup")
-        case .tablespoon: return String(localized: "density.unit.tablespoon", defaultValue: "g/tbsp")
-        case .teaspoon: return String(localized: "density.unit.teaspoon", defaultValue: "g/tsp")
-        case .milliliter: return String(localized: "density.unit.milliliter", defaultValue: "g/ml")
-        }
-    }
 }
 
 /// Which part of an egg a quantity refers to: the whole egg (in its shell), or just

@@ -136,6 +136,9 @@
 "create.mode.scan.description" = "Notaðu Apple Intelligence til að lesa uppskrift af mynd eða skjámynd, alfarið á tækinu án nettengingar";
 "create.mode.scan.title" = "Skanna uppskrift";
 "create.mode.scan.unavailable" = "Krefst iOS 26 eða nýrra með Apple Intelligence";
+"create.mode.scan.device_not_eligible" = "Krefst iPhone 15 eða nýrra";
+"create.mode.scan.apple_intelligence_not_enabled" = "Virkja Apple Intelligence í Stillingar > Apple Intelligence og Siri";
+"create.mode.scan.model_not_ready" = "Apple Intelligence er enn að setjast upp";
 "create.mode.weight.description" = "Best fyrir uppskriftir án mjöls, eða þegar þú vilt halda nákvæmu grammamagni";
 "create.mode.weight.title" = "Eftir þyngd";
 "create.other_ingredients.footer.preferment" = "Sláðu inn viðbótarmagn hvers hráefnis í aðaldeiginu, til viðbótar við það sem er í %@. Skildu eftir 0 (eða fjarlægðu) ef það er eingöngu notað í fordeiginu.";
@@ -158,7 +161,9 @@
 "recipe_writer.error.save_failed" = "Tókst ekki að vista uppskriftina. Vinsamlegast reyndu aftur.";
 "scan.error.invalid_image" = "Tókst ekki að lesa valda mynd.";
 "scan.error.load_selected_image" = "Tókst ekki að hlaða valdri mynd.";
-"scan.error.model_unavailable" = "Apple Intelligence er ekki tiltækt á þessu tæki eða á þessum svæðum.";
+"scan.error.device_not_eligible" = "Uppskriftarskönnun krefst iPhone 15 eða nýrra.";
+"scan.error.apple_intelligence_not_enabled" = "Apple Intelligence er ekki virkt. Kveiktu á því í Stillingar > Apple Intelligence og Siri.";
+"scan.error.model_not_ready" = "Apple Intelligence er enn að setjast upp. Reyndu aftur eftir nokkrar mínútur.";
 "scan.error.no_flour_found" = "Tókst ekki að finna mjöl í uppskriftinni. Vinsamlegast sláðu inn uppskriftina handvirkt.";
 "scan.error.no_text_found" = "Enginn lesanlegur texti fannst á myndinni.";
 "scan.detected_language" = "Uppskrift greind á %@. Heiti hráefna hafa verið þýdd.";

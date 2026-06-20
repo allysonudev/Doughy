@@ -135,6 +135,9 @@
 "create.mode.scan.description" = "Use Apple Intelligence to read a recipe from a photo or screenshot, entirely on-device and offline";
 "create.mode.scan.title" = "Scan a Recipe";
 "create.mode.scan.unavailable" = "Requires iOS 26 or later with Apple Intelligence";
+"create.mode.scan.device_not_eligible" = "Requires iPhone 15 or later";
+"create.mode.scan.apple_intelligence_not_enabled" = "Enable Apple Intelligence in Settings > Apple Intelligence & Siri";
+"create.mode.scan.model_not_ready" = "Apple Intelligence is still setting up";
 "create.mode.weight.description" = "Best for recipes without flour, or when you want to keep exact gram amounts";
 "create.mode.weight.title" = "By Weight";
 "create.other_ingredients.footer.preferment" = "Enter the additional amount of each ingredient used in the main dough, on top of what's in the %@. Leave at 0 (or remove) if it's only used in the preferment.";
@@ -157,7 +160,9 @@
 "recipe_writer.error.save_failed" = "The recipe could not be saved. Please try again.";
 "scan.error.invalid_image" = "Could not read the selected image.";
 "scan.error.load_selected_image" = "Could not load the selected image.";
-"scan.error.model_unavailable" = "Apple Intelligence is not available on this device or region.";
+"scan.error.device_not_eligible" = "Recipe scanning requires iPhone 15 or later.";
+"scan.error.apple_intelligence_not_enabled" = "Apple Intelligence is not enabled. Turn it on in Settings > Apple Intelligence & Siri.";
+"scan.error.model_not_ready" = "Apple Intelligence is still setting up. Please try again in a few minutes.";
 "scan.error.no_flour_found" = "Could not identify any flour in the recipe. Please enter the recipe manually.";
 "scan.error.no_text_found" = "No readable text was found in the image.";
 "scan.detected_language" = "Recipe detected in %@. Ingredient names have been translated.";

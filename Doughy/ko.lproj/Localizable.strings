@@ -134,6 +134,9 @@
 "create.mode.scan.description" = "Apple Intelligence를 사용해 사진이나 스크린샷에서 레시피를 읽어옵니다 — 완전히 기기 내에서, 오프라인으로 처리";
 "create.mode.scan.title" = "레시피 스캔";
 "create.mode.scan.unavailable" = "iOS 26 이상 및 Apple Intelligence가 필요합니다";
+"create.mode.scan.device_not_eligible" = "iPhone 15 이상이 필요합니다";
+"create.mode.scan.apple_intelligence_not_enabled" = "설정 > Apple Intelligence 및 Siri에서 Apple Intelligence를 활성화하세요";
+"create.mode.scan.model_not_ready" = "Apple Intelligence가 아직 설정 중입니다";
 "create.mode.weight.description" = "밀가루 없는 레시피이거나 정확한 그램 수치를 유지하고 싶을 때 최적";
 "create.mode.weight.title" = "무게로";
 "create.other_ingredients.footer.preferment" = "%@에 있는 양 외에 본 반죽에서 각 재료의 추가 사용량을 입력하세요. 발효 반죽에만 사용된다면 0으로 두거나 제거하세요.";
@@ -156,7 +159,9 @@
 "recipe_writer.error.save_failed" = "레시피를 저장할 수 없습니다. 다시 시도해 주세요.";
 "scan.error.invalid_image" = "선택한 이미지를 읽을 수 없습니다.";
 "scan.error.load_selected_image" = "선택한 이미지를 불러올 수 없습니다.";
-"scan.error.model_unavailable" = "Apple Intelligence는 이 기기 또는 지역에서 사용할 수 없습니다.";
+"scan.error.device_not_eligible" = "레시피 스캔은 iPhone 15 이상이 필요합니다.";
+"scan.error.apple_intelligence_not_enabled" = "Apple Intelligence가 활성화되지 않았습니다. 설정 > Apple Intelligence 및 Siri에서 켜주세요.";
+"scan.error.model_not_ready" = "Apple Intelligence가 아직 설정 중입니다. 몇 분 후에 다시 시도해 주세요.";
 "scan.error.no_flour_found" = "레시피에서 밀가루를 확인할 수 없습니다. 레시피를 직접 입력해 주세요.";
 "scan.error.no_text_found" = "이미지에서 읽을 수 있는 텍스트를 찾을 수 없습니다.";
 "scan.detected_language" = "%@ 레시피가 감지되었습니다. 재료 이름이 번역되었습니다.";
