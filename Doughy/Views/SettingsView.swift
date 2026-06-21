@@ -12,6 +12,8 @@ private struct AppLanguage: Identifiable {
     var id: String { code }
 
     static let all: [AppLanguage] = [
+        .init(code: "ar",    nativeName: "العربية"),
+        .init(code: "da",    nativeName: "Dansk"),
         .init(code: "de",    nativeName: "Deutsch"),
         .init(code: "en",    nativeName: "English"),
         .init(code: "es",    nativeName: "Español"),
@@ -20,7 +22,9 @@ private struct AppLanguage: Identifiable {
         .init(code: "it",    nativeName: "Italiano"),
         .init(code: "ja",    nativeName: "日本語"),
         .init(code: "ko",    nativeName: "한국어"),
+        .init(code: "nb",    nativeName: "Norsk bokmål"),
         .init(code: "pt-BR", nativeName: "Português (Brasil)"),
+        .init(code: "sv",    nativeName: "Svenska"),
     ]
 }
 
@@ -91,7 +95,6 @@ struct SettingsView: View {
                 }
                 .accessibilityIdentifier("ingredientConversionsLink")
             }
-
             Section {
                 NavigationLink {
                     RecentlyDeletedRecipesView()
@@ -107,23 +110,20 @@ struct SettingsView: View {
                     }
                 }
                 .accessibilityIdentifier("recentlyDeletedLink")
-            } footer: {
-                Text("Deleted recipes stay here for 30 days before they are permanently removed.")
-            }
-
-            Section {
                 Button {
                     backupLibrary()
                 } label: {
-                    Label("Back Up Recipe Library", systemImage: "square.and.arrow.up")
+                    Label("Back Up Recipe Library")
                 }
                 Button {
                     showingRestoreImporter = true
                 } label: {
-                    Label("Restore Recipe Library", systemImage: "arrow.clockwise")
+                    Label("Restore Recipe Library")
                 }
+            } header: {
+                Text("Library")
             } footer: {
-                Text("Backups include every active recipe. Restoring a backup replaces your current recipe library.")
+                Text("Backups include every recipe. Restoring a backup replaces your current recipe library.")
             }
 
             Section {

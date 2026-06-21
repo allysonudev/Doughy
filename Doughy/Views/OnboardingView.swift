@@ -18,7 +18,7 @@ struct OnboardingView: View {
         Slide(
             symbol: "fork.knife",
             title: "Welcome to Doughy",
-            body: "The offline recipe calculator. Precisely make bread, pizza, crepes, frosting, burritos, or anything you want!"
+            body: "The offline recipe calculator for precise bakers. Make sourdough, pizza, cupcakes, jam, tacos, or anything you want!"
         ),
         Slide(
             symbol: "scalemass",

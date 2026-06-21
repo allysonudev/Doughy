@@ -2576,6 +2576,7 @@ private struct ModeCard: View {
                     Image(systemName: "chevron.right")
                         .font(.caption)
                         .foregroundStyle(.tertiary)
+                        .flipsForRightToLeftLayoutDirection(true)
                 }
             }
             .padding(16)

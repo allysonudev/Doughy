@@ -255,6 +255,10 @@
 "Instructions (Optional)" = "手順（任意）";
 "Keep Original Unit" = "元の単位のまま";
 "Language" = "言語";
+"Library" = "ライブラリ";
+"Back Up Recipe Library" = "レシピライブラリのバックアップ";
+"Restore Recipe Library" = "レシピライブラリを復元";
+
 "Main Dough" = "メイン生地";
 "Metric" = "メートル法";
 "Name" = "名前";
@@ -322,7 +326,7 @@
 "density.unit.deciliter" = "g/dl";
 /* Onboarding & What's New */
 "Welcome to Doughy" = "Doughyへようこそ";
-"The offline recipe calculator. Precisely make bread, pizza, crepes, frosting, burritos, or anything you want!" = "オフラインのレシピ計算機。食パン、あんぱん、たい焼き、ガナッシュ、照り焼きなど、なんでも正確に作りましょう！";
+"The offline recipe calculator for precise bakers. Make sourdough, pizza, cupcakes, jam, tacos, or anything you want!" = "こだわりのパン職人向けオフラインレシピ計算機。食パン、あんぱん、たい焼き、ガナッシュ、照り焼きなど、なんでも作りましょう！";
 "Scale Any Batch" = "どんな量でもスケール";
 "Enter how much you're making and Doughy tells you exactly how much of each ingredient you need." = "どれだけ作るかを入力すると、Doughyが各材料の正確な量を教えてくれます。";
 "Convert to Volume" = "体積に変換";

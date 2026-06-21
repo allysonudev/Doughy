@@ -248,6 +248,10 @@
 "Instructions (Optional)" = "Leiðbeiningar (valfrjálst)";
 "Keep Original Unit" = "Halda upprunalegri einingu";
 "Language" = "Tungumál";
+"Library" = "Bókasafn";
+"Back Up Recipe Library" = "Taka afrit af uppskriftarsafni";
+"Restore Recipe Library" = "Endurheimta uppskriftarsafn";
+
 "Main Dough" = "Aðaldeig";
 "Metric" = "Metrískt";
 "Name" = "Nafn";
@@ -315,7 +319,7 @@
 "density.unit.deciliter" = "g/dl";
 /* Onboarding & What's New */
 "Welcome to Doughy" = "Velkomin í Doughy";
-"The offline recipe calculator. Precisely make bread, pizza, crepes, frosting, burritos, or anything you want!" = "Uppskriftarreiknarinn án nettengingar. Gerðu nákvæmlega brauð, kleinur, pönnukökur, skyr, kjötsúpu eða hvað sem þér líður!";
+"The offline recipe calculator for precise bakers. Make sourdough, pizza, cupcakes, jam, tacos, or anything you want!" = "Uppskriftarreiknarinn fyrir nákvæma bakara án nettengingar. Gerðu brauð, kleinur, pönnukökur, skyr, kjötsúpu eða hvað sem þér líður!";
 "Scale Any Batch" = "Stækkaðu hvaða uppskrift sem er";
 "Enter how much you're making and Doughy tells you exactly how much of each ingredient you need." = "Sláðu inn hversu mikið þú ert að gera og Doughy segir þér nákvæmlega hversu mikið þú þarft af hverri hráefni.";
 "Convert to Volume" = "Breyta í rúmmál";

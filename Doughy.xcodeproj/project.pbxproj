@@ -208,6 +208,10 @@
 		F0LOC000000000000000009 /* is */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = is; path = is.lproj/Localizable.strings; sourceTree = "<group>"; };
 		F0LOC00000000000000000A /* en-CA */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "en-CA"; path = "en-CA.lproj/Localizable.strings"; sourceTree = "<group>"; };
 		F0LOC00000000000000000B /* en-GB */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "en-GB"; path = "en-GB.lproj/Localizable.strings"; sourceTree = "<group>"; };
+		F0LOC00000000000000000C /* sv */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = sv; path = sv.lproj/Localizable.strings; sourceTree = "<group>"; };
+		F0LOC00000000000000000D /* nb */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nb; path = nb.lproj/Localizable.strings; sourceTree = "<group>"; };
+		F0LOC00000000000000000E /* da */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = da; path = da.lproj/Localizable.strings; sourceTree = "<group>"; };
+		F0LOC00000000000000000F /* ar */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ar; path = ar.lproj/Localizable.strings; sourceTree = "<group>"; };
 		FF0000000000000000000001 /* IngredientDensityStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IngredientDensityStore.swift; sourceTree = "<group>"; };
 		FF0000000000000000000003 /* IngredientConversionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IngredientConversionsView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -528,6 +532,10 @@
 				it,
 				"pt-BR",
 				is,
+				sv,
+				nb,
+				da,
+				ar,
 			);
 			mainGroup = BB30DEC32425B83D00BFD472;
 			productRefGroup = BB30DECD2425B83D00BFD472 /* Products */;
@@ -724,6 +732,10 @@
 				F0LOC000000000000000009 /* is */,
 				F0LOC00000000000000000A /* en-CA */,
 				F0LOC00000000000000000B /* en-GB */,
+				F0LOC00000000000000000C /* sv */,
+				F0LOC00000000000000000D /* nb */,
+				F0LOC00000000000000000E /* da */,
+				F0LOC00000000000000000F /* ar */,
 			);
 			name = Localizable.strings;
 			sourceTree = "<group>";

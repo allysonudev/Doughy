@@ -246,6 +246,10 @@
 "Instructions (Optional)" = "조리 과정 (선택 사항)";
 "Keep Original Unit" = "원래 단위 유지";
 "Language" = "언어";
+"Library" = "라이브러리";
+"Back Up Recipe Library" = "레시피 라이브러리 백업";
+"Restore Recipe Library" = "레시피 라이브러리 복원";
+
 "Main Dough" = "본 반죽";
 "Metric" = "미터법";
 "Name" = "이름";
@@ -313,7 +317,7 @@
 "density.unit.deciliter" = "g/dl";
 /* Onboarding & What's New */
 "Welcome to Doughy" = "Doughy에 오신 것을 환영합니다";
-"The offline recipe calculator. Precisely make bread, pizza, crepes, frosting, burritos, or anything you want!" = "오프라인 레시피 계산기. 식빵, 소금빵, 호떡, 찹쌀떡, 불고기 양념 등 원하는 것을 정확하게 만드세요!";
+"The offline recipe calculator for precise bakers. Make sourdough, pizza, cupcakes, jam, tacos, or anything you want!" = "정밀한 제빵사를 위한 오프라인 레시피 계산기. 식빵, 소금빵, 호떡, 찹쌀떡, 불고기 양념 등 원하는 것을 만드세요!";
 "Scale Any Batch" = "어떤 양이든 스케일 조정";
 "Enter how much you're making and Doughy tells you exactly how much of each ingredient you need." = "얼마나 만들지 입력하면 Doughy가 각 재료의 정확한 양을 알려드립니다.";
 "Convert to Volume" = "부피로 변환";

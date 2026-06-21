@@ -255,6 +255,10 @@
 "Instructions (Optional)" = "Istruzioni (opzionale)";
 "Keep Original Unit" = "Mantieni unità originale";
 "Language" = "Lingua";
+"Library" = "Libreria";
+"Back Up Recipe Library" = "Backup della libreria di ricette";
+"Restore Recipe Library" = "Ripristina la libreria di ricette";
+
 "Main Dough" = "Impasto principale";
 "Metric" = "Metrico";
 "Name" = "Nome";
@@ -322,7 +326,7 @@
 "density.unit.deciliter" = "g/dl";
 /* Onboarding & What's New */
 "Welcome to Doughy" = "Benvenuto in Doughy";
-"The offline recipe calculator. Precisely make bread, pizza, crepes, frosting, burritos, or anything you want!" = "Il calcolatore di ricette offline. Realizza con precisione pane, focaccia, calzoni, panna cotta, ragù o qualsiasi cosa tu voglia!";
+"The offline recipe calculator for precise bakers. Make sourdough, pizza, cupcakes, jam, tacos, or anything you want!" = "Il calcolatore di ricette offline per pasticceri precisi. Realizza pane, focaccia, calzoni, panna cotta, ragù o qualsiasi cosa tu voglia!";
 "Scale Any Batch" = "Scala qualsiasi quantità";
 "Enter how much you're making and Doughy tells you exactly how much of each ingredient you need." = "Inserisci quanto stai preparando e Doughy ti dirà esattamente quanto ti serve di ogni ingrediente.";
 "Convert to Volume" = "Converti in volume";

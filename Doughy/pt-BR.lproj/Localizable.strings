@@ -246,6 +246,10 @@
 "Instructions (Optional)" = "Instruções (opcional)";
 "Keep Original Unit" = "Manter unidade original";
 "Language" = "Idioma";
+"Library" = "Biblioteca";
+"Back Up Recipe Library" = "Fazer backup da biblioteca de receitas";
+"Restore Recipe Library" = "Restaurar biblioteca de receitas";
+
 "Main Dough" = "Massa principal";
 "Metric" = "Métrico";
 "Name" = "Nome";
@@ -313,7 +317,7 @@
 "density.unit.deciliter" = "g/dl";
 /* Onboarding & What's New */
 "Welcome to Doughy" = "Bem-vindo ao Doughy";
-"The offline recipe calculator. Precisely make bread, pizza, crepes, frosting, burritos, or anything you want!" = "A calculadora de receitas offline. Faça com precisão pão francês, broa, pastel, brigadeiro, moqueca ou qualquer coisa que quiser!";
+"The offline recipe calculator for precise bakers. Make sourdough, pizza, cupcakes, jam, tacos, or anything you want!" = "A calculadora de receitas offline para padeiros precisos. Faça pão francês, broa, pastel, brigadeiro, moqueca ou qualquer coisa que quiser!";
 "Scale Any Batch" = "Ajuste qualquer quantidade";
 "Enter how much you're making and Doughy tells you exactly how much of each ingredient you need." = "Informe quanto você vai fazer e o Doughy dirá exatamente quanto de cada ingrediente você precisa.";
 "Convert to Volume" = "Converter para volume";
