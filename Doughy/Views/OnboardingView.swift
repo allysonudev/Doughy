@@ -17,33 +17,33 @@ struct OnboardingView: View {
     private let slides: [Slide] = [
         Slide(
             symbol: "fork.knife",
-            title: "Welcome to Doughy",
-            body: "The offline recipe calculator for precise bakers. Make sourdough, pizza, cupcakes, jam, tacos, or anything you want!"
+            title: "onboarding_welcome_title",
+            body: "onboarding_welcome_body"
         ),
         Slide(
             symbol: "scalemass",
-            title: "Scale Any Batch",
-            body: "Enter how much you're making and Doughy tells you exactly how much of each ingredient you need."
+            title: "onboarding_scale_title",
+            body: "onboarding_scale_body"
         ),
         Slide(
             symbol: "flask",
-            title: "Convert to Volume",
-            body: "Not everything is easily weighed. Common ingredients have standard mass to volume conversions. Add your own any time."
+            title: "onboarding_volume_title",
+            body: "onboarding_volume_body"
         ),
         Slide(
             symbol: "camera.viewfinder",
-            title: "Create or Scan Recipes",
-            body: "Type a recipe by percentage or by weight — or use Apple Intelligence On-Device models to photograph a recipe or scan a screenshot and create your recipe in seconds. Requires iPhone 15 or later."
+            title: "onboarding_scan_title",
+            body: "onboarding_scan_body"
         ),
         Slide(
             symbol: "lock",
-            title: "Totally Free. Totally Private.",
-            body: "Doughy isn't interested in taking your money or your information. Doughy doesn't track your usage or use the internet."
+            title: "onboarding_private_title",
+            body: "onboarding_private_body"
         ),
         Slide(
             symbol: "square.and.arrow.up",
-            title: "Share & Back Up",
-            body: "Export recipes and send them to other Doughy users with a personal note. Backup and restore your entire library to a file any time."
+            title: "onboarding_share_title",
+            body: "onboarding_share_body"
         ),
     ]
 
@@ -82,7 +82,7 @@ struct OnboardingView: View {
                         dismiss()
                     }
                 } label: {
-                    Text(currentPage < slides.count - 1 ? "Next" : "Get Started")
+                    Text(currentPage < slides.count - 1 ? "onboarding_next" : "onboarding_get_started")
                         .bold()
                         .frame(maxWidth: .infinity)
                 }

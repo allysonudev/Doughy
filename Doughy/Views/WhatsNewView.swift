@@ -16,33 +16,33 @@ struct WhatsNewView: View {
     private let features: [Feature] = [
         Feature(
             symbol: "camera.viewfinder",
-            title: "On-Device AI Recipe Scanning",
-            body: "Use Apple Intelligence On-Device models to photograph a recipe or scan a screenshot and create your recipe in seconds. Requires iPhone 15 or later."
+            title: "whats_new_scan_title",
+            body: "whats_new_scan_body"
         ),
         Feature(
             symbol: "flask",
-            title: "Convert to Volume",
-            body: "Not everything is easily weighed. Common ingredients have standard mass to volume conversions. Add your own any time."
+            title: "whats_new_volume_title",
+            body: "whats_new_volume_body"
         ),
         Feature(
             symbol: "clock.arrow.circlepath",
-            title: "Recipe History",
-            body: "Every edit is saved. Browse and restore past versions using the clock icon on any recipe's calculator screen."
+            title: "whats_new_history_title",
+            body: "whats_new_history_body"
         ),
         Feature(
             symbol: "square.and.arrow.up",
-            title: "Share Recipes",
-            body: "Send a recipe to another Doughy user. Include a personal note they'll see when they open it."
+            title: "whats_new_share_title",
+            body: "whats_new_share_body"
         ),
         Feature(
             symbol: "arrow.clockwise",
-            title: "Backup & Restore",
-            body: "Export your full recipe library and restore it on any device. Find it under Settings."
+            title: "whats_new_backup_title",
+            body: "whats_new_backup_body"
         ),
         Feature(
             symbol: "trash",
-            title: "Recently Deleted",
-            body: "Deleted recipes stay in Settings → Recently Deleted for 30 days before they're permanently removed."
+            title: "whats_new_deleted_title",
+            body: "whats_new_deleted_body"
         ),
     ]
 
@@ -53,10 +53,10 @@ struct WhatsNewView: View {
                     featureRow(feature)
                 }
             }
-            .navigationTitle("What's New in Doughy")
+            .navigationTitle("whats_new_title")
             .navigationBarTitleDisplayMode(.large)
             .safeAreaInset(edge: .bottom) {
-                Button("Got it") {
+                Button("whats_new_got_it") {
                     dismiss()
                 }
                 .buttonStyle(.borderedProminent)
