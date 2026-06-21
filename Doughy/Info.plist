@@ -54,17 +54,6 @@
 			</array>
 		</dict>
 	</dict>
-	<key>UIApplicationShortcutItems</key>
-	<array>
-		<dict>
-			<key>UIApplicationShortcutItemIconType</key>
-			<string>UIApplicationShortcutIconTypeCapturePhoto</string>
-			<key>UIApplicationShortcutItemTitle</key>
-			<string>Scan a Recipe</string>
-			<key>UIApplicationShortcutItemType</key>
-			<string>org.georgie.Doughy.scanRecipe</string>
-		</dict>
-	</array>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>

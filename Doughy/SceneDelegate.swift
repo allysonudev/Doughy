@@ -4,6 +4,9 @@
 
 import UIKit
 import SwiftUI
+#if canImport(FoundationModels)
+import FoundationModels
+#endif
 
 enum DoughyShortcut {
     static let scanRecipe = "org.georgie.Doughy.scanRecipe"
@@ -56,6 +59,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             handleIncomingFile(url: url)
         }
 
+        registerScanShortcutIfSupported()
+
         if let shortcutItem = connectionOptions.shortcutItem {
             _ = handleShortcutItem(shortcutItem)
         }
@@ -64,6 +69,26 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
         guard let url = URLContexts.first?.url else { return }
         handleIncomingFile(url: url)
+    }
+
+    // Registers the "Scan a Recipe" home-screen quick action only on devices where
+    // Apple Intelligence can run. Hardware that can never run it (deviceNotEligible)
+    // won't see the shortcut at all; devices where AI is simply not yet enabled or
+    // still downloading still get it so the feature remains discoverable.
+    private func registerScanShortcutIfSupported() {
+        #if canImport(FoundationModels)
+        guard #available(iOS 26, *) else { return }
+        if case .unavailable(let reason) = SystemLanguageModel.default.availability,
+           case .deviceNotEligible = reason { return }
+        let item = UIApplicationShortcutItem(
+            type: DoughyShortcut.scanRecipe,
+            localizedTitle: "Scan a Recipe",
+            localizedSubtitle: nil,
+            icon: UIApplicationShortcutIcon(type: .capturePhoto),
+            userInfo: nil
+        )
+        UIApplication.shared.shortcutItems = [item]
+        #endif
     }
 
     private func handleIncomingFile(url: URL) {
