@@ -314,7 +314,7 @@
 
 /* Onboarding & What's New */
 "onboarding_welcome_title" = "Welcome to Doughy";
-"onboarding_welcome_body" = "The offline recipe calculator for precise bakers. Make bannock, Montreal bagels, tourtière, Nanaimo bars, poutine, or anything you want!";
+"onboarding_welcome_body" = "The offline recipe calculator for precise bakers. Make bannock, bagels, tourtière, maple taffy, poutine, or anything you want!";
 "onboarding_scale_title" = "Scale Any Batch";
 "onboarding_scale_body" = "Enter how much you're making and Doughy tells you exactly how much of each ingredient you need.";
 "onboarding_volume_title" = "Convert to Volume";
