@@ -126,7 +126,7 @@ struct SettingsView: View {
                 Text("Backups include every active recipe. Restoring a backup replaces your current recipe library.")
             }
 
-            Section("About") {
+            Section {
                 Link("Source Code on GitHub",
                      destination: URL(string: "https://github.com/georgie-codes/Doughy")!)
                 if isUSRegion {
@@ -141,12 +141,11 @@ struct SettingsView: View {
                 }
                 Link("Send Feedback",
                      destination: URL(string: "mailto:doughyapp@icloud.com")!)
-                HStack {
-                    Text("Version")
-                    Spacer()
-                    Text(appVersion)
-                        .foregroundStyle(.secondary)
-                }
+            } header: {
+                Text("About")
+            } footer: {
+                Text(appVersion)
+                    .frame(maxWidth: .infinity, alignment: .center)
             }
         }
         .navigationTitle("Settings")
