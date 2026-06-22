@@ -212,6 +212,7 @@
 		F0LOC00000000000000000D /* nb */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nb; path = nb.lproj/Localizable.strings; sourceTree = "<group>"; };
 		F0LOC00000000000000000E /* da */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = da; path = da.lproj/Localizable.strings; sourceTree = "<group>"; };
 		F0LOC00000000000000000F /* ar */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ar; path = ar.lproj/Localizable.strings; sourceTree = "<group>"; };
+		F0LOC000000000000000010 /* hi */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = hi; path = hi.lproj/Localizable.strings; sourceTree = "<group>"; };
 		FF0000000000000000000001 /* IngredientDensityStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IngredientDensityStore.swift; sourceTree = "<group>"; };
 		FF0000000000000000000003 /* IngredientConversionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IngredientConversionsView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -536,6 +537,7 @@
 				nb,
 				da,
 				ar,
+				hi,
 			);
 			mainGroup = BB30DEC32425B83D00BFD472;
 			productRefGroup = BB30DECD2425B83D00BFD472 /* Products */;
@@ -736,6 +738,7 @@
 				F0LOC00000000000000000D /* nb */,
 				F0LOC00000000000000000E /* da */,
 				F0LOC00000000000000000F /* ar */,
+				F0LOC000000000000000010 /* hi */,
 			);
 			name = Localizable.strings;
 			sourceTree = "<group>";

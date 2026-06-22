@@ -18,6 +18,7 @@ private struct AppLanguage: Identifiable {
         .init(code: "en",    nativeName: "English"),
         .init(code: "es",    nativeName: "Español"),
         .init(code: "fr",    nativeName: "Français"),
+        .init(code: "hi",    nativeName: "हिन्दी"),
         .init(code: "is",    nativeName: "Íslenska"),
         .init(code: "it",    nativeName: "Italiano"),
         .init(code: "ja",    nativeName: "日本語"),
