@@ -50,45 +50,111 @@ struct SettingsView: View {
         return "\(version) (\(build))"
     }()
 
-    var body: some View {
-        Form {
-            Section {
-                Picker("Temperature Unit", selection: $selectedTemp) {
-                    Text("Fahrenheit").tag(Temperature.Measurement.fahrenheit)
-                    Text("Celsius").tag(Temperature.Measurement.celsius)
-                }
-                .onChange(of: selectedTemp) { old, new in
-                    if old != new {
-                        Settings.shared.setPreferredTemp(measurement: new)
-                        do {
-                            try Settings.shared.updateRecipeTemps(original: old, target: new)
-                            store.refresh()
-                        } catch {
-                            tempUpdateError = String(localized: "settings.error.convert_temperatures", defaultValue: "Could not convert recipe temperatures.")
-                            selectedTemp = old
-                        }
+    // Extracted from `body` so the type-checker isn't inferring the whole Form chain
+    // (Pickers + onChange closures + four alerts) as one expression, which times out.
+    @ViewBuilder
+    private var preferencesSection: some View {
+        Section {
+            Picker("Temperature Unit", selection: $selectedTemp) {
+                Text("Fahrenheit").tag(Temperature.Measurement.fahrenheit)
+                Text("Celsius").tag(Temperature.Measurement.celsius)
+            }
+            .onChange(of: selectedTemp) { old, new in
+                if old != new {
+                    Settings.shared.setPreferredTemp(measurement: new)
+                    do {
+                        try Settings.shared.updateRecipeTemps(original: old, target: new)
+                        store.refresh()
+                    } catch {
+                        tempUpdateError = String(localized: "settings.error.convert_temperatures", defaultValue: "Could not convert recipe temperatures.")
+                        selectedTemp = old
                     }
-                }
-
-                Picker("Volume Units", selection: $selectedVolumeSystem) {
-                    Text("Metric").tag(VolumeSystem.metric)
-                    Text("Imperial").tag(VolumeSystem.imperial)
-                }
-                .onChange(of: selectedVolumeSystem) { _, new in
-                    Settings.shared.setPreferredVolumeSystem(new)
-                }
-
-                Picker("Language", selection: $selectedLanguage) {
-                    Text("System Default").tag("")
-                    ForEach(AppLanguage.all) { lang in
-                        Text(lang.nativeName).tag(lang.code)
-                    }
-                }
-                .onChange(of: selectedLanguage) { _, new in
-                    Settings.shared.setPreferredLanguageCode(new.isEmpty ? nil : new)
-                    showRestartAlert = true
                 }
             }
+
+            Picker("Volume Units", selection: $selectedVolumeSystem) {
+                Text("Metric").tag(VolumeSystem.metric)
+                Text("Imperial").tag(VolumeSystem.imperial)
+            }
+            .onChange(of: selectedVolumeSystem) { _, new in
+                Settings.shared.setPreferredVolumeSystem(new)
+            }
+
+            Picker("Language", selection: $selectedLanguage) {
+                Text("System Default").tag("")
+                ForEach(AppLanguage.all) { lang in
+                    Text(lang.nativeName).tag(lang.code)
+                }
+            }
+            .onChange(of: selectedLanguage) { _, new in
+                Settings.shared.setPreferredLanguageCode(new.isEmpty ? nil : new)
+                showRestartAlert = true
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var librarySection: some View {
+        Section {
+            NavigationLink {
+                RecentlyDeletedRecipesView()
+                    .environment(store)
+            } label: {
+                HStack {
+                    Text("Recently Deleted")
+                    Spacer()
+                    if !store.deletedRecipes.isEmpty {
+                        Text("\(store.deletedRecipes.count)")
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+            .accessibilityIdentifier("recentlyDeletedLink")
+            Button {
+                backupLibrary()
+            } label: {
+                Label("Back Up Recipe Library", systemImage: "square.and.arrow.up")
+            }
+            Button {
+                showingRestoreImporter = true
+            } label: {
+                Label("Restore Recipe Library", systemImage: "arrow.clockwise")
+            }
+        } header: {
+            Text("Library")
+        } footer: {
+            Text("Backups include every recipe. Restoring a backup replaces your current recipe library.")
+        }
+    }
+
+    @ViewBuilder
+    private var aboutSection: some View {
+        Section {
+            Link("Source Code on GitHub",
+                 destination: URL(string: "https://github.com/georgie-codes/Doughy")!)
+            if isUSRegion {
+                Link(destination: URL(string: "https://www.feedingamerica.org/find-your-local-foodbank")!) {
+                    VStack(alignment: .leading) {
+                        Text("Donate to your local food bank.")
+                        Text("Go to feedingamerica.org")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+            Link("Send Feedback",
+                 destination: URL(string: "mailto:doughyapp@icloud.com")!)
+        } header: {
+            Text("About")
+        } footer: {
+            Text(appVersion)
+                .frame(maxWidth: .infinity, alignment: .center)
+        }
+    }
+
+    var body: some View {
+        Form {
+            preferencesSection
 
             Section {
                 NavigationLink(String(localized: "conversions.title", defaultValue: "Ingredient Conversions")) {
@@ -96,58 +162,9 @@ struct SettingsView: View {
                 }
                 .accessibilityIdentifier("ingredientConversionsLink")
             }
-            Section {
-                NavigationLink {
-                    RecentlyDeletedRecipesView()
-                        .environment(store)
-                } label: {
-                    HStack {
-                        Text("Recently Deleted")
-                        Spacer()
-                        if !store.deletedRecipes.isEmpty {
-                            Text("\(store.deletedRecipes.count)")
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                }
-                .accessibilityIdentifier("recentlyDeletedLink")
-                Button {
-                    backupLibrary()
-                } label: {
-                    Label("Back Up Recipe Library")
-                }
-                Button {
-                    showingRestoreImporter = true
-                } label: {
-                    Label("Restore Recipe Library")
-                }
-            } header: {
-                Text("Library")
-            } footer: {
-                Text("Backups include every recipe. Restoring a backup replaces your current recipe library.")
-            }
+            librarySection
 
-            Section {
-                Link("Source Code on GitHub",
-                     destination: URL(string: "https://github.com/georgie-codes/Doughy")!)
-                if isUSRegion {
-                    Link(destination: URL(string: "https://www.feedingamerica.org/find-your-local-foodbank")!) {
-                        VStack(alignment: .leading) {
-                            Text("Donate to your local food bank.")
-                            Text("Go to feedingamerica.org")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                }
-                Link("Send Feedback",
-                     destination: URL(string: "mailto:doughyapp@icloud.com")!)
-            } header: {
-                Text("About")
-            } footer: {
-                Text(appVersion)
-                    .frame(maxWidth: .infinity, alignment: .center)
-            }
+            aboutSection
         }
         .navigationTitle("Settings")
         .alert("Error", isPresented: Binding(
@@ -188,10 +205,9 @@ struct SettingsView: View {
             Text(backupRestoreMessage ?? "")
         }
         .alert("Restart Required", isPresented: $showRestartAlert) {
-            Button("Quit App") { exit(0) }
-            Button("Later", role: .cancel) {}
+            Button("OK", role: .cancel) {}
         } message: {
-            Text("Please reopen Doughy to apply the language change.")
+            Text("Please close and reopen Doughy to apply the language change.")
         }
     }
 

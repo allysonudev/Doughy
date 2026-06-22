@@ -1173,7 +1173,7 @@ struct RecipeScanner {
     }
 
     private static func trimmedAtPreparationComma(_ name: String) -> String {
-        let preparationPattern = #"\b(?:warmed|melted|softened|creamy|cold|room temperature|beaten|chopped|cut|packed|spooned|minced|sifted|gently|roughly|torn|drained|made by|see notes?|at least|about|such as|any percentage|any|plus more|plus extra|plus a little extra|for flouring|for dusting|to grease)\b"#
+        let preparationPattern = #"\b(?:warmed|melted|softened|creamy|cold|room temperature|beaten|chopped|cut|packed|spooned|minced|sifted|gently|roughly|torn|drained|divided|made by|see notes?|at least|about|such as|any percentage|any|plus more|plus extra|plus a little extra|for flouring|for dusting|to grease)\b"#
         let parts = name.split(separator: ",", omittingEmptySubsequences: false).map(String.init)
         guard parts.count > 1 else { return name }
 

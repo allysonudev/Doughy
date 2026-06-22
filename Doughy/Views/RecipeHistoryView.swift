@@ -65,6 +65,7 @@ struct RecipeHistoryView: View {
                 .foregroundStyle(.secondary)
             Text(entry.text)
         }
+        .accessibilityElement(children: .combine)
         .swipeActions(edge: .trailing) {
             Button("Delete", role: .destructive) {
                 delete(entry)
@@ -74,6 +75,7 @@ struct RecipeHistoryView: View {
                     restoreTarget = entry
                 }
                 .tint(.blue)
+                .accessibilityHint("Restores the recipe to this saved version")
             }
         }
     }

@@ -63,6 +63,7 @@ struct IngredientConversionsView: View {
                     showingResetAllConfirmation = true
                 }
                 .accessibilityIdentifier("resetAllConversionsButton")
+                .accessibilityHint("A confirmation dialog will appear before resetting all values")
                 .confirmationDialog(String(localized: "conversions.reset_all.title", defaultValue: "Reset All to Defaults?"), isPresented: $showingResetAllConfirmation, titleVisibility: .visible) {
                     Button(String(localized: "action.reset_all_to_defaults", defaultValue: "Reset All to Defaults"), role: .destructive) {
                         store.resetAllToDefaults()
@@ -99,6 +100,7 @@ struct IngredientConversionsView: View {
                 .multilineTextAlignment(.trailing)
                 .keyboardType(.decimalPad)
                 .frame(width: 70)
+                .accessibilityLabel("\(entry.name.capitalized), grams per \(entry.unit)")
             Text(shortUnitLabel(for: entry.unit))
                 .foregroundStyle(.secondary)
         }
@@ -142,6 +144,7 @@ struct IngredientConversionsView: View {
             .keyboardType(.decimalPad)
             .frame(width: 70)
             .accessibilityIdentifier("gramsPerCupField_\(category.rawValue)")
+            .accessibilityLabel("\(category.localizedDisplayName), grams per \(unit(for: category).localizedLabel)")
 
             Menu {
                 ForEach(DensityUnit.allCases) { unit in
@@ -155,6 +158,7 @@ struct IngredientConversionsView: View {
                     .foregroundStyle(.secondary)
             }
             .accessibilityIdentifier("unitMenu_\(category.rawValue)")
+            .accessibilityLabel("Unit for \(category.localizedDisplayName), currently \(unit(for: category).localizedLabel)")
         }
         .swipeActions(edge: .trailing) {
             Button("Delete", role: .destructive) {
@@ -209,6 +213,7 @@ struct IngredientConversionsView: View {
             .keyboardType(.decimalPad)
             .frame(width: 70)
             .accessibilityIdentifier("eggGramsField_\(size.rawValue)_\(part.rawValue)")
+            .accessibilityLabel("\(size.localizedDisplayName) \(part.localizedDisplayName), grams")
 
             Text(String(localized: "unit.grams.short", defaultValue: "g"))
                 .foregroundStyle(.secondary)

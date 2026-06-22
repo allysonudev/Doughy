@@ -68,6 +68,7 @@ struct OnboardingView: View {
                             .symbolRenderingMode(.hierarchical)
                             .foregroundStyle(.secondary)
                     }
+                    .accessibilityLabel("Close")
                     .padding()
                 }
                 Spacer()
@@ -90,6 +91,7 @@ struct OnboardingView: View {
                 .controlSize(.large)
                 .padding(.horizontal)
                 .padding(.bottom, 40)
+                .accessibilityValue("Page \(currentPage + 1) of \(slides.count)")
             }
         }
     }
@@ -123,5 +125,6 @@ struct OnboardingView: View {
                     .animation(.easeInOut, value: currentPage)
             }
         }
+        .accessibilityHidden(true)
     }
 }

@@ -342,6 +342,8 @@ struct CalculatedRecipeView: View {
             guard units != nil else { return }
             advanceUnit(key: key, name: ingredient.name, grams: ingredient.weight)
         }
+        .accessibilityAddTraits(units != nil ? .isButton : [])
+        .accessibilityHint(units != nil ? String(localized: "Double-tap to cycle units") : "")
     }
 
     @ViewBuilder
@@ -403,6 +405,8 @@ struct CalculatedRecipeView: View {
             guard units != nil else { return }
             advanceUnit(key: key, name: ingredient.name, grams: ingredient.weight)
         }
+        .accessibilityAddTraits(units != nil ? .isButton : [])
+        .accessibilityHint(units != nil ? String(localized: "Double-tap to cycle units") : "")
     }
 }
 

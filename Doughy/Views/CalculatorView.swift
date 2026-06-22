@@ -76,6 +76,7 @@ struct CalculatorView: View {
                             HStack(spacing: 8) {
                                 Image(systemName: "person.circle")
                                     .foregroundStyle(.secondary)
+                                    .accessibilityHidden(true)
                                 Text("Shared by \(author)")
                                     .foregroundStyle(.secondary)
                             }
@@ -84,6 +85,7 @@ struct CalculatorView: View {
                         HStack(spacing: 8) {
                             Image(systemName: "person.circle")
                                 .foregroundStyle(.secondary)
+                                .accessibilityHidden(true)
                             Text("Shared by \(author)")
                                 .foregroundStyle(.secondary)
                         }
@@ -161,6 +163,9 @@ struct CalculatorView: View {
             }
         }
         .navigationTitle(currentRecipe.name)
+        // The numeric weight/percent fields use decimalPad, which has no return key;
+        // let a downward scroll dismiss the keyboard (matches CreateRecipeView).
+        .scrollDismissesKeyboard(.interactively)
         .navigationDestination(item: $calculatedResult) { wrapper in
             CalculatedRecipeView(calculatedRecipe: wrapper.recipe, recipe: currentRecipe, overrides: wrapper.overrides)
         }

@@ -32,12 +32,14 @@ struct RecipeListView: View {
                         } label: {
                             Image(systemName: "gearshape")
                         }
+                        .accessibilityLabel("Settings")
                     }
                     ToolbarItem(placement: .topBarTrailing) {
                         Button { showingCreate = true } label: {
                             Image(systemName: "plus")
                         }
                         .accessibilityIdentifier("addRecipeButton")
+                        .accessibilityLabel("Add recipe")
                     }
                 }
                 .navigationDestination(for: RecipeWrapper.self) { wrapper in
@@ -245,10 +247,12 @@ struct RecipeListView: View {
                             Spacer()
                             Image(systemName: "chevron.down")
                                 .rotationEffect(.degrees(isCollapsed ? -90 : 0))
+                                .accessibilityHidden(true)
                         }
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
+                    .accessibilityHint(isCollapsed ? "Expand" : "Collapse")
                 }
             }
         }

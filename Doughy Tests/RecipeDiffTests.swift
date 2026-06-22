@@ -54,7 +54,10 @@ final class RecipeDiffTests: XCTestCase {
         var new = old
         new.ingredients[2].defaultPercentage = 2.2
 
-        XCTAssertEqual(RecipeDiff.summarize(from: old, to: new), "Salt: 2% → 2.2%")
+        // The diff text is built with the device-locale NumberFormatter (by design — European
+        // users should see "2,2%"), so derive the separator instead of hardcoding a period.
+        let sep = Locale.current.decimalSeparator ?? "."
+        XCTAssertEqual(RecipeDiff.summarize(from: old, to: new), "Salt: 2% → 2\(sep)2%")
     }
 
     func testIngredientTemperatureChange() {

@@ -832,6 +832,7 @@ struct CreateRecipeView: View {
             Color.black.opacity(0.4).ignoresSafeArea()
             VStack(spacing: 16) {
                 ProgressView().scaleEffect(1.5).tint(.white)
+                    .accessibilityLabel("Scanning recipe")
                 Text("Scanning recipe…")
                     .foregroundStyle(.white)
                     .font(.headline)
@@ -909,7 +910,7 @@ struct CreateRecipeView: View {
     }
     
     private var closeButton: some View {
-        Button("", systemImage: "xmark") {
+        Button("Close", systemImage: "xmark") {
             requestDismiss()
         }
         .confirmationDialog("Are you sure? You will lose unsaved changes", isPresented: $showDiscardConfirmation, titleVisibility: .visible) {
@@ -1005,7 +1006,7 @@ struct CreateRecipeView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
-                Button("", systemImage: "xmark") {
+                Button("Close", systemImage: "xmark") {
                     requestDismiss()
                 }
                 .accessibilityIdentifier("scanReviewCancelButton")
@@ -1089,6 +1090,7 @@ struct CreateRecipeView: View {
                             .keyboardType(.decimalPad)
                             .frame(width: 80)
                             .accessibilityIdentifier("defaultWeightField")
+                            .accessibilityLabel("Default dough weight in grams")
                         Text("g").foregroundStyle(.secondary)
                     }
                 }
@@ -1228,6 +1230,7 @@ struct CreateRecipeView: View {
                             .keyboardType(.decimalPad)
                             .frame(width: 70)
                             .accessibilityIdentifier("flourValueField_\(index)")
+                            .accessibilityLabel("\(flours[index].name.isEmpty ? "Flour" : flours[index].name), \(isPercent ? "percentage" : "grams")")
                             .focused($focusedValueRowID, equals: flours[index].id)
                         Text(isPercent ? "%" : "g").foregroundStyle(.secondary)
                     }
@@ -1300,6 +1303,7 @@ struct CreateRecipeView: View {
                                     .keyboardType(.decimalPad)
                                     .frame(width: 70)
                                     .accessibilityIdentifier("ingredientValueField_\(index)")
+                                    .accessibilityLabel("\(ingredients[index].name.isEmpty ? "Ingredient" : ingredients[index].name), \(isPercent ? "percentage" : "grams")")
                                     .focused($focusedValueRowID, equals: ingredients[index].id)
                                 Text(isPercent ? "%" : "g").foregroundStyle(.secondary)
                             }
@@ -1327,6 +1331,7 @@ struct CreateRecipeView: View {
                             .frame(width: 60)
                             .focused($focusedTempRowID, equals: ingredients[index].id)
                             .accessibilityIdentifier("ingredientTempField_\(index)")
+                            .accessibilityLabel("\(ingredients[index].name.isEmpty ? "Ingredient" : ingredients[index].name) temperature in °\(useCelsius ? "C" : "F")")
                         Text("°\(useCelsius ? "C" : "F")").foregroundStyle(.secondary)
                     }
                     .contentShape(Rectangle())
@@ -1919,6 +1924,7 @@ struct CreateRecipeView: View {
                             }
                             .buttonStyle(.plain)
                             .foregroundStyle(.tint)
+                            .accessibilityLabel("Confirm edit")
                         } else {
                             Button {
                                 editingStepIndex = index
@@ -1967,6 +1973,7 @@ struct CreateRecipeView: View {
                     newStepText = ""
                 }
                 .disabled(newStepText.trimmingCharacters(in: .whitespaces).isEmpty)
+                .accessibilityHint("Enter step text to enable")
             }
 
             if let diagnostics = lastScanDiagnostics {
@@ -2558,6 +2565,7 @@ private struct ModeCard: View {
                     .font(.title2)
                     .frame(width: 36)
                     .foregroundStyle(enabled ? Color.accentColor : Color.secondary)
+                    .accessibilityHidden(true)
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)
@@ -2577,6 +2585,7 @@ private struct ModeCard: View {
                         .font(.caption)
                         .foregroundStyle(.tertiary)
                         .flipsForRightToLeftLayoutDirection(true)
+                        .accessibilityHidden(true)
                 }
             }
             .padding(16)

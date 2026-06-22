@@ -28,6 +28,7 @@ struct ImportRecipeView: View {
                             HStack(spacing: 8) {
                                 Image(systemName: "person.circle")
                                     .foregroundStyle(.secondary)
+                                    .accessibilityHidden(true)
                                 Text("Shared by \(author)")
                                     .foregroundStyle(.secondary)
                             }
@@ -79,6 +80,7 @@ struct ImportRecipeView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Add to Library") { importRecipe() }
                         .disabled(collectionName.trimmingCharacters(in: .whitespaces).isEmpty)
+                        .accessibilityHint("Enter a collection name to enable")
                 }
             }
             .alert("Import Failed", isPresented: Binding(

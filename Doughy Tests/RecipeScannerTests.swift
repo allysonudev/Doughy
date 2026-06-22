@@ -1008,8 +1008,8 @@ final class RecipeScannerTests: XCTestCase {
 
         XCTAssertEqual(totalFlour, 452, accuracy: 0.001)
         XCTAssertTrue(resolved.contains { $0.name == "Milk" && $0.weightGrams == 360 })
-        XCTAssertTrue(resolved.contains { $0.name == "Active Dry Yeast" && abs($0.weightGrams - UnitConversion.gramsPerOunce / 4) < 0.001 })
-        XCTAssertTrue(resolved.contains { $0.name == "Packed Brown Sugar" && abs($0.weightGrams - 53.25) < 0.001 })
+        XCTAssertTrue(resolved.contains { $0.name == "Active Dry Yeast" && $0.weightGrams == 7.0 })
+        XCTAssertTrue(resolved.contains { $0.name == "Brown Sugar" && abs($0.weightGrams - 53.25) < 0.001 })
         XCTAssertTrue(resolved.contains { $0.name == "Butter" && abs($0.weightGrams - 28.375) < 0.001 })
         XCTAssertTrue(resolved.contains { $0.name == "Kosher Salt" && abs($0.weightGrams - 2.5) < 0.001 })
         XCTAssertTrue(resolved.contains { $0.name == "Rye Flour" && $0.weightGrams == 212 })
@@ -1100,7 +1100,7 @@ final class RecipeScannerTests: XCTestCase {
 
         XCTAssertTrue(resolved.contains { $0.name == "All-Purpose Flour" && $0.category == .allPurposeFlour && $0.weightGrams == 300 })
         XCTAssertFalse(resolved.contains { $0.category == .wholeWheatFlour && $0.isFlour })
-        XCTAssertTrue(resolved.contains { $0.name == "Active Dry Yeast" && abs($0.weightGrams - 7.087375) < 0.001 })
+        XCTAssertTrue(resolved.contains { $0.name == "Active Dry Yeast" && $0.weightGrams == 7.0 })
         #else
         throw XCTSkip("FoundationModels is not available in this build.")
         #endif
