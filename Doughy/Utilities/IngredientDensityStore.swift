@@ -537,15 +537,15 @@ class IngredientDensityStore: NSObject {
         set { userDefaults.set(newValue, forKey: eggOverridesStorageKey) }
     }
 
-    /// Returns the unit `category`'s density should be displayed/edited in. If the user
-    /// has saved an explicit choice it is always honoured; otherwise falls back to the
-    /// system-appropriate equivalent of the category's natural unit.
+    /// Returns the unit `category`'s density should be displayed/edited in. Explicit
+    /// user choices are honoured, but remapped through the current volume system so
+    /// that e.g. a stored `deciliter` preference shows as `cup` in Imperial mode.
     func displayUnit(for category: IngredientCategory) -> DensityUnit {
+        let system = Settings.shared.preferredVolumeSystem()
         if let stored = displayUnits[category.rawValue].flatMap(DensityUnit.init(rawValue:)) {
-            return stored
+            return DensityUnit.systemDefault(for: stored, in: system)
         }
-        return DensityUnit.systemDefault(for: category.defaultDisplayUnit,
-                                        in: Settings.shared.preferredVolumeSystem())
+        return DensityUnit.systemDefault(for: category.defaultDisplayUnit, in: system)
     }
 
     /// Remembers the unit `category`'s density should be displayed/edited in.
@@ -585,6 +585,7 @@ class IngredientDensityStore: NSObject {
     func resetAllToDefaults() {
         overrides = [:]
         eggOverrides = [:]
+        displayUnits = [:]
         userDefaults.removeObject(forKey: hiddenCategoriesKey)
     }
 

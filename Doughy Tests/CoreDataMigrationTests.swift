@@ -119,10 +119,11 @@ final class CoreDataMigrationTests: XCTestCase {
         XCTAssertEqual(recipe.name, "Sourdough Boule")
         XCTAssertEqual(recipe.collection, "Breads")
         XCTAssertEqual(recipe.defaultWeight, 900.0)
-        // New, additive relationship - should exist and be empty, not crash or carry junk.
+        // New, additive attributes/relationships - should be nil/empty, not crash or carry junk.
+        XCTAssertNil(recipe.value(forKey: "defaultKey"), "defaultKey should be nil for pre-existing recipes")
         XCTAssertEqual(recipe.historyEntries?.count ?? 0, 0)
 
-        let ingredients = (recipe.ingredients?.array as? [XCIngredient]) ?? []
+        let ingredients = recipe.sortedIngredients
         XCTAssertEqual(ingredients.count, 2)
 
         let flour = ingredients.first { $0.name == "Bread Flour" }
@@ -136,18 +137,18 @@ final class CoreDataMigrationTests: XCTestCase {
         XCTAssertEqual(water?.defaultPercentage, 75.0)
         XCTAssertEqual(water?.temperature, 78.0)
 
-        let steps = (recipe.instructions?.array as? [XCInstruction]) ?? []
+        let steps = recipe.sortedInstructions
         XCTAssertEqual(steps.map { $0.step }, ["Mix and autolyse for 30 minutes."])
 
         let preferment = recipe.preferment
         XCTAssertEqual(preferment?.name, "Levain")
         XCTAssertEqual(preferment?.flourPercentage, 20.0)
-        let prefIngredients = (preferment?.ingredients?.array as? [XCIngredient]) ?? []
+        let prefIngredients = preferment?.sortedIngredients ?? []
         XCTAssertEqual(prefIngredients.map { $0.name }, ["Bread Flour"])
 
         let calcRecipes = try context.fetch(NSFetchRequest<XCCalculatedRecipe>(entityName: "XCCalculatedRecipe"))
         XCTAssertEqual(calcRecipes.count, 1)
-        let calcIngredients = (calcRecipes.first?.ingredients?.array as? [XCCalculatedIngredient]) ?? []
+        let calcIngredients = calcRecipes.first?.sortedIngredients ?? []
         XCTAssertEqual(calcIngredients.first?.name, "Bread Flour")
         XCTAssertEqual(calcIngredients.first?.weight, 514.0)
         XCTAssertNil(calcIngredients.first?.extraAmount)

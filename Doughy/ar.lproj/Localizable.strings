@@ -346,3 +346,9 @@
 "whats_new_deleted_title" = "محذوف مؤخراً";
 "whats_new_deleted_body" = "تبقى الوصفات المحذوفة في الإعدادات ← محذوف مؤخراً لمدة 30 يوماً قبل حذفها نهائياً.";
 "whats_new_got_it" = "فهمت";
+
+// MARK: - Default Recipe Names
+"default_recipe_neopolitan_pizza" = "نابولي بيتزا";
+"default_recipe_new_york_pizza" = "بيتزا نيويورك";
+"default_recipe_bagels" = "بيغل";
+"default_recipe_bagels_with_poolish" = "بيغل بالبوليش";

@@ -345,3 +345,9 @@
 "whats_new_deleted_title" = "최근 삭제됨";
 "whats_new_deleted_body" = "삭제된 레시피는 설정 → 최근 삭제됨에 30일 동안 보관된 후 영구적으로 삭제됩니다.";
 "whats_new_got_it" = "확인";
+
+// MARK: - Default Recipe Names
+"default_recipe_neopolitan_pizza" = "나폴리 피자";
+"default_recipe_new_york_pizza" = "뉴욕 피자";
+"default_recipe_bagels" = "베이글";
+"default_recipe_bagels_with_poolish" = "풀리시 베이글";

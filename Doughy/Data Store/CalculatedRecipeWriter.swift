@@ -48,17 +48,14 @@ class CalculatedRecipeWriter: NSObject {
         }
         
         self.coreDataGateway.managedObjectConext.delete(coreDataRecipe)
-        let ingredients = coreDataRecipe.ingredients!.array as! [XCIngredient]
-        ingredients.forEach {
+        coreDataRecipe.sortedIngredients.forEach {
             self.coreDataGateway.managedObjectConext.delete($0)
         }
-        let instructions = coreDataRecipe.instructions!.array as! [XCInstruction]
-        instructions.forEach {
+        coreDataRecipe.sortedInstructions.forEach {
             self.coreDataGateway.managedObjectConext.delete($0)
         }
         if let preferment = coreDataRecipe.preferment {
-            let prefIngredients = preferment.ingredients!.array as! [XCIngredient]
-            prefIngredients.forEach {
+            preferment.sortedIngredients.forEach {
                 self.coreDataGateway.managedObjectConext.delete($0)
             }
             self.coreDataGateway.managedObjectConext.delete(preferment)

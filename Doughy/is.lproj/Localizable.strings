@@ -347,3 +347,9 @@
 "whats_new_deleted_title" = "Nýlega eytt";
 "whats_new_deleted_body" = "Eyddum uppskriftum er haldið í Stillingar → Nýlega eytt í 30 daga áður en þær eru fjarlægðar endanlega.";
 "whats_new_got_it" = "Skilið";
+
+// MARK: - Default Recipe Names
+"default_recipe_neopolitan_pizza" = "Napólísk pizza";
+"default_recipe_new_york_pizza" = "New York-pizza";
+"default_recipe_bagels" = "Bagglar";
+"default_recipe_bagels_with_poolish" = "Bagglar með poolish";

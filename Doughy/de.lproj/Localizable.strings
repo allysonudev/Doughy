@@ -354,3 +354,9 @@
 "whats_new_deleted_title" = "Kürzlich gelöscht";
 "whats_new_deleted_body" = "Gelöschte Rezepte bleiben 30 Tage lang unter Einstellungen → Kürzlich gelöscht, bevor sie dauerhaft entfernt werden.";
 "whats_new_got_it" = "Verstanden";
+
+// MARK: - Default Recipe Names
+"default_recipe_neopolitan_pizza" = "Neapolitanische Pizza";
+"default_recipe_new_york_pizza" = "New Yorker Pizza";
+"default_recipe_bagels" = "Bagels";
+"default_recipe_bagels_with_poolish" = "Bagels mit Poolish";

@@ -9,19 +9,40 @@
 import UIKit
 
 class DefaultRecipeFactory: NSObject {
-    
+
+    enum Key {
+        static let neopolitanPizza    = "default_recipe_neopolitan_pizza"
+        static let newYorkPizza       = "default_recipe_new_york_pizza"
+        static let bagels             = "default_recipe_bagels"
+        static let bagelsWithPoolish  = "default_recipe_bagels_with_poolish"
+
+        static let byStoredName: [String: String] = [
+            "Neapolitan Pizza":    neopolitanPizza,  // current spelling
+            "Neopolitan Pizza":    neopolitanPizza,  // 1.0 legacy alias
+            "New York Pizza":      newYorkPizza,
+            "Bagels":              bagels,
+            "Bagels With Poolish": bagelsWithPoolish,
+        ]
+    }
+
     private let objectFactory = ObjectFactory.shared
     private let tempConverter = TemperatureConverter.shared
-    
+
     static let shared = DefaultRecipeFactory()
-    
+
     private override init() { }
-    
+
+    func createWithKeys() -> [(recipe: RecipeProtocol, key: String)] {
+        return [
+            (createNeopolitan(),     Key.neopolitanPizza),
+            (createNewYorkPizza(),   Key.newYorkPizza),
+            (createBagel(),          Key.bagels),
+            (createBagelWithPoolish(), Key.bagelsWithPoolish),
+        ]
+    }
+
     func create() -> [RecipeProtocol] {
-        return [createNeopolitan(),
-                createNewYorkPizza(),
-                createBagel(),
-                createBagelWithPoolish()]
+        return createWithKeys().map { $0.recipe }
     }
     
     private func createNeopolitan() -> Recipe {
@@ -54,7 +75,7 @@ class DefaultRecipeFactory: NSObject {
         instructions.append(Instruction(step:
             "Cook at the hottest temperature you can. For home, cook on a baking steel which has been preheated to 500ºF or more for 1 hour. For browning, you can turn on your broiler for the last 2 minutes. You should be able to cook in about 5-8 minutes depending on your surface (stone transfers heat slower than steel) and oven temperature. A wood or gas-fired oven is best. You can cook at 932º F in about 60-90 seconds."))
         
-        let name = "Neopolitan Pizza"
+        let name = "Neapolitan Pizza"
         let collection = "Pizza"
         let defaultWeight = 270.0
         return Recipe(name: name, collection: collection, defaultWeight: defaultWeight, ingredients: ingredients, instructions: instructions)

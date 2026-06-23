@@ -47,6 +47,30 @@ public class Temperature: NSObject {
                 }
             }
         }
+
+        /// The Foundation unit this maps to, for locale-aware formatting.
+        var unit: UnitTemperature {
+            switch self {
+            case .celsius: return .celsius
+            case .fahrenheit: return .fahrenheit
+            }
+        }
+
+        /// The localized degree symbol on its own — "°C"/"°F" in English,
+        /// "°م"/"°ف" in Arabic — matching how `TemperatureFormatter` renders the
+        /// unit (including RTL marks). Derived from `MeasurementFormatter` so it
+        /// stays in sync with inline temperatures rather than hardcoding glyphs.
+        var localizedSymbol: String {
+            let formatter = MeasurementFormatter()
+            formatter.locale = .autoupdatingCurrent
+            formatter.unitOptions = .providedUnit
+            formatter.unitStyle = .medium
+            let formatted = formatter.string(from: Foundation.Measurement(value: 0, unit: unit))
+            let zero = formatter.numberFormatter.string(from: NSNumber(value: 0)) ?? "0"
+            return formatted
+                .replacingOccurrences(of: zero, with: "")
+                .trimmingCharacters(in: .whitespaces)
+        }
     }
     
     public override func copy() -> Any {

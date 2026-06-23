@@ -68,11 +68,12 @@ extension Settings {
         let isUITesting = ProcessInfo.processInfo.arguments.contains("-UITesting")
 
         if isUITesting || !userDefaults.bool(forKey: hasInitializedDefaultsKey) {
-            setPreferredTemp(measurement: .fahrenheit)
+            let isUS = Locale.current.region?.identifier == "US"
+            setPreferredTemp(measurement: isUS ? .fahrenheit : .celsius)
 
-            defaultRecipeFactory.create().forEach {
+            defaultRecipeFactory.createWithKeys().forEach { item in
                 do {
-                    try recipeWriter.writeRecipe(recipe: $0)
+                    try recipeWriter.writeDefaultRecipe(recipe: item.recipe, key: item.key)
                 } catch {
                     print("Failed to write default recipe: \(error)")
                 }
@@ -80,7 +81,39 @@ extension Settings {
             if !isUITesting {
                 userDefaults.set(true, forKey: hasInitializedDefaultsKey)
             }
+        } else {
+            backfillDefaultRecipeKeys()
+            fixNeapolitanSpelling()
         }
+    }
+
+    private func fixNeapolitanSpelling() {
+        let migrationKey = "hasFixedNeapolitanSpelling"
+        guard !userDefaults.bool(forKey: migrationKey) else { return }
+        for recipe in recipeReader.getRecipes() {
+            guard recipe.name == "Neopolitan Pizza",
+                  recipe.value(forKey: "defaultKey") as? String == DefaultRecipeFactory.Key.neopolitanPizza
+            else { continue }
+            recipe.name = "Neapolitan Pizza"
+        }
+        try? coreDataGateway.managedObjectConext.save()
+        userDefaults.set(true, forKey: migrationKey)
+    }
+
+    private func backfillDefaultRecipeKeys() {
+        let backfillKey = "hasBackfilledDefaultRecipeKeys"
+        guard !userDefaults.bool(forKey: backfillKey) else { return }
+
+        let keysByName = DefaultRecipeFactory.Key.byStoredName
+        for recipe in recipeReader.getRecipes() {
+            guard let name = recipe.name,
+                  let key = keysByName[name],
+                  recipe.value(forKey: "defaultKey") == nil,
+                  recipe.historyEntries?.count == 0 else { continue }
+            recipe.setValue(key, forKey: "defaultKey")
+        }
+        try? coreDataGateway.managedObjectConext.save()
+        userDefaults.set(true, forKey: backfillKey)
     }
     
 }
@@ -135,7 +168,7 @@ extension Settings {
                            target: Temperature.Measurement) throws {
         let recipes = recipeReader.getRecipes()
         recipes
-            .flatMap { $0.ingredients!.array as! [XCIngredient] }
+            .flatMap { $0.sortedIngredients }
             .forEach {
                 if let currentTemp = $0.temperature {
                     let newTemp = TemperatureConverter.shared.convert(temperature: currentTemp.doubleValue, source: original, target: target)
@@ -144,7 +177,7 @@ extension Settings {
                 
         }
         recipes
-            .compactMap { $0.preferment?.ingredients?.array as? [XCIngredient] }
+            .compactMap { $0.preferment?.sortedIngredients }
             .flatMap { $0 }
             .forEach {
                 if let currentTemp = $0.temperature {

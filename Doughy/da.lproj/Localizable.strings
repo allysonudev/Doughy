@@ -354,3 +354,9 @@
 "whats_new_deleted_title" = "Nyligt slettet";
 "whats_new_deleted_body" = "Slettede opskrifter forbliver under Indstillinger → Nyligt slettet i 30 dage, inden de fjernes permanent.";
 "whats_new_got_it" = "Forstået";
+
+// MARK: - Default Recipe Names
+"default_recipe_neopolitan_pizza" = "Napolitansk pizza";
+"default_recipe_new_york_pizza" = "New York-pizza";
+"default_recipe_bagels" = "Bagels";
+"default_recipe_bagels_with_poolish" = "Bagels med Poolish";

@@ -354,3 +354,9 @@
 "whats_new_deleted_title" = "最近削除したもの";
 "whats_new_deleted_body" = "削除されたレシピは設定 → 最近削除したものに30日間保存された後、完全に削除されます。";
 "whats_new_got_it" = "了解";
+
+// MARK: - Default Recipe Names
+"default_recipe_neopolitan_pizza" = "ナポリ風ピザ";
+"default_recipe_new_york_pizza" = "ニューヨーク風ピザ";
+"default_recipe_bagels" = "ベーグル";
+"default_recipe_bagels_with_poolish" = "プーリッシュベーグル";

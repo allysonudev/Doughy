@@ -1,28 +1,37 @@
 //
-//  PercentFormatter.swift
+//  TemperatureFormatter.swift
 //  Doughy
 //
 //  Created by urickg on 3/29/20.
 //  Copyright © 2020 George Urick. All rights reserved.
 //
 
-import UIKit
+import Foundation
 
 class TemperatureFormatter: NSObject {
-    
-    private let formatter = NumberFormatter()
-    
+
     static let shared = TemperatureFormatter()
-    
+
+    private let formatter: MeasurementFormatter
+
     private override init() {
-        formatter.minimumFractionDigits = 0
-        formatter.maximumFractionDigits = 2
-    }
-    
-    func format(temperature: Temperature) -> String {
-        let tempNumber = NSNumber(floatLiteral: temperature.value)
-        let tempString = formatter.string(from: tempNumber)!
-        return "\(tempString)º \(temperature.measurement.shortValue)"
+        let formatter = MeasurementFormatter()
+        // Track the live locale so an OS region / in-app language change is
+        // reflected without caching a stale snapshot.
+        formatter.locale = .autoupdatingCurrent
+        // Keep the user's chosen scale; never convert between °C and °F.
+        formatter.unitOptions = .providedUnit
+        // `.medium` yields "165°C" / "350°F" / "١٦٥°م" / "٣٥٠°ف". (`.short`
+        // renders Fahrenheit as a bare "°" with no scale letter — don't use it.)
+        formatter.unitStyle = .medium
+        formatter.numberFormatter.minimumFractionDigits = 0
+        formatter.numberFormatter.maximumFractionDigits = 2
+        self.formatter = formatter
+        super.init()
     }
 
+    func format(temperature: Temperature) -> String {
+        formatter.string(from: Measurement(value: temperature.value,
+                                           unit: temperature.measurement.unit))
+    }
 }

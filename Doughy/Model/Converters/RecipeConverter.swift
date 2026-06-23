@@ -27,11 +27,15 @@ class RecipeConverter: NSObject {
         coreData.collection = recipe.collection
         coreData.defaultWeight = NSNumber(floatLiteral: recipe.defaultWeight)
         coreData.setValue(recipe.measurementMode.rawValue, forKey: "measurementMode")
-        recipe.ingredients.forEach {
-            coreData.addToIngredients(ingredientConverter.convertToCoreData(ingredient: $0))
+        recipe.ingredients.enumerated().forEach { index, ingredient in
+            let xcIng = ingredientConverter.convertToCoreData(ingredient: ingredient)
+            xcIng.sortOrder = Int16(index)
+            coreData.addToIngredients(xcIng)
         }
-        recipe.instructions.forEach {
-            coreData.addToInstructions(instructionConverter.convertToCoreData(instruction: $0))
+        recipe.instructions.enumerated().forEach { index, instruction in
+            let xcStep = instructionConverter.convertToCoreData(instruction: instruction)
+            xcStep.sortOrder = Int16(index)
+            coreData.addToInstructions(xcStep)
         }
         if recipe is PrefermentRecipe {
             let preferment = (recipe as! PrefermentRecipe).preferment
@@ -42,7 +46,11 @@ class RecipeConverter: NSObject {
     }
     
     func overWriteCoreData(recipe: RecipeProtocol, existing: XCRecipe) -> XCRecipe {
-        
+        // Clear the localization key if the user has renamed the recipe.
+        if existing.name != recipe.name {
+            existing.setValue(nil, forKey: "defaultKey")
+        }
+
         existing.name = recipe.name
         existing.collection = recipe.collection
         existing.defaultWeight = NSNumber(floatLiteral: recipe.defaultWeight)
@@ -62,37 +70,48 @@ class RecipeConverter: NSObject {
     }
     
     private func replaceIngredients(recipe: RecipeProtocol, existing: XCRecipe) {
-        let ingredients = existing.ingredients!.array as! [XCIngredient]
-        existing.removeFromIngredients(existing.ingredients!)
+        let ingredients = existing.sortedIngredients
+        if let set = existing.ingredients { existing.removeFromIngredients(set) }
         ingredients.forEach {
             self.coreDataGateway.managedObjectConext.delete($0)
         }
-        recipe.ingredients.forEach {
-            existing.addToIngredients(ingredientConverter.convertToCoreData(ingredient: $0))
+        recipe.ingredients.enumerated().forEach { index, ingredient in
+            let xcIng = ingredientConverter.convertToCoreData(ingredient: ingredient)
+            xcIng.sortOrder = Int16(index)
+            existing.addToIngredients(xcIng)
         }
     }
-    
+
     private func replaceInstructions(recipe: RecipeProtocol, existing: XCRecipe) {
-        let instructions = existing.instructions!.array as! [XCInstruction]
-        existing.removeFromInstructions(existing.instructions!)
+        let instructions = existing.sortedInstructions
+        if let set = existing.instructions { existing.removeFromInstructions(set) }
         instructions.forEach {
             self.coreDataGateway.managedObjectConext.delete($0)
         }
-        recipe.instructions.forEach {
-            existing.addToInstructions(instructionConverter.convertToCoreData(instruction: $0))
+        recipe.instructions.enumerated().forEach { index, instruction in
+            let xcStep = instructionConverter.convertToCoreData(instruction: instruction)
+            xcStep.sortOrder = Int16(index)
+            existing.addToInstructions(xcStep)
         }
     }
     
     func convertToExternal(recipe: XCRecipe) -> RecipeProtocol {
-        let name = recipe.name!
+        let storedName = recipe.name!
+        let name: String
+        if let key = recipe.value(forKey: "defaultKey") as? String {
+            let localized = NSLocalizedString(key, comment: "")
+            name = (localized == key) ? storedName : localized
+        } else {
+            name = storedName
+        }
         let collection = recipe.collection!
         let defaultWeight = recipe.defaultWeight!.doubleValue
         let measurementModeRaw = recipe.value(forKey: "measurementMode") as? String
         let measurementMode = RecipeMeasurementMode(rawValue: measurementModeRaw ?? "") ?? .percent
-        let ingredients = (recipe.ingredients!.array as! [XCIngredient]).map {
+        let ingredients = recipe.sortedIngredients.map {
             ingredientConverter.convertToExternal(ingredient: $0)
         }
-        let instructions = (recipe.instructions!.array as! [XCInstruction]).map {
+        let instructions = recipe.sortedInstructions.map {
             instructionConverter.convertToExternal(instruction: $0)
         }
         if let xcPreferment = recipe.preferment {

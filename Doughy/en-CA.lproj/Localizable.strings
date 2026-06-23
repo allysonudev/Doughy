@@ -341,3 +341,9 @@
 "whats_new_deleted_title" = "Recently Deleted";
 "whats_new_deleted_body" = "Deleted recipes stay in Settings → Recently Deleted for 30 days before they're permanently removed.";
 "whats_new_got_it" = "Got it";
+
+// MARK: - Default Recipe Names
+"default_recipe_neopolitan_pizza" = "Neapolitan Pizza";
+"default_recipe_new_york_pizza" = "New York Pizza";
+"default_recipe_bagels" = "Bagels";
+"default_recipe_bagels_with_poolish" = "Bagels With Poolish";

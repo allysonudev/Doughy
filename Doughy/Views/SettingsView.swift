@@ -113,12 +113,12 @@ struct SettingsView: View {
             Button {
                 backupLibrary()
             } label: {
-                Label("Back Up Recipe Library", systemImage: "square.and.arrow.up")
+                Text("Back Up Recipe Library")
             }
             Button {
                 showingRestoreImporter = true
             } label: {
-                Label("Restore Recipe Library", systemImage: "arrow.clockwise")
+                Text("Restore Recipe Library")
             }
         } header: {
             Text("Library")

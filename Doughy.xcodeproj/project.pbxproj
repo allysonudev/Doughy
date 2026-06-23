@@ -21,6 +21,8 @@
 		AA0000000000000000000008 /* RecipeEditUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000004 /* RecipeEditUITests.swift */; };
 		AA0000000000000000000014 /* RecipeDataIntegrityUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000013 /* RecipeDataIntegrityUITests.swift */; };
 		AA0000000000000000000016 /* RecipeCalculatorUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000015 /* RecipeCalculatorUITests.swift */; };
+		FA57000000000000000000F2 /* SnapshotHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA57000000000000000000F1 /* SnapshotHelper.swift */; };
+		FA57000000000000000000F4 /* ScreenshotUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA57000000000000000000F3 /* ScreenshotUITests.swift */; };
 		BB06F1732425F5F0001A03AD /* ObjectFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB06F1722425F5F0001A03AD /* ObjectFactory.swift */; };
 		BB06F1752425F681001A03AD /* CoreDataGateway.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB06F1742425F681001A03AD /* CoreDataGateway.swift */; };
 		BB06F1772425FAE6001A03AD /* RecipeReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB06F1762425FAE6001A03AD /* RecipeReader.swift */; };
@@ -64,8 +66,8 @@
 		BBEA0CA52434554C00A708C7 /* CalculatedRecipeWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBEA0CA42434554C00A708C7 /* CalculatedRecipeWriter.swift */; };
 		BBEA0CA72434557300A708C7 /* CalculatedRecipeReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBEA0CA62434557300A708C7 /* CalculatedRecipeReader.swift */; };
 		CA1000000000000000000001 /* CalculatorOverridesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA1000000000000000000002 /* CalculatorOverridesTests.swift */; };
-		CA2000000000000000000001 /* SettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA2000000000000000000002 /* SettingsTests.swift */; };
 		CA1000000000000000000003 /* RecipeSnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA1000000000000000000004 /* RecipeSnapshotTests.swift */; };
+		CA2000000000000000000001 /* SettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA2000000000000000000002 /* SettingsTests.swift */; };
 		CC1234567890ABCDEF000001 /* RecipeScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC1234567890ABCDEF000002 /* RecipeScanner.swift */; };
 		CC1234567890ABCDEF000003 /* IngredientConversionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC1234567890ABCDEF000004 /* IngredientConversionStore.swift */; };
 		CC1234567890ABCDEF000005 /* VolumeUnitFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC1234567890ABCDEF000006 /* VolumeUnitFormatter.swift */; };
@@ -80,6 +82,7 @@
 		DD0000000000000000000014 /* RecipeHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000000000000000000013 /* RecipeHistoryView.swift */; };
 		DD0000000000000000000016 /* RecipeDiffTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000000000000000000015 /* RecipeDiffTests.swift */; };
 		DD0000000000000000000018 /* RecipeHistoryUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000000000000000000017 /* RecipeHistoryUITests.swift */; };
+		DD000000000000000000001B /* CoreDataSortedAccessors.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD000000000000000000001A /* CoreDataSortedAccessors.swift */; };
 		DD0000000000000000000020 /* CoreDataMigrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000000000000000000019 /* CoreDataMigrationTests.swift */; };
 		DD0000000000000000000022 /* ExtraIngredientConversion.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000000000000000000023 /* ExtraIngredientConversion.swift */; };
 		DDA522364120C5B7AF1238D4 /* CreateRecipeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D3CD9D13F590A51EDD39033 /* CreateRecipeView.swift */; };
@@ -130,6 +133,8 @@
 		AA0000000000000000000005 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		AA0000000000000000000013 /* RecipeDataIntegrityUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeDataIntegrityUITests.swift; sourceTree = "<group>"; };
 		AA0000000000000000000015 /* RecipeCalculatorUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeCalculatorUITests.swift; sourceTree = "<group>"; };
+		FA57000000000000000000F1 /* SnapshotHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnapshotHelper.swift; sourceTree = "<group>"; };
+		FA57000000000000000000F3 /* ScreenshotUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotUITests.swift; sourceTree = "<group>"; };
 		AC478C29AFD50FC6F4F02412 /* CalculatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalculatorView.swift; sourceTree = "<group>"; };
 		B31864D344883DD71A807B7C /* CalculatedRecipeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalculatedRecipeView.swift; sourceTree = "<group>"; };
 		BB06F1722425F5F0001A03AD /* ObjectFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjectFactory.swift; sourceTree = "<group>"; };
@@ -140,6 +145,7 @@
 		BB30DED12425B83E00BFD472 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		BB30DED92425B83E00BFD472 /* Recipe_Helper.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Recipe_Helper.xcdatamodel; sourceTree = "<group>"; };
 		BB30DED92425B83E00BFD473 /* Recipe_Helper_2.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Recipe_Helper_2.xcdatamodel; sourceTree = "<group>"; };
+		BB30DED92425B83E00BFD474 /* Recipe_Helper_3.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Recipe_Helper_3.xcdatamodel; sourceTree = "<group>"; };
 		BB30DEDB2425B83F00BFD472 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		BB30DEDE2425B83F00BFD472 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		BB30DEE02425B83F00BFD472 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -180,8 +186,8 @@
 		BBEA0CA62434557300A708C7 /* CalculatedRecipeReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalculatedRecipeReader.swift; sourceTree = "<group>"; };
 		BE9D64C9D3DE4E42B4B71BD9 /* RecipeShareView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeShareView.swift; sourceTree = "<group>"; };
 		CA1000000000000000000002 /* CalculatorOverridesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalculatorOverridesTests.swift; sourceTree = "<group>"; };
-		CA2000000000000000000002 /* SettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsTests.swift; sourceTree = "<group>"; };
 		CA1000000000000000000004 /* RecipeSnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeSnapshotTests.swift; sourceTree = "<group>"; };
+		CA2000000000000000000002 /* SettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsTests.swift; sourceTree = "<group>"; };
 		CC1234567890ABCDEF000002 /* RecipeScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeScanner.swift; sourceTree = "<group>"; };
 		CC1234567890ABCDEF000004 /* IngredientConversionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IngredientConversionStore.swift; sourceTree = "<group>"; };
 		CC1234567890ABCDEF000006 /* VolumeUnitFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VolumeUnitFormatter.swift; sourceTree = "<group>"; };
@@ -196,6 +202,7 @@
 		DD0000000000000000000015 /* RecipeDiffTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeDiffTests.swift; sourceTree = "<group>"; };
 		DD0000000000000000000017 /* RecipeHistoryUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeHistoryUITests.swift; sourceTree = "<group>"; };
 		DD0000000000000000000019 /* CoreDataMigrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataMigrationTests.swift; sourceTree = "<group>"; };
+		DD000000000000000000001A /* CoreDataSortedAccessors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataSortedAccessors.swift; sourceTree = "<group>"; };
 		DD0000000000000000000023 /* ExtraIngredientConversion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtraIngredientConversion.swift; sourceTree = "<group>"; };
 		EE00000000000000000002 /* RecipeScannerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeScannerTests.swift; sourceTree = "<group>"; };
 		EE00000000000000000004 /* Recipes */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Recipes; sourceTree = "<group>"; };
@@ -263,6 +270,8 @@
 				AA0000000000000000000013 /* RecipeDataIntegrityUITests.swift */,
 				AA0000000000000000000015 /* RecipeCalculatorUITests.swift */,
 				DD0000000000000000000017 /* RecipeHistoryUITests.swift */,
+				FA57000000000000000000F1 /* SnapshotHelper.swift */,
+				FA57000000000000000000F3 /* ScreenshotUITests.swift */,
 				AA0000000000000000000005 /* Info.plist */,
 			);
 			path = "Doughy UI Tests";
@@ -350,6 +359,7 @@
 				BB06F1742425F681001A03AD /* CoreDataGateway.swift */,
 				BBEA0CA62434557300A708C7 /* CalculatedRecipeReader.swift */,
 				BBEA0CA42434554C00A708C7 /* CalculatedRecipeWriter.swift */,
+				DD000000000000000000001A /* CoreDataSortedAccessors.swift */,
 			);
 			path = "Data Store";
 			sourceTree = "<group>";
@@ -611,6 +621,8 @@
 				AA0000000000000000000014 /* RecipeDataIntegrityUITests.swift in Sources */,
 				AA0000000000000000000016 /* RecipeCalculatorUITests.swift in Sources */,
 				DD0000000000000000000018 /* RecipeHistoryUITests.swift in Sources */,
+				FA57000000000000000000F2 /* SnapshotHelper.swift in Sources */,
+				FA57000000000000000000F4 /* ScreenshotUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -632,6 +644,7 @@
 				BBD264512432E7A200DF8987 /* CalculatedPreferment.swift in Sources */,
 				BBE2FF402436FADB0091A485 /* TemperatureConverter.swift in Sources */,
 				BB06F1752425F681001A03AD /* CoreDataGateway.swift in Sources */,
+				DD000000000000000000001B /* CoreDataSortedAccessors.swift in Sources */,
 				BBD264592432E8A400DF8987 /* Recipe.swift in Sources */,
 				BBD2642424312FDD00DF8987 /* WeightFormatter.swift in Sources */,
 				BB06F1772425FAE6001A03AD /* RecipeReader.swift in Sources */,
@@ -916,6 +929,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Doughy/Doughy.entitlements;
 				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = RU9TPSC3GX;
 				INFOPLIST_FILE = Doughy/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
@@ -923,10 +937,12 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				MARKETING_VERSION = 1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = org.georgie.Doughy;
 				PRODUCT_NAME = Doughy;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Debug;
 		};
@@ -936,6 +952,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Doughy/Doughy.entitlements;
 				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = RU9TPSC3GX;
 				INFOPLIST_FILE = Doughy/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
@@ -943,10 +960,12 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				MARKETING_VERSION = 1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = org.georgie.Doughy;
 				PRODUCT_NAME = Doughy;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Release;
 		};
@@ -1039,8 +1058,9 @@
 			children = (
 				BB30DED92425B83E00BFD472 /* Recipe_Helper.xcdatamodel */,
 				BB30DED92425B83E00BFD473 /* Recipe_Helper_2.xcdatamodel */,
+				BB30DED92425B83E00BFD474 /* Recipe_Helper_3.xcdatamodel */,
 			);
-			currentVersion = BB30DED92425B83E00BFD473 /* Recipe_Helper_2.xcdatamodel */;
+			currentVersion = BB30DED92425B83E00BFD474 /* Recipe_Helper_3.xcdatamodel */;
 			path = Doughy.xcdatamodeld;
 			sourceTree = "<group>";
 			versionGroupType = wrapper.xcdatamodel;

@@ -347,3 +347,9 @@
 "whats_new_deleted_title" = "Supprimés récemment";
 "whats_new_deleted_body" = "Les recettes supprimées restent dans Réglages → Supprimés récemment pendant 30 jours avant d'être définitivement supprimées.";
 "whats_new_got_it" = "Compris";
+
+// MARK: - Default Recipe Names
+"default_recipe_neopolitan_pizza" = "Pizza Napolitaine";
+"default_recipe_new_york_pizza" = "Pizza New-Yorkaise";
+"default_recipe_bagels" = "Bagels";
+"default_recipe_bagels_with_poolish" = "Bagels au Poolish";

@@ -354,7 +354,7 @@ struct CalculatorView: View {
                         .multilineTextAlignment(.trailing)
                         .keyboardType(.decimalPad)
                         .frame(width: 70)
-                        Text("°\(settings.preferredTemp().shortValue)").foregroundStyle(.secondary)
+                        Text(settings.preferredTemp().localizedSymbol).foregroundStyle(.secondary)
                     }
                 }
             }
@@ -375,7 +375,7 @@ struct CalculatorView: View {
                             .multilineTextAlignment(.trailing)
                             .keyboardType(.decimalPad)
                             .frame(width: 70)
-                            Text("°\(settings.preferredTemp().shortValue)").foregroundStyle(.secondary)
+                            Text(settings.preferredTemp().localizedSymbol).foregroundStyle(.secondary)
                         }
                     }
                 }

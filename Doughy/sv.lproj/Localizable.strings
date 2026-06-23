@@ -354,3 +354,9 @@
 "whats_new_deleted_title" = "Nyligen borttagna";
 "whats_new_deleted_body" = "Borttagna recept finns kvar under Inställningar → Nyligen borttagna i 30 dagar innan de tas bort permanent.";
 "whats_new_got_it" = "Förstått";
+
+// MARK: - Default Recipe Names
+"default_recipe_neopolitan_pizza" = "Napolitansk pizza";
+"default_recipe_new_york_pizza" = "New York-pizza";
+"default_recipe_bagels" = "Bagels";
+"default_recipe_bagels_with_poolish" = "Bagels med Poolish";

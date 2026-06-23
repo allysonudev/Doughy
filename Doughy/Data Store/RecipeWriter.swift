@@ -21,6 +21,19 @@ class RecipeWriter: NSObject {
     
     private override init() { }
     
+    func writeDefaultRecipe(recipe: RecipeProtocol, key: String) throws {
+        if recipeReader.getRecipe(collection: recipe.collection, name: recipe.name) != nil {
+            throw RecipeWritingError.recipeExistsDuringWrite
+        }
+        let xcRecipe = recipeConverter.convertToCoreData(recipe: recipe)
+        xcRecipe.setValue(key, forKey: "defaultKey")
+        do {
+            try self.coreDataGateway.managedObjectConext.save()
+        } catch {
+            throw RecipeWritingError.couldNotSave
+        }
+    }
+
     func writeRecipe(recipe: RecipeProtocol) throws {
         print("Writing Recipe \(recipe)")
         
@@ -107,17 +120,14 @@ class RecipeWriter: NSObject {
 
     private func deleteCoreDataRecipe(_ coreDataRecipe: XCRecipe) {
         self.coreDataGateway.managedObjectConext.delete(coreDataRecipe)
-        let ingredients = coreDataRecipe.ingredients!.array as! [XCIngredient]
-        ingredients.forEach {
+        coreDataRecipe.sortedIngredients.forEach {
             self.coreDataGateway.managedObjectConext.delete($0)
         }
-        let instructions = coreDataRecipe.instructions!.array as! [XCInstruction]
-        instructions.forEach {
+        coreDataRecipe.sortedInstructions.forEach {
             self.coreDataGateway.managedObjectConext.delete($0)
         }
         if let preferment = coreDataRecipe.preferment {
-            let prefIngredients = preferment.ingredients!.array as! [XCIngredient]
-            prefIngredients.forEach {
+            preferment.sortedIngredients.forEach {
                 self.coreDataGateway.managedObjectConext.delete($0)
             }
             self.coreDataGateway.managedObjectConext.delete(preferment)

@@ -169,6 +169,117 @@ final class RecipeScannerTests: XCTestCase {
             """,
     ]
 
+    private struct ExpectedIngredient {
+        let name: String
+        let grams: Double
+        init(_ name: String, _ grams: Double) { self.name = name; self.grams = grams }
+    }
+
+    /// Structured ingredient expectations for each scan fixture. Names are matched
+    /// case-insensitively (substring) against actual model output. Derived from
+    /// `expectedSummaries` above; update both when a fixture's expected output changes.
+    private static let expectedIngredients: [String: [ExpectedIngredient]] = [
+        "cinnamon_rolls_grams": [
+            .init("All-Purpose Flour", 545),
+            .init("Whole Milk", 243),
+            .init("Water", 60),
+            .init("Granulated Sugar", 50),
+            .init("Active Dry Yeast", 7),
+            .init("Unsalted Butter", 42),
+            .init("Kosher Salt", 7),
+            .init("Ground Cinnamon", 6),
+            .init("Light Brown Sugar", 150),
+        ],
+        "bread_machine_cups": [
+            .init("All-Purpose Flour", 300),
+            .init("Active Dry Yeast", 7.1),
+            .init("Salt", 1.5),
+            .init("Water", 236.6),
+            .init("Olive Oil", 10.1),
+        ],
+        "cinnamon_rolls_cups": [
+            .init("All-Purpose Flour", 480),
+            .init("Active Dry Yeast", 7),
+            .init("Water", 236.6),
+            .init("Sugar", 99),
+            .init("Butter", 170),
+            .init("Salt", 6),
+            .init("Vegetable Oil", 13.6),
+            .init("Dark Brown Sugar", 106.5),
+            .init("Confectioners' Sugar", 226),
+        ],
+        "partial_recipe": [
+            .init("All-Purpose Flour", 450),
+        ],
+        "vodka_pizza_sauce": [
+            .init("Extra-Virgin Olive Oil", 27),
+            .init("Whole Peeled Tomatoes", 794),
+            .init("Heavy Cream", 240),
+            .init("Fresh Mozzarella", 454),
+        ],
+        "rye_bread_honey_butter": [
+            .init("Rye Flour", 212),
+            .init("All-Purpose Flour", 240),
+            .init("Milk", 360),
+            .init("Active Dry Yeast", 7.1),
+            .init("Brown Sugar", 53.3),
+            .init("Butter", 28.4),
+            .init("Kosher Salt", 2.5),
+            .init("Honey", 85),
+        ],
+        "no_knead_bread_grams": [
+            .init("All-Purpose Flour", 1000),
+            .init("Water", 720),
+            .init("Fine Sea Salt", 21),
+            .init("Yeast", 4),
+        ],
+        "pizza_dough_biga": [
+            .init("Bread Flour", 1000),
+            .init("Water", 532),
+            .init("Sea Salt", 22),
+            .init("Yeast", 4),
+        ],
+        "uk_bread_grams": [
+            .init("Strong White Bread Flour", 500),
+            .init("Salt", 10),
+            .init("Instant Yeast", 10),
+        ],
+        "uk_scones": [
+            .init("Strong White Flour", 500),
+            .init("Butter", 80),
+            .init("Caster Sugar", 80),
+            .init("Baking Powder", 20),
+            .init("Milk", 253.6),
+        ],
+        "nyt_chocolate_chip_cookies": [
+            .init("Cake Flour", 241),
+            .init("Bread Flour", 241),
+            .init("Unsalted Butter", 284),
+            .init("Light Brown Sugar", 284),
+            .init("Granulated Sugar", 227),
+            .init("Bittersweet Chocolate", 567),
+        ],
+        "brown_butter_chocolate_chip_cookies": [
+            .init("All-Purpose Flour", 325),
+            .init("Salted Butter", 255),
+            .init("Granulated Sugar", 100),
+            .init("Light Brown Sugar", 55),
+            .init("Chocolate", 170),
+        ],
+        "brownies_cocoa": [
+            .init("All-Purpose Flour", 30),
+            .init("Butter", 113.5),
+            .init("Sugar", 200),
+        ],
+        "brownies_chocolate": [
+            .init("All-Purpose Flour", 60),
+            .init("Butter", 113.5),
+            .init("Unsweetened Chocolate", 113.4),
+            .init("Sugar", 250),
+            .init("Salt", 1.5),
+        ],
+    ]
+
     func testScanSampleRecipes() async throws {
         guard #available(iOS 26, *) else {
             throw XCTSkip("RecipeScanner requires iOS 26.")
@@ -1231,14 +1342,9 @@ final class RecipeScannerTests: XCTestCase {
             }
 
             print("\n========== \(name) ==========")
-            if let expected = Self.expectedSummaries[name] {
-                print("--- Expected ---")
-                print(expected.trimmingCharacters(in: .whitespacesAndNewlines))
-                print("--- Actual ---")
-            }
             do {
                 let result = try await RecipeScanner.shared.scan(image: image)
-                printDiagnostics(for: result)
+                printDiff(expected: Self.expectedIngredients[name] ?? [], result: result)
             } catch {
                 print("Scan failed: \(error.localizedDescription)")
             }
@@ -1249,26 +1355,80 @@ final class RecipeScannerTests: XCTestCase {
     }
 
     @available(iOS 26, *)
-    private func printDiagnostics(for result: ScanResult) {
+    private func printDiff(expected: [ExpectedIngredient], result: ScanResult) {
         let recipe = result.resolvedRecipe
         print("Name: \(recipe.name)")
         if recipe.hasPreferment {
             print("Preferment: \(recipe.prefermentName)")
         }
-
-        let totalFlour = recipe.ingredients
-            .filter { $0.isFlour }
-            .reduce(0) { $0 + $1.weightGrams }
+        let actual = Array(recipe.ingredients)
+        let totalFlour = actual.filter { $0.isFlour }.reduce(0) { $0 + $1.weightGrams }
         print("Total flour: \(totalFlour)g")
 
-        for ingredient in recipe.ingredients {
-            let prefTag = ingredient.isPreferment ? " (preferment)" : ""
-            if ingredient.isExtra {
-                print("  [extra] \(ingredient.name)\(prefTag): \(ingredient.extraAmount) \(ingredient.extraUnit.rawValue)")
+        guard !expected.isEmpty else {
+            for ingredient in actual {
+                let prefTag = ingredient.isPreferment ? " (preferment)" : ""
+                if ingredient.isExtra {
+                    print("  [extra] \(ingredient.name)\(prefTag): \(ingredient.extraAmount) \(ingredient.extraUnit.rawValue)")
+                } else {
+                    let pct = totalFlour > 0 ? ingredient.weightGrams / totalFlour * 100 : 0
+                    let flourTag = ingredient.isFlour ? " [flour]" : ""
+                    print("  \(ingredient.name)\(flourTag)\(prefTag): \(ingredient.weightGrams)g (\(String(format: "%.1f", pct))%)")
+                }
+            }
+            return
+        }
+
+        var matched = Array(repeating: false, count: actual.count)
+        var missing: [ExpectedIngredient] = []
+        var matchInfos: [(ExpectedIngredient, Int)] = []
+
+        for exp in expected {
+            let needle = exp.name.lowercased()
+            if let idx = actual.indices.first(where: { i in
+                let hay = actual[i].name.lowercased()
+                return hay.contains(needle) || needle.contains(hay)
+            }) {
+                matched[idx] = true
+                matchInfos.append((exp, idx))
             } else {
-                let percent = totalFlour > 0 ? ingredient.weightGrams / totalFlour * 100 : 0
-                let flourTag = ingredient.isFlour ? " [flour]" : ""
-                print("  \(ingredient.name)\(flourTag)\(prefTag): \(ingredient.weightGrams)g (\(String(format: "%.1f", percent))%)")
+                missing.append(exp)
+            }
+        }
+
+        let extraneous = actual.indices.filter { !matched[$0] }.map { actual[$0] }
+
+        if !missing.isEmpty {
+            print("Missing:")
+            for m in missing {
+                print("  - \(m.name): \(m.grams)g expected")
+            }
+        }
+
+        if !extraneous.isEmpty {
+            print("Extraneous:")
+            for e in extraneous {
+                let prefTag = e.isPreferment ? " (preferment)" : ""
+                if e.isExtra {
+                    print("  + \(e.name)\(prefTag): \(e.extraAmount) \(e.extraUnit.rawValue)")
+                } else {
+                    print("  + \(e.name)\(prefTag): \(e.weightGrams)g")
+                }
+            }
+        }
+
+        if !matchInfos.isEmpty {
+            print("Matches:")
+            for (exp, idx) in matchInfos {
+                let act = actual[idx]
+                let prefTag = act.isPreferment ? " (preferment)" : ""
+                if act.isExtra {
+                    print("  ~ \(act.name)\(prefTag) [extra]: \(act.extraAmount) \(act.extraUnit.rawValue)")
+                } else {
+                    let delta = act.weightGrams - exp.grams
+                    let sign = delta >= 0 ? "+" : ""
+                    print("  ~ \(act.name)\(prefTag): expected \(exp.grams)g, actual \(String(format: "%.1f", act.weightGrams))g (Δ \(sign)\(String(format: "%.1f", delta))g)")
+                }
             }
         }
     }

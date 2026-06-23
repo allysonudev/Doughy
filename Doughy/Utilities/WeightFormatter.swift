@@ -6,39 +6,37 @@
 //  Copyright © 2020 George Urick. All rights reserved.
 //
 
-import UIKit
+import Foundation
 
 class WeightFormatter: NSObject {
-    
-    static let shared = WeightFormatter()
-    
-    private override init() {
-}
-    
-    func format(weight: Double, minimumFraction: Int = 0) -> String {
-        let minFraction = minimumFraction >= 0 ? minimumFraction : 0
-        let formatter = NumberFormatter()
-        formatter.usesGroupingSeparator = true
-        formatter.groupingSize = 3
-        if abs(weight) > 100 {
-            formatter.maximumFractionDigits = 0
-        }
-        else if abs(weight) > 10 {
-            formatter.maximumFractionDigits = 1
-        }
-        else {
-            formatter.maximumFractionDigits = 2
-        }
-        formatter.minimumFractionDigits = minFraction
-        return "\(formatter.string(from: NSNumber(floatLiteral: weight))!)g"
-    }
-}
 
-extension NumberFormatter {
-    func number(from number: NSNumber) -> NSNumber? {
-        let stringValue = string(from: number)
-        if stringValue == nil { return nil }
-        return self.number(from: stringValue!)
+    static let shared = WeightFormatter()
+
+    private override init() {}
+
+    /// Formats a gram weight, localized to the current locale: "350g" in
+    /// English, "٣٥٠ غ" in Arabic. Fewer decimals as the magnitude grows, with
+    /// thousands grouping. `.providedUnit` keeps the value in grams (it never
+    /// auto-promotes to kg), and `.autoupdatingCurrent` tracks the live locale.
+    func format(weight: Double, minimumFraction: Int = 0) -> String {
+        let minFraction = max(minimumFraction, 0)
+        let maxFraction: Int
+        if abs(weight) > 100 {
+            maxFraction = 0
+        } else if abs(weight) > 10 {
+            maxFraction = 1
+        } else {
+            maxFraction = 2
+        }
+
+        let formatter = MeasurementFormatter()
+        formatter.locale = .autoupdatingCurrent
+        formatter.unitOptions = .providedUnit
+        formatter.unitStyle = .short
+        formatter.numberFormatter.usesGroupingSeparator = true
+        formatter.numberFormatter.groupingSize = 3
+        formatter.numberFormatter.minimumFractionDigits = minFraction
+        formatter.numberFormatter.maximumFractionDigits = maxFraction
+        return formatter.string(from: Measurement(value: weight, unit: UnitMass.grams))
     }
-    
 }

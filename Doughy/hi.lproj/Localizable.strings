@@ -343,3 +343,9 @@
 "whats_new_deleted_title" = "हाल ही में हटाए गए";
 "whats_new_deleted_body" = "हटाई गई रेसिपी स्थायी रूप से हटाए जाने से पहले 30 दिनों तक सेटिंग्स → हाल ही में हटाए गए में रहती हैं।";
 "whats_new_got_it" = "समझ गया";
+
+// MARK: - Default Recipe Names
+"default_recipe_neopolitan_pizza" = "नेपोलिटन पिज़्ज़ा";
+"default_recipe_new_york_pizza" = "न्यूयॉर्क पिज़्ज़ा";
+"default_recipe_bagels" = "बेगल्स";
+"default_recipe_bagels_with_poolish" = "पूलिश बेगल्स";

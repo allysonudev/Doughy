@@ -65,7 +65,7 @@ final class RecipeDiffTests: XCTestCase {
         var new = old
         new.ingredients[1].temperatureValue = 78
 
-        XCTAssertEqual(RecipeDiff.summarize(from: old, to: new), "Water temp: 75º F → 78º F")
+        XCTAssertEqual(RecipeDiff.summarize(from: old, to: new), "Water temp: 75°F → 78°F")
     }
 
     func testAddedIngredient() {

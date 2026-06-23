@@ -1,0 +1,54 @@
+# Devices to capture. Names must match an installed simulator
+# (run `xcrun simctl list devicetypes` to see what's available). The 6.9" iPhone
+# and 13" iPad cover the two App Store screenshot sizes Doughy needs — the app is
+# universal (TARGETED_DEVICE_FAMILY = "1,2"), so iPad screenshots are required.
+devices([
+  "iPhone 17 Pro Max",
+  "iPad Pro 13-inch (M5)"
+])
+
+# One screenshot set per App Store localization. These are capture codes; note
+# the two App Store Connect mismatches when you upload (see fastlane/README.md):
+#   - "nb" captures Norwegian Bokmål; App Store Connect's locale code is "no".
+#   - "is" (Icelandic) has no App Store storefront localization — capture works
+#     for previews, but there's no slot to upload it to.
+languages([
+  "ar-SA",
+  "da",
+  "de-DE",
+  "en-CA",
+  "en-GB",
+  "en-US",
+  "es-ES",
+  "fr-FR",
+  "hi",
+  "is",
+  "it",
+  "ja",
+  "ko",
+  "nb",
+  "pt-BR",
+  "sv"
+])
+
+# Use the app scheme, not the dedicated "Doughy UI Tests" scheme. snapshot runs
+# `xcodebuild build test`, and the "Doughy UI Tests" scheme has an EMPTY build
+# action (it builds only via its test plan), which makes the `build` step fail with
+# "Supported platforms for the buildables in the current scheme is empty". The
+# "Doughy" scheme's build action builds Doughy.app, and its test plan includes the
+# UI test target — `only_testing` below narrows the run to just the screenshot class.
+scheme("Doughy")
+
+# Only run the dedicated screenshot test class, not the full functional suite.
+only_testing(["Doughy UI Tests/ScreenshotUITests"])
+
+output_directory("./fastlane/screenshots")
+
+# Wipe old PNGs before each run (leaves title.strings / keyword.strings intact).
+clear_previous_screenshots(true)
+
+# Clean status bar in every shot: 9:41, full battery, full signal + Wi-Fi.
+override_status_bar(true)
+
+# Capture one simulator at a time — more reliable and easier to watch.
+concurrent_simulators(false)

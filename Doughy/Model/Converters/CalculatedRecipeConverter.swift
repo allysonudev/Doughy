@@ -25,15 +25,19 @@ class CalculatedRecipeConverter: NSObject {
         coreData.name = recipe.name
         coreData.collection = recipe.collection
         coreData.weight = NSNumber(floatLiteral: recipe.weight)
-        recipe.ingredients.forEach {
-            coreData.addToIngredients(ingredientConverter.convertToCoreData(ingredient: $0))
+        recipe.ingredients.enumerated().forEach { index, ingredient in
+            let xcIng = ingredientConverter.convertToCoreData(ingredient: ingredient)
+            xcIng.sortOrder = Int16(index)
+            coreData.addToIngredients(xcIng)
         }
         if recipe is CalculatedPrefermentRecipe {
             let preferment = (recipe as! CalculatedPrefermentRecipe).preferment
             coreData.preferment = prefermentConverter.convertToCoreData(preferment: preferment)
         }
-        recipe.instructions.forEach {
-            coreData.addToInstructions(instructionConverter.convertToCoreData(instruction: $0))
+        recipe.instructions.enumerated().forEach { index, instruction in
+            let xcStep = instructionConverter.convertToCoreData(instruction: instruction)
+            xcStep.sortOrder = Int16(index)
+            coreData.addToInstructions(xcStep)
         }
         
         
@@ -44,10 +48,10 @@ class CalculatedRecipeConverter: NSObject {
         let name = recipe.name!
         let collection = recipe.collection!
         let weight = recipe.weight!.doubleValue
-        let ingredients = (recipe.ingredients!.array as! [XCCalculatedIngredient]).map {
+        let ingredients = recipe.sortedIngredients.map {
             ingredientConverter.convertToExternal(ingredient: $0)
         }
-        let instructions = (recipe.instructions!.array as! [XCInstruction]).map {
+        let instructions = recipe.sortedInstructions.map {
             instructionConverter.convertToExternal(instruction: $0)
         }
         if let xcPreferment = recipe.preferment {

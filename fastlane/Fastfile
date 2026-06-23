@@ -1,0 +1,12 @@
+default_platform(:ios)
+
+platform :ios do
+  desc "Capture localized App Store screenshots, then add device frames + captions"
+  lane :screenshots do
+    capture_ios_screenshots          # reads fastlane/Snapfile
+    # Absolute path (__dir__ = the fastlane/ folder) so framing finds the shots
+    # regardless of fastlane's working directory.
+    frame_screenshots(white: true, path: File.expand_path("screenshots", __dir__))
+    UI.success("Framed screenshots are in fastlane/screenshots/<locale>/ (look for *_framed.png)")
+  end
+end

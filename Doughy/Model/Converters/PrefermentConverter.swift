@@ -22,8 +22,10 @@ class PrefermentConverter: NSObject {
         
         coreData.name = preferment.name
         coreData.flourPercentage = NSNumber(floatLiteral: preferment.flourPercentage)
-        preferment.ingredients.forEach {
-            coreData.addToIngredients(ingredientConverter.convertToCoreData(ingredient: $0))
+        preferment.ingredients.enumerated().forEach { index, ingredient in
+            let xcIng = ingredientConverter.convertToCoreData(ingredient: ingredient)
+            xcIng.sortOrder = Int16(index)
+            coreData.addToIngredients(xcIng)
         }
         
         return coreData
@@ -32,7 +34,7 @@ class PrefermentConverter: NSObject {
     func convertToExternal(preferment: XCPreferment) -> Preferment {
         let name = preferment.name!
         let flourPercentage = preferment.flourPercentage!.doubleValue
-        let ingredients = (preferment.ingredients!.array as! [XCIngredient]).map {
+        let ingredients = preferment.sortedIngredients.map {
             ingredientConverter.convertToExternal(ingredient: $0)
         }
         
