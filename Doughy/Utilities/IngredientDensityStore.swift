@@ -351,7 +351,7 @@ enum IngredientCategory: String, CaseIterable, Identifiable {
         case .tableSalt: return "Table Salt"
         case .mortonKosherSalt: return "Morton Kosher Salt"
         case .diamondCrystalKosherSalt: return "Diamond Crystal Kosher Salt"
-        case .seaSalt: return "Sea Salt"
+        case .seaSalt: return "Fine Sea Salt"
 
         case .water: return "Water"
         case .seeds: return "Seeds"
@@ -411,7 +411,7 @@ enum IngredientCategory: String, CaseIterable, Identifiable {
         case .tableSalt: return String(localized: "density.ingredient.table_salt", defaultValue: "Table Salt")
         case .mortonKosherSalt: return String(localized: "density.ingredient.morton_kosher_salt", defaultValue: "Morton Kosher Salt")
         case .diamondCrystalKosherSalt: return String(localized: "density.ingredient.diamond_crystal_kosher_salt", defaultValue: "Diamond Crystal Kosher Salt")
-        case .seaSalt: return String(localized: "density.ingredient.sea_salt", defaultValue: "Sea Salt")
+        case .seaSalt: return String(localized: "density.ingredient.fine_sea_salt", defaultValue: "Fine Sea Salt")
 
         case .water: return String(localized: "density.ingredient.water", defaultValue: "Water")
         case .seeds: return String(localized: "density.ingredient.seeds", defaultValue: "Seeds")

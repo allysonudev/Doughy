@@ -36,8 +36,12 @@ class IngredientConverter: NSObject {
         return coreData
     }
 
-    func convertToExternal(ingredient: XCIngredient) -> Ingredient {
-        let name = ingredient.name!
+    /// - Parameter localizeName: When true, a default-recipe ingredient name is
+    ///   resolved to the user's language. Only set for the app's built-in default
+    ///   recipes — never for user-created recipes, so their input is preserved.
+    func convertToExternal(ingredient: XCIngredient, localizeName: Bool = false) -> Ingredient {
+        let storedName = ingredient.name!
+        let name = localizeName ? DefaultLocalization.ingredientName(storedName) : storedName
         let defaultPercentage = ingredient.defaultPercentage!.doubleValue
         let defaultWeight = (ingredient.value(forKey: "defaultWeight") as? NSNumber)?.doubleValue
         let isFlour = ingredient.isFlour

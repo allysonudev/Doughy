@@ -97,25 +97,26 @@ class RecipeConverter: NSObject {
     
     func convertToExternal(recipe: XCRecipe) -> RecipeProtocol {
         let storedName = recipe.name!
-        let name: String
-        if let key = recipe.value(forKey: "defaultKey") as? String {
-            let localized = NSLocalizedString(key, comment: "")
-            name = (localized == key) ? storedName : localized
-        } else {
-            name = storedName
-        }
+        // A non-nil defaultKey marks an unmodified built-in recipe. Only these get
+        // their name, ingredients, and collection localized; user recipes are kept
+        // exactly as the user entered them.
+        let defaultKey = recipe.value(forKey: "defaultKey") as? String
+        let isDefault = defaultKey != nil
+        let name = DefaultLocalization.recipeDisplayName(storedName: storedName, defaultKey: defaultKey)
+        // Collection stays canonical in the model so grouping is consistent and an
+        // edit never rewrites it; it's localized for display at the view layer.
         let collection = recipe.collection!
         let defaultWeight = recipe.defaultWeight!.doubleValue
         let measurementModeRaw = recipe.value(forKey: "measurementMode") as? String
         let measurementMode = RecipeMeasurementMode(rawValue: measurementModeRaw ?? "") ?? .percent
         let ingredients = recipe.sortedIngredients.map {
-            ingredientConverter.convertToExternal(ingredient: $0)
+            ingredientConverter.convertToExternal(ingredient: $0, localizeName: isDefault)
         }
         let instructions = recipe.sortedInstructions.map {
-            instructionConverter.convertToExternal(instruction: $0)
+            instructionConverter.convertToExternal(instruction: $0, localize: isDefault)
         }
         if let xcPreferment = recipe.preferment {
-            let preferment = prefermentConverter.convertToExternal(preferment: xcPreferment)
+            let preferment = prefermentConverter.convertToExternal(preferment: xcPreferment, localizeName: isDefault)
             return PrefermentRecipe(name: name, collection: collection,
                                     defaultWeight: defaultWeight, ingredients: ingredients,
                                     preferment: preferment, instructions: instructions,

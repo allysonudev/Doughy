@@ -64,7 +64,7 @@
 "density.ingredient.powdered_sugar" = "슈가파우더";
 "density.ingredient.rice_flour" = "쌀가루";
 "density.ingredient.rye_flour" = "호밀가루";
-"density.ingredient.sea_salt" = "천일염";
+"density.ingredient.fine_sea_salt" = "고운 천일염";
 "density.ingredient.seeds" = "씨앗류";
 "density.ingredient.self_rising_flour" = "셀프라이징 밀가루";
 "density.ingredient.semolina_flour" = "세몰리나 밀가루";
@@ -131,7 +131,7 @@
 "create.flours.main.percent_remaining" = "100%%까지 %.4g%% 남음";
 "create.flours.preferment.percent_remaining" = "프리퍼먼트 밀가루의 100%%까지 %.4g%% 남음.";
 "create.ingredient_name" = "재료 이름";
-"create.ingredients.percent_total" = "%.4g%% 합계";
+"create.ingredients.percent_total" = "%@ 합계";
 "create.mode.percent.description" = "밀가루 총량 대비 재료 비율을 사용하는 밀가루 기반 반죽에 최적";
 "create.mode.percent.title" = "베이커스 퍼센트로";
 "create.mode.scan.description" = "Apple Intelligence를 사용해 사진이나 스크린샷에서 레시피를 읽어옵니다 — 완전히 기기 내에서, 오프라인으로 처리";
@@ -351,3 +351,75 @@
 "default_recipe_new_york_pizza" = "뉴욕 피자";
 "default_recipe_bagels" = "베이글";
 "default_recipe_bagels_with_poolish" = "풀리시 베이글";
+"default_collection.pizza" = "피자";
+"default_collection.bagels" = "베이글";
+"default_ingredient.fine_sea_salt" = "고운 천일염";
+"default_ingredient.sugar" = "설탕";
+"default_ingredient.poolish" = "풀리시";
+
+/* Default recipe instructions (localized only for the built-in recipes) */
+"Mix all the ingredients.\nAdd water to the mixing bowl. Add yeast to the water and stir until combined. You can let it sit for 10 minutes to proof or move to the next step if you trust your yeast. Then add the flour. Use your hands to combine the ingredients together until fully incorporated. The doughy will be  kind of sticky and won't be smooth yet. Add the salt and incorporate it into the dough until fully mixed up. Should only take about 30 seconds. Cover the mixing bowl with a cloth." = "모든 재료를 섞습니다.\n믹싱 볼에 물을 붓습니다. 물에 이스트를 넣고 풀어질 때까지 저어 줍니다. 활성화를 위해 10분간 두어도 되고, 이스트를 믿는다면 다음 단계로 넘어가도 됩니다. 그런 다음 밀가루를 넣습니다. 손으로 재료가 완전히 어우러질 때까지 섞습니다. 반죽은 다소 끈적하고 아직 매끄럽지 않을 것입니다. 소금을 넣고 반죽에 완전히 섞어 줍니다. 약 30초면 충분합니다. 볼을 천으로 덮습니다.";
+"Stretch and fold.\nLet the dough rest for 30 minutes. Then begin your stretch and folds. Remove the cloth. Wet your hands and loosen the dough from the sides. Making sure to keep your hands damp (not dripping, this will add hydration to the dough), grab one edge of the dough. Lift it as far as it will go without tearing (make sure it doesn't tear) and fold it into the center. Turn the bowl and repeat this until you come back to the first spot you folded. Repeat 30 minute rest and stretch and fold 3-4 times until your dough can be stretched so thin, you can see light through it. This is called the window pane test." = "늘리고 접기.\n반죽을 30분간 휴지시킵니다. 그런 다음 늘리고 접기를 시작합니다. 천을 걷어 냅니다. 손을 적시고 반죽을 가장자리에서 떼어 냅니다. 손을 촉촉하게 유지한 채(물이 뚝뚝 떨어질 정도는 안 됩니다. 반죽에 수분이 더해지기 때문입니다) 반죽의 한쪽 끝을 잡습니다. 찢어지지 않는 한 최대한 들어 올려(찢어지지 않도록 주의하세요) 가운데로 접습니다. 볼을 돌려 처음 접은 자리로 돌아올 때까지 반복합니다. 30분 휴지와 늘리고 접기를 3~4회 반복하여, 반죽을 빛이 비칠 만큼 얇게 늘릴 수 있을 때까지 합니다. 이것을 윈도 페인 테스트라고 합니다.";
+"Bulk ferment.\nLet the dough sit out on the counter for 8-18 hours, depending on the temperature of the room. What you're looking for is that the dough has doubled in size. Because of the small amount of yeast, it will take a long time to rise. This is a good thing because it lets the yeast release more gas, which helps with flavor. If you find your dough is getting to 2x size too quickly, you can move it to a colder part of the house, or consider moving it to the fridge (for up to 24 hours, long than that in bulk ferment will mean the flour might start to break down if you're using 00 flour. Bread flour can last longer)." = "1차 발효.\n방 온도에 따라 반죽을 작업대 위에 8~18시간 둡니다. 반죽이 두 배로 부푸는 것이 목표입니다. 이스트 양이 적기 때문에 부풀어 오르는 데 오랜 시간이 걸립니다. 이는 좋은 일인데, 이스트가 더 많은 가스를 내보내 풍미가 좋아지기 때문입니다. 반죽이 너무 빨리 두 배로 부푼다면 집 안의 더 시원한 곳으로 옮기거나 냉장고에 넣는 것을 고려하세요(최대 24시간. 1차 발효를 그보다 오래 하면 00 밀가루를 쓸 경우 밀가루가 분해되기 시작할 수 있습니다. 강력분은 더 오래 버팁니다).";
+"Divide and shape into balls.\n Search on youtube and pick a video to help learn to shape the dough balls. https://www.youtube.com/results?search_query=how+to+shape+pizza+dough+balls It's very difficult to describe by text.  \nIf you just need a refresher, here you go. Dump the mass onto an unfloured counter. Divide the dough into preferred dough ball size. About 270 for a 10 inch pizza. Fold the edges into the center and flip it over. Take your hands and cup around the back of the pizza with pinkies touching and pull the ball toward you. The friction of the counter will cause the front of the dough to tighten into the center. Turn the dough 90º and repeat until the ball is tight and smooth.\nPlace all the dough balls into a tray to proof." = "나누고 둥글리기.\n YouTube에서 검색해 반죽 볼 성형을 배울 수 있는 영상을 고르세요. https://www.youtube.com/results?search_query=how+to+shape+pizza+dough+balls 글로 설명하기는 매우 어렵습니다.\n복습만 필요하다면 여기 있습니다. 밀가루를 뿌리지 않은 작업대에 반죽을 쏟습니다. 원하는 볼 크기로 반죽을 나눕니다. 25cm 피자라면 약 270입니다. 가장자리를 가운데로 접고 뒤집습니다. 새끼손가락이 맞닿도록 피자 뒤쪽에 손을 컵 모양으로 대고 볼을 몸 쪽으로 당깁니다. 작업대와의 마찰로 반죽 앞면이 가운데로 팽팽해집니다. 반죽을 90º 돌리고 볼이 팽팽하고 매끄러워질 때까지 반복합니다.\n모든 반죽 볼을 트레이에 담아 최종 발효시킵니다.";
+"Proof the dough for between 2 and 8 hours at room temperature or 24 hours in the refrigerator." = "반죽을 실온에서 2~8시간, 또는 냉장고에서 24시간 최종 발효시킵니다.";
+"Shape your pizza.\nThis is again something that is best explained by video. Vito Iacopelli is an excentric pizzaioli who has hundreds of videos on Pizza. Here's his shaping video https://www.youtube.com/watch?v=h75bxDwT1Ko" = "피자를 성형합니다.\n이것도 역시 영상으로 보는 것이 가장 잘 이해됩니다. 비토 이아코펠리는 피자에 관한 영상을 수백 개 올린 괴짜 피자이올로입니다. 다음은 그의 성형 영상입니다 https://www.youtube.com/watch?v=h75bxDwT1Ko";
+"Cook at the hottest temperature you can. For home, cook on a baking steel which has been preheated to 500ºF or more for 1 hour. For browning, you can turn on your broiler for the last 2 minutes. You should be able to cook in about 5-8 minutes depending on your surface (stone transfers heat slower than steel) and oven temperature. A wood or gas-fired oven is best. You can cook at 932º F in about 60-90 seconds." = "가능한 한 높은 온도에서 굽습니다. 가정에서는 1시간 동안 500ºF 이상으로 예열한 베이킹 스틸 위에서 굽습니다. 색을 내려면 마지막 2분간 브로일러를 켜도 됩니다. 굽는 면(돌은 스틸보다 열 전달이 느립니다)과 오븐 온도에 따라 약 5~8분이면 구울 수 있을 것입니다. 장작이나 가스 오븐이 가장 좋습니다. 932º F에서는 약 60~90초면 구울 수 있습니다.";
+"Put the dough out onto the counter. Knead the dough for about 2-3 minutes. Then rest the dough into mixing bowl for about 15 minutes. Knead the dough for another 2-3 minutes. By now, the dough should be smooth and you should be able to stretch it so thin, you can see light through it. This is called the window pane test." = "반죽을 작업대에 꺼냅니다. 약 2~3분간 반죽을 치댑니다. 그런 다음 믹싱 볼에서 약 15분간 반죽을 휴지시킵니다. 다시 2~3분간 반죽을 치댑니다. 이쯤이면 반죽이 매끄러워지고, 빛이 비칠 만큼 얇게 늘릴 수 있어야 합니다. 이것을 윈도 페인 테스트라고 합니다.";
+"Bulk ferment.\nLet the dough sit out on the counter for 2-3 hours, depending on the temperature of the room. What you're looking for is that the dough has doubled in size. If you find your dough is getting to 2x size too quickly, you can move it to a colder part of the house. You can also bulk ferment in the refrigerator for 24 hours to give it a longer rise, which improves the flavor." = "1차 발효.\n방 온도에 따라 반죽을 작업대 위에 2~3시간 둡니다. 반죽이 두 배로 부푸는 것이 목표입니다. 너무 빨리 두 배로 부푼다면 집 안의 더 시원한 곳으로 옮기세요. 냉장고에서 24시간 1차 발효시켜 더 길게 발효시킬 수도 있으며, 이렇게 하면 풍미가 좋아집니다.";
+"Shape your pizza.\nThis is again something that is best explained by video. Pagliacci is a Seattle-based pizza chain that made a few videos a few years ago. They don't make NY style pizza, but their shaping instructions are great. Here's their hand-tossed shaping video https://www.youtube.com/watch?v=VIJlRXMfW50" = "피자를 성형합니다.\n이것도 역시 영상으로 보는 것이 가장 잘 이해됩니다. 파글리아치는 시애틀에 기반을 둔 피자 체인으로, 몇 년 전 영상을 몇 개 만들었습니다. 뉴욕 스타일 피자를 만들지는 않지만, 성형 설명이 아주 훌륭합니다. 다음은 그들의 손으로 던져 펴는 성형 영상입니다 https://www.youtube.com/watch?v=VIJlRXMfW50";
+"Cook at the hottest temperature you can. For home, cook on a baking steel which has been preheated to 500ºF or more for 1 hour. For browning, you can turn on your broiler for the last 2 minutes. You should be able to cook in about 5-8 minutes depending on your surface (stone transfers heat slower than steel) and oven temperature. A gas-fired oven is considered authentic to NY but wood-fired ovens will work as well. You can cook at 750º F in about 3-4 minutes." = "가능한 한 높은 온도에서 굽습니다. 가정에서는 1시간 동안 500ºF 이상으로 예열한 베이킹 스틸 위에서 굽습니다. 색을 내려면 마지막 2분간 브로일러를 켜도 됩니다. 굽는 면(돌은 스틸보다 열 전달이 느립니다)과 오븐 온도에 따라 약 5~8분이면 구울 수 있을 것입니다. 가스 오븐이 뉴욕에서는 정통으로 여겨지지만, 장작 오븐도 잘 됩니다. 750º F에서는 약 3~4분이면 구울 수 있습니다.";
+"Autolyse the flour and water.\nIn the bowl of a stand mixer, add the flour and water, leaving a small amount of water separate for the yeast. Mix just until combined. Let it rest for 20 minutes. After 10 minutes, combine the remaining water and the yeast to proof." = "밀가루와 물의 오토리즈.\n스탠드 믹서 볼에 밀가루와 물을 넣되, 이스트용으로 소량의 물을 따로 남겨 둡니다. 어우러질 정도로만 섞습니다. 20분간 휴지시킵니다. 10분 후, 남은 물과 이스트를 섞어 활성화시킵니다.";
+"Mix the remaining ingredients.\nPour the yeast and water mixture into the mixing bowl. Add the malt powder or malt syrup into the bowl. Begin mixing on low-medium speed for 3 minutes. Then add the salt and continue mixing for another 7-12 minutes. The dough is ready when it's smooth and ideally it should pass the window pane test. You should be able to slowly stretch it so thin, you can see light through it. Once it's been mixed for 15 minutes, though, you don't want to mix any more." = "남은 재료를 섞습니다.\n이스트와 물 혼합물을 볼에 붓습니다. 몰트 파우더 또는 몰트 시럽을 볼에 넣습니다. 중저속으로 3분간 섞기 시작합니다. 그런 다음 소금을 넣고 7~12분간 더 섞습니다. 반죽이 매끄럽고 이상적으로 윈도 페인 테스트를 통과하면 완성입니다. 반죽을 천천히 빛이 비칠 만큼 얇게 늘릴 수 있어야 합니다. 다만 15분간 섞은 뒤에는 더 이상 치대지 않는 것이 좋습니다.";
+"Bulk ferment the dough.\nDump the dough on an unfloured work surface. Tighten the dough into a ball and place in a lightly-oiled bowl, seam-side down. Cover and let it rise for 1-1.5 hours, until it's doubled in size." = "반죽의 1차 발효.\n밀가루를 뿌리지 않은 작업대에 반죽을 쏟습니다. 반죽을 팽팽하게 둥글려 이음매가 아래로 가도록 기름을 살짝 두른 볼에 넣습니다. 덮어서 두 배로 부풀 때까지 1~1.5시간 발효시킵니다.";
+"Divide and shape into balls.\nDivide the dough into 105-115 gram dough balls. Tighten them like you would a pizza, except these are much smaller. Let them rest for 10 minutes. To shape a bagel, you roll it out into a relatively round rectangle. Roll it up along the long side so you have a tube. Close up the seams by pinching, it doesn't have to be perfect Use the part of your hands above your palm to roll the tube and pull your hands apart to stretch out the tube until it's about 8 inches. Place that part of the hand on one end of the tube. Then grab it and with the other hand, grab the other end and wrap it around the knuckles. With the first hand, take both ends and squeeze them together. Roll this combined piece on the table to make it round and help close up the seams. Repeat this for all the bagels and place on a spray-oiled baking sheet. Wrap the baking sheet in plastic wrap and either let them proof for 1 hour, or rise in the fridge overnight." = "나누고 둥글리기.\n반죽을 105~115그램짜리 볼로 나눕니다. 피자처럼 팽팽하게 둥글리되, 이것들은 훨씬 작습니다. 10분간 휴지시킵니다. 베이글을 성형하려면 대체로 둥근 직사각형으로 밀어 폅니다. 긴 쪽을 따라 말아 관 모양으로 만듭니다. 이음매를 꼬집어 막으세요. 완벽하지 않아도 됩니다. 손바닥 위쪽 부분을 사용해 관을 굴리고, 양손을 벌려 관을 약 8인치까지 늘립니다. 그 손 부분을 관의 한쪽 끝에 댑니다. 그런 다음 그것을 잡고, 다른 손으로 반대쪽 끝을 잡아 손가락 관절 둘레에 감습니다. 첫 번째 손으로 양 끝을 모아 함께 눌러 줍니다. 이 이어 붙인 조각을 테이블 위에서 굴려 둥글게 만들고 이음매가 잘 막히도록 합니다. 모든 베이글에 대해 이를 반복하고, 기름을 분사한 베이킹 시트에 올립니다. 베이킹 시트를 랩으로 감싸고, 베이글을 1시간 최종 발효시키거나 냉장고에서 밤새 발효시킵니다.";
+"Boil the bagels.\nPreheat the oven to 450º F. Then get the boiling water bath ready. You can use 2-3 quarts of water, 1 tbsp of baking soda, and 1.5 tbsp of malt syrup (not powder). Add the baking soda and malt syrup once the water is boiling. If you put the bagels in the fridge, make sure they have rest at room temp for 30-60 minutes before boiling. Boil the bagels in batches, making sure they aren't crowded. They should boil for 30-60 seconds per side and then removed to a drying rack so they can lose excess water. As soon as your done boiling all the bagels, get the desired toppings onto the bagels, such as everything seasoning, sesame seeds, dried garlic, or just flaky salt." = "베이글을 삶습니다.\n오븐을 450º F로 예열합니다. 그런 다음 끓는 물 욕조를 준비합니다. 물 2~3쿼트, 베이킹 소다 1큰술, 몰트 시럽(가루 말고) 1.5큰술을 사용할 수 있습니다. 물이 끓으면 베이킹 소다와 몰트 시럽을 넣습니다. 베이글을 냉장고에 두었다면 삶기 전에 실온에서 30~60분 휴지시키세요. 베이글이 너무 붐비지 않도록 나누어 삶습니다. 한 면당 30~60초 삶은 뒤 건조망에 옮겨 여분의 물기를 빼냅니다. 모든 베이글을 삶자마자 에브리싱 시즈닝, 참깨, 말린 마늘, 또는 그냥 플레이크 소금 같은 원하는 토핑을 올립니다.";
+"Bake the bagels.\nPlace the bagels into the oven on a baking sheet (or if you're fancy, you can bake these on a baking steel/stone). Baking at 450 for 16-18 minutes, turning the baking sheet 180º halfway through for even baking." = "베이글을 굽습니다.\n베이글을 베이킹 시트에 올려 오븐에 넣습니다(멋을 내고 싶다면 베이킹 스틸/스톤 위에서 구울 수도 있습니다). 450에서 16~18분 굽고, 고르게 구워지도록 중간에 베이킹 시트를 180º 돌립니다.";
+"Make the poolish.\nCombine all the poolish ingredients into a bowl. Use your fingers or the handle of a wooden spoon to incorporate completely. Let this ferment for 12-18 hours. It should smell really strong and be bubbly when it's ready." = "풀리시를 만듭니다.\n풀리시 재료를 모두 볼에 합칩니다. 손가락이나 나무 숟가락 손잡이를 사용해 완전히 섞어 줍니다. 이를 12~18시간 발효시킵니다. 다 되면 아주 강한 냄새가 나고 기포가 올라와 있어야 합니다.";
+"Mix the ingredients.\nPut the remaining flour into the bowl of a stand mixer. Put the remaining water and yeast into the poolish to help it release from the bowl. Pour the poolish, yeast, and water mixture into the mixing bowl. Add the malt powder or malt syrup into the bowl. Begin mixing on low-medium speed for 3 minutes. Then add the salt and continue mixing for another 7-12 minutes. The dough is ready when it's smooth and ideally it should pass the window pane test. You should be able to slowly stretch it so thin, you can see light through it. Once it's been mixed for 15 minutes, though, you don't want to mix any more." = "재료를 섞습니다.\n남은 밀가루를 스탠드 믹서 볼에 넣습니다. 남은 물과 이스트를 풀리시에 넣어 볼에서 잘 떨어지도록 합니다. 풀리시, 이스트, 물 혼합물을 믹싱 볼에 붓습니다. 몰트 파우더 또는 몰트 시럽을 볼에 넣습니다. 중저속으로 3분간 섞기 시작합니다. 그런 다음 소금을 넣고 7~12분간 더 섞습니다. 반죽이 매끄럽고 이상적으로 윈도 페인 테스트를 통과하면 완성입니다. 반죽을 천천히 빛이 비칠 만큼 얇게 늘릴 수 있어야 합니다. 다만 15분간 섞은 뒤에는 더 이상 치대지 않는 것이 좋습니다.";
+
+/* Calculator result view */
+"Dough" = "반죽";
+"Final Dough" = "최종 반죽";
+"plus additional ingredients" = "추가 재료 포함";
+"Changes from default" = "기본값에서 변경된 사항";
+"Add a note about this batch..." = "이 배치에 대한 메모 추가...";
+
+/* Batch 2 localization */
+"recipe.copy_name" = "%@ 복사본";
+"create.instructions.tap_hint" = "탭하여 편집, 길게 눌러 이동 또는 삭제, 드래그하여 순서 변경.";
+"share.note.header" = "메모";
+"share.note.placeholder" = "메모 추가 (선택 사항)";
+"share.note.footer" = "수신자가 레시피에서 읽을 수 있는 개인 메모입니다.";
+"calculator.preferment.section_title" = "프리퍼먼트: %@";
+"settings.backup.footer" = "백업에는 모든 레시피가 포함됩니다. 백업을 복원하면 현재 레시피 라이브러리가 교체됩니다.";
+"settings.recently_deleted.nav_title" = "최근 삭제됨";
+"settings.recently_deleted.empty.title" = "최근 삭제된 레시피가 없습니다";
+"settings.recently_deleted.empty.description" = "삭제된 레시피는 30일 동안 여기에 표시됩니다.";
+"settings.recently_deleted.footer" = "레시피는 30일 후 영구적으로 삭제됩니다.";
+"settings.recently_deleted.restore" = "복원";
+"settings.recently_deleted.delete_permanently" = "영구 삭제";
+"settings.recently_deleted.delete_all" = "모두 삭제";
+"settings.recently_deleted.delete_permanently_title" = "영구 삭제하시겠습니까?";
+"settings.recently_deleted.delete_all_permanently_title" = "모두 영구 삭제하시겠습니까?";
+"settings.recently_deleted.delete_permanently_message" = "이 레시피는 즉시 삭제됩니다. 이 작업은 취소할 수 없습니다.";
+"settings.recently_deleted.delete_all_permanently_message" = "최근 삭제된 모든 레시피가 즉시 삭제됩니다. 이 작업은 취소할 수 없습니다.";
+"unit.volume.teaspoon" = "작은술";
+"unit.volume.tablespoon" = "큰술";
+"unit.volume.cup" = "컵";
+"unit.volume.ounce" = "온스";
+"unit.volume.milliliter" = "ml";
+"unit.volume.deciliter" = "dl";
+"unit.volume.liter" = "l";
+"calculated.percent_total" = "%@ 합계";
+"settings.recently_deleted.expires_in_one" = "1일 후 삭제";
+"settings.recently_deleted.expires_in_other" = "%d일 후 삭제";
+"unit.volume.teaspoon.one" = "작은술";
+"unit.volume.tablespoon.one" = "큰술";
+"unit.volume.cup.one" = "컵";
+"unit.volume.ounce.one" = "온스";
+"create.instructions.move_to_position" = "위치로 이동…";
+"create.instructions.move_step.title" = "단계 이동";
+"create.instructions.move_step.prompt" = "단계 번호 입력 (1–%d)";
+"create.instructions.move_step.placeholder" = "단계 번호";
+"create.instructions.move_step.action" = "이동";

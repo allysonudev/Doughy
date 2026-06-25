@@ -243,7 +243,7 @@ struct RecipeListView: View {
                         }
                     } label: {
                         HStack {
-                            Text(collection.name)
+                            Text(DefaultLocalization.collectionName(collection.name))
                             Spacer()
                             Image(systemName: "chevron.down")
                                 .rotationEffect(.degrees(isCollapsed ? -90 : 0))

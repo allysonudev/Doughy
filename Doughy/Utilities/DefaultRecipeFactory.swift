@@ -34,7 +34,7 @@ class DefaultRecipeFactory: NSObject {
 
     func createWithKeys() -> [(recipe: RecipeProtocol, key: String)] {
         return [
-            (createNeopolitan(),     Key.neopolitanPizza),
+            (createNeapolitan(),     Key.neopolitanPizza),
             (createNewYorkPizza(),   Key.newYorkPizza),
             (createBagel(),          Key.bagels),
             (createBagelWithPoolish(), Key.bagelsWithPoolish),
@@ -45,7 +45,7 @@ class DefaultRecipeFactory: NSObject {
         return createWithKeys().map { $0.recipe }
     }
     
-    private func createNeopolitan() -> Recipe {
+    private func createNeapolitan() -> Recipe {
         
         let flour = Ingredient(name: "Tipo 00 Flour", isFlour: true, defaultPercentage: 100, temperature: nil)
         
@@ -124,11 +124,11 @@ class DefaultRecipeFactory: NSObject {
         let water = Ingredient(name: "Water", isFlour: false, defaultPercentage: 56, temperature: waterTemp)
         let salt = Ingredient(name: "Fine Sea Salt", isFlour: false, defaultPercentage: 2.3, temperature: nil)
         let yeast = Ingredient(name: "Instant Yeast", isFlour: false, defaultPercentage: 0.66, temperature: nil)
-        let malt = Ingredient(name: "Non-diastic Malt", isFlour: false, defaultPercentage: 4.6, temperature: nil)
+        let malt = Ingredient(name: "Non-Diastatic Malt", isFlour: false, defaultPercentage: 4.6, temperature: nil)
         let ingredients = [flour, water, salt, yeast, malt]
-        
+
         var instructions = [Instruction]()
-        
+
         instructions.append(Instruction(step:
                 "Autolyse the flour and water.\nIn the bowl of a stand mixer, add the flour and water, leaving a small amount of water separate for the yeast. Mix just until combined. Let it rest for 20 minutes. After 10 minutes, combine the remaining water and the yeast to proof."))
         instructions.append(Instruction(step:
@@ -163,11 +163,11 @@ class DefaultRecipeFactory: NSObject {
         let water = Ingredient(name: "Water", isFlour: false, defaultPercentage: 56, temperature: waterTemp)
         let salt = Ingredient(name: "Fine Sea Salt", isFlour: false, defaultPercentage: 2.3, temperature: nil)
         let yeast = Ingredient(name: "Instant Yeast", isFlour: false, defaultPercentage: 0.66, temperature: nil)
-        let malt = Ingredient(name: "Non-diastic Malt", isFlour: false, defaultPercentage: 4.6, temperature: nil)
+        let malt = Ingredient(name: "Non-Diastatic Malt", isFlour: false, defaultPercentage: 4.6, temperature: nil)
         let ingredients = [flour, water, salt, yeast, malt]
-        
+
         var instructions = [Instruction]()
-        
+
         instructions.append(Instruction(step:
         "Make the poolish.\nCombine all the poolish ingredients into a bowl. Use your fingers or the handle of a wooden spoon to incorporate completely. Let this ferment for 12-18 hours. It should smell really strong and be bubbly when it's ready."))
         instructions.append(Instruction(step:

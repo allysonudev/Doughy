@@ -24,9 +24,13 @@ class InstructionConverter: NSObject {
         return coreData
     }
     
-    func convertToExternal(instruction: XCInstruction) -> Instruction {
-        let step = instruction.step!
-        
+    /// - Parameter localize: When true, a default-recipe instruction step is
+    ///   resolved to the user's language. Only set for the app's built-in
+    ///   default recipes, so user-written steps are preserved as entered.
+    func convertToExternal(instruction: XCInstruction, localize: Bool = false) -> Instruction {
+        let storedStep = instruction.step!
+        let step = localize ? DefaultLocalization.instructionStep(storedStep) : storedStep
+
         return Instruction(step: step)
     }
 

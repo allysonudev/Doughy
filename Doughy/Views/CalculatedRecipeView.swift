@@ -359,7 +359,7 @@ struct CalculatedRecipeView: View {
             }
             Spacer()
             if let amount = ingredient.extraAmount, let unit = ingredient.extraUnit {
-                Text(VolumeUnitFormatter.format(amount: amount, unit: unit))
+                Text(VolumeUnitFormatter.localizedFormat(amount: amount, unit: unit))
             }
         }
     }
@@ -383,7 +383,7 @@ struct CalculatedRecipeView: View {
                         .foregroundStyle(.secondary)
                 }
                 if prefermentWeight > 0 {
-                    Text(percentFormatter.format(percent: ingredient.totalPercentage) + " total")
+                    Text(String(format: String(localized: "calculated.percent_total", defaultValue: "%@ total"), percentFormatter.format(percent: ingredient.totalPercentage)))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }

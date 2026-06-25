@@ -64,7 +64,7 @@
 "density.ingredient.powdered_sugar" = "سكر ناعم";
 "density.ingredient.rice_flour" = "دقيق الأرز";
 "density.ingredient.rye_flour" = "دقيق الجاودار";
-"density.ingredient.sea_salt" = "ملح البحر";
+"density.ingredient.fine_sea_salt" = "ملح بحري ناعم";
 "density.ingredient.seeds" = "بذور";
 "density.ingredient.self_rising_flour" = "دقيق ذاتي التخمير";
 "density.ingredient.semolina_flour" = "دقيق السميد";
@@ -74,7 +74,7 @@
 "density.ingredient.spelt_flour" = "دقيق الكاموت";
 "density.ingredient.spices" = "بهارات";
 "density.ingredient.table_salt" = "ملح الطعام";
-"density.ingredient.tipo_00_flour" = "Tipo 00 Flour";
+"density.ingredient.tipo_00_flour" = "دقيق تيبو 00";
 "density.ingredient.vegetable_oil" = "زيت نباتي";
 "density.ingredient.water" = "ماء";
 "density.ingredient.whole_wheat_flour" = "دقيق القمح الكامل";
@@ -133,7 +133,7 @@
 "create.flours.main.percent_remaining" = "%.4g%% متبقية للوصول إلى 100%%";
 "create.flours.preferment.percent_remaining" = "%.4g%% متبقية للوصول إلى 100%% من دقيق العجين المُسبق.";
 "create.ingredient_name" = "اسم المكوّن";
-"create.ingredients.percent_total" = "%.4g%% إجمالي";
+"create.ingredients.percent_total" = "%@ إجمالي";
 "create.mode.percent.description" = "الأفضل للعجائن القائمة على الدقيق حيث تُقاس المكونات نسبةً إلى الدقيق الكلي";
 "create.mode.percent.title" = "بنسبة الخباز";
 "create.mode.scan.description" = "استخدم Apple Intelligence لقراءة وصفة من صورة أو لقطة شاشة، على الجهاز وبدون إنترنت";
@@ -352,3 +352,75 @@
 "default_recipe_new_york_pizza" = "بيتزا نيويورك";
 "default_recipe_bagels" = "بيغل";
 "default_recipe_bagels_with_poolish" = "بيغل بالبوليش";
+"default_collection.pizza" = "بيتزا";
+"default_collection.bagels" = "بيغل";
+"default_ingredient.fine_sea_salt" = "ملح بحري ناعم";
+"default_ingredient.sugar" = "سكر";
+"default_ingredient.poolish" = "بوليش";
+
+/* Default recipe instructions (localized only for the built-in recipes) */
+"Mix all the ingredients.\nAdd water to the mixing bowl. Add yeast to the water and stir until combined. You can let it sit for 10 minutes to proof or move to the next step if you trust your yeast. Then add the flour. Use your hands to combine the ingredients together until fully incorporated. The doughy will be  kind of sticky and won't be smooth yet. Add the salt and incorporate it into the dough until fully mixed up. Should only take about 30 seconds. Cover the mixing bowl with a cloth." = "اخلط جميع المكوّنات.\nأضف الماء إلى وعاء الخلّاط. أضف الخميرة إلى الماء وحرّك حتى تذوب. يمكنك تركها 10 دقائق لتنشط، أو الانتقال إلى الخطوة التالية إذا كنت تثق بخميرتك. ثم أضف الدقيق. استخدم يديك لمزج المكوّنات حتى تتجانس تماماً. ستكون العجينة لزجة بعض الشيء وغير ناعمة بعد. أضف الملح وادمجه في العجينة حتى يختلط تماماً. لا يستغرق ذلك سوى نحو 30 ثانية. غطِّ الوعاء بقطعة قماش.";
+"Stretch and fold.\nLet the dough rest for 30 minutes. Then begin your stretch and folds. Remove the cloth. Wet your hands and loosen the dough from the sides. Making sure to keep your hands damp (not dripping, this will add hydration to the dough), grab one edge of the dough. Lift it as far as it will go without tearing (make sure it doesn't tear) and fold it into the center. Turn the bowl and repeat this until you come back to the first spot you folded. Repeat 30 minute rest and stretch and fold 3-4 times until your dough can be stretched so thin, you can see light through it. This is called the window pane test." = "المدّ والطي.\nاترك العجينة ترتاح 30 دقيقة. ثم ابدأ عمليات المدّ والطي. ارفع القماش. بلّل يديك وفكّ العجينة عن الجوانب. مع إبقاء يديك رطبتين (غير مقطّرتين، فهذا يضيف ماءً إلى العجينة)، أمسك إحدى حواف العجينة. ارفعها إلى أقصى ما تستطيع دون أن تتمزّق (احرص ألّا تتمزّق) واطوها نحو المركز. أدِر الوعاء وكرّر حتى تعود إلى أول موضع طويته. كرّر الراحة لمدة 30 دقيقة والمدّ والطي 3-4 مرات، حتى يمكن مدّ العجينة رقيقة جداً بحيث يمرّ الضوء من خلالها. يُسمّى هذا اختبار النافذة.";
+"Bulk ferment.\nLet the dough sit out on the counter for 8-18 hours, depending on the temperature of the room. What you're looking for is that the dough has doubled in size. Because of the small amount of yeast, it will take a long time to rise. This is a good thing because it lets the yeast release more gas, which helps with flavor. If you find your dough is getting to 2x size too quickly, you can move it to a colder part of the house, or consider moving it to the fridge (for up to 24 hours, long than that in bulk ferment will mean the flour might start to break down if you're using 00 flour. Bread flour can last longer)." = "التخمير الأولي.\nاترك العجينة على سطح المطبخ لمدة 8 إلى 18 ساعة، حسب درجة حرارة الغرفة. ما تبحث عنه هو أن يتضاعف حجم العجينة. بسبب الكمية القليلة من الخميرة، سيستغرق الاختمار وقتاً طويلاً. وهذا أمر جيد، لأنه يتيح للخميرة إطلاق مزيد من الغاز، مما يحسّن النكهة. إذا وجدت عجينتك تتضاعف بسرعة كبيرة، يمكنك نقلها إلى مكان أبرد في المنزل، أو وضعها في الثلاجة (حتى 24 ساعة؛ أطول من ذلك في التخمير الأولي قد يعني أن الدقيق سيبدأ بالتحلل إذا كنت تستخدم دقيق 00. أما دقيق الخبز فيتحمّل وقتاً أطول).";
+"Divide and shape into balls.\n Search on youtube and pick a video to help learn to shape the dough balls. https://www.youtube.com/results?search_query=how+to+shape+pizza+dough+balls It's very difficult to describe by text.  \nIf you just need a refresher, here you go. Dump the mass onto an unfloured counter. Divide the dough into preferred dough ball size. About 270 for a 10 inch pizza. Fold the edges into the center and flip it over. Take your hands and cup around the back of the pizza with pinkies touching and pull the ball toward you. The friction of the counter will cause the front of the dough to tighten into the center. Turn the dough 90º and repeat until the ball is tight and smooth.\nPlace all the dough balls into a tray to proof." = "قسّم وشكّل كرات.\n ابحث في يوتيوب واختر مقطعاً لتتعلّم تشكيل كرات العجين. https://www.youtube.com/results?search_query=how+to+shape+pizza+dough+balls من الصعب جداً وصف ذلك بالنص.\nإذا كنت تحتاج فقط إلى تذكير، فإليك. اقلب الكتلة على سطح غير مرشوش بالدقيق. قسّم العجينة إلى حجم الكرة المفضّل لديك. نحو 270 لبيتزا قطرها 25 سم. اطوِ الحواف نحو المركز واقلب الكرة. ضع يديك على شكل كوب خلف البيتزا مع تلامس الخنصرين واسحب الكرة نحوك. سيؤدي احتكاك السطح إلى شدّ الجهة الأمامية من العجينة نحو المركز. أدِر العجينة 90º وكرّر حتى تصبح الكرة مشدودة وناعمة.\nضع جميع كرات العجين في صينية للتخمير النهائي.";
+"Proof the dough for between 2 and 8 hours at room temperature or 24 hours in the refrigerator." = "اترك العجينة تختمر بين ساعتين و8 ساعات في درجة حرارة الغرفة، أو 24 ساعة في الثلاجة.";
+"Shape your pizza.\nThis is again something that is best explained by video. Vito Iacopelli is an excentric pizzaioli who has hundreds of videos on Pizza. Here's his shaping video https://www.youtube.com/watch?v=h75bxDwT1Ko" = "شكّل بيتزتك.\nهذا أيضاً يُشرح على نحو أفضل بالفيديو. فيتو ياكوبيلي صانع بيتزا غريب الأطوار لديه مئات مقاطع الفيديو عن البيتزا. إليك فيديو التشكيل الخاص به https://www.youtube.com/watch?v=h75bxDwT1Ko";
+"Cook at the hottest temperature you can. For home, cook on a baking steel which has been preheated to 500ºF or more for 1 hour. For browning, you can turn on your broiler for the last 2 minutes. You should be able to cook in about 5-8 minutes depending on your surface (stone transfers heat slower than steel) and oven temperature. A wood or gas-fired oven is best. You can cook at 932º F in about 60-90 seconds." = "اخبز عند أعلى درجة حرارة ممكنة. في المنزل، اخبز على صفيحة فولاذية للخبز سُخّنت مسبقاً إلى 500ºF أو أكثر لمدة ساعة واحدة. للتحمير، يمكنك تشغيل الشواية العلوية في آخر دقيقتين. ينبغي أن تتمكّن من الخَبز في نحو 5-8 دقائق حسب سطحك (الحجر ينقل الحرارة أبطأ من الفولاذ) ودرجة حرارة الفرن. الأفضل فرن يعمل بالحطب أو الغاز. يمكنك الخَبز عند 932º F في نحو 60-90 ثانية.";
+"Put the dough out onto the counter. Knead the dough for about 2-3 minutes. Then rest the dough into mixing bowl for about 15 minutes. Knead the dough for another 2-3 minutes. By now, the dough should be smooth and you should be able to stretch it so thin, you can see light through it. This is called the window pane test." = "اقلب العجينة على سطح المطبخ. اعجنها نحو 2-3 دقائق. ثم أرِح العجينة في الوعاء نحو 15 دقيقة. اعجنها 2-3 دقائق أخرى. الآن ينبغي أن تكون العجينة ناعمة وأن تتمكّن من مدّها رقيقة جداً بحيث يمرّ الضوء من خلالها. يُسمّى هذا اختبار النافذة.";
+"Bulk ferment.\nLet the dough sit out on the counter for 2-3 hours, depending on the temperature of the room. What you're looking for is that the dough has doubled in size. If you find your dough is getting to 2x size too quickly, you can move it to a colder part of the house. You can also bulk ferment in the refrigerator for 24 hours to give it a longer rise, which improves the flavor." = "التخمير الأولي.\nاترك العجينة على سطح المطبخ لمدة 2-3 ساعات، حسب درجة حرارة الغرفة. ما تبحث عنه هو أن يتضاعف حجم العجينة. إذا وجدتها تتضاعف بسرعة كبيرة، يمكنك نقلها إلى مكان أبرد في المنزل. يمكنك أيضاً إجراء التخمير الأولي في الثلاجة لمدة 24 ساعة لمنحها اختماراً أطول، مما يحسّن النكهة.";
+"Shape your pizza.\nThis is again something that is best explained by video. Pagliacci is a Seattle-based pizza chain that made a few videos a few years ago. They don't make NY style pizza, but their shaping instructions are great. Here's their hand-tossed shaping video https://www.youtube.com/watch?v=VIJlRXMfW50" = "شكّل بيتزتك.\nمرة أخرى، يُشرح هذا على نحو أفضل بالفيديو. باغلياتشي سلسلة بيتزا مقرّها سياتل صنعت بعض المقاطع قبل سنوات. هم لا يصنعون بيتزا على طريقة نيويورك، لكن تعليماتهم للتشكيل رائعة. إليك فيديو التشكيل اليدوي الخاص بهم https://www.youtube.com/watch?v=VIJlRXMfW50";
+"Cook at the hottest temperature you can. For home, cook on a baking steel which has been preheated to 500ºF or more for 1 hour. For browning, you can turn on your broiler for the last 2 minutes. You should be able to cook in about 5-8 minutes depending on your surface (stone transfers heat slower than steel) and oven temperature. A gas-fired oven is considered authentic to NY but wood-fired ovens will work as well. You can cook at 750º F in about 3-4 minutes." = "اخبز عند أعلى درجة حرارة ممكنة. في المنزل، اخبز على صفيحة فولاذية للخبز سُخّنت مسبقاً إلى 500ºF أو أكثر لمدة ساعة واحدة. للتحمير، يمكنك تشغيل الشواية العلوية في آخر دقيقتين. ينبغي أن تتمكّن من الخَبز في نحو 5-8 دقائق حسب سطحك (الحجر ينقل الحرارة أبطأ من الفولاذ) ودرجة حرارة الفرن. يُعدّ الفرن الذي يعمل بالغاز أصيلاً في نيويورك، لكن الأفران التي تعمل بالحطب تؤدي الغرض أيضاً. يمكنك الخَبز عند 750º F في نحو 3-4 دقائق.";
+"Autolyse the flour and water.\nIn the bowl of a stand mixer, add the flour and water, leaving a small amount of water separate for the yeast. Mix just until combined. Let it rest for 20 minutes. After 10 minutes, combine the remaining water and the yeast to proof." = "التحلّل الذاتي للدقيق والماء.\nفي وعاء الخلّاط الكهربائي، أضف الدقيق والماء، مع ترك كمية قليلة من الماء جانباً للخميرة. اخلط فقط حتى يتجانس. اتركه يرتاح 20 دقيقة. بعد 10 دقائق، اخلط الماء المتبقّي مع الخميرة لتنشيطها.";
+"Mix the remaining ingredients.\nPour the yeast and water mixture into the mixing bowl. Add the malt powder or malt syrup into the bowl. Begin mixing on low-medium speed for 3 minutes. Then add the salt and continue mixing for another 7-12 minutes. The dough is ready when it's smooth and ideally it should pass the window pane test. You should be able to slowly stretch it so thin, you can see light through it. Once it's been mixed for 15 minutes, though, you don't want to mix any more." = "اخلط بقية المكوّنات.\nاسكب خليط الخميرة والماء في الوعاء. أضف مسحوق الشعير المنبت (المالت) أو شراب المالت إلى الوعاء. ابدأ الخلط على سرعة منخفضة إلى متوسطة لمدة 3 دقائق. ثم أضف الملح واستمر في الخلط 7-12 دقيقة أخرى. تكون العجينة جاهزة عندما تصبح ناعمة ويُفضَّل أن تجتاز اختبار النافذة. ينبغي أن تتمكّن من مدّها ببطء رقيقة جداً بحيث يمرّ الضوء من خلالها. لكن بمجرد أن تُخلط لمدة 15 دقيقة، لا ترغب في الخلط أكثر.";
+"Bulk ferment the dough.\nDump the dough on an unfloured work surface. Tighten the dough into a ball and place in a lightly-oiled bowl, seam-side down. Cover and let it rise for 1-1.5 hours, until it's doubled in size." = "التخمير الأولي للعجينة.\nاقلب العجينة على سطح عمل غير مرشوش بالدقيق. اشدد العجينة على شكل كرة وضعها في وعاء مدهون قليلاً بالزيت مع جعل خط الإغلاق إلى الأسفل. غطِّها واتركها ترتفع لمدة 1 إلى 1.5 ساعة، حتى يتضاعف حجمها.";
+"Divide and shape into balls.\nDivide the dough into 105-115 gram dough balls. Tighten them like you would a pizza, except these are much smaller. Let them rest for 10 minutes. To shape a bagel, you roll it out into a relatively round rectangle. Roll it up along the long side so you have a tube. Close up the seams by pinching, it doesn't have to be perfect Use the part of your hands above your palm to roll the tube and pull your hands apart to stretch out the tube until it's about 8 inches. Place that part of the hand on one end of the tube. Then grab it and with the other hand, grab the other end and wrap it around the knuckles. With the first hand, take both ends and squeeze them together. Roll this combined piece on the table to make it round and help close up the seams. Repeat this for all the bagels and place on a spray-oiled baking sheet. Wrap the baking sheet in plastic wrap and either let them proof for 1 hour, or rise in the fridge overnight." = "قسّم وشكّل كرات.\nقسّم العجينة إلى كرات وزن كل منها 105-115 غراماً. اشددها كما تفعل مع البيتزا، إلا أن هذه أصغر بكثير. اتركها ترتاح 10 دقائق. لتشكيل خبز الكعك (بيغل)، افرده إلى مستطيل مستدير الشكل تقريباً. لُفّه على طول الجانب الطويل لتحصل على أنبوب. أغلق خطوط الإغلاق بالضغط؛ لا داعي لأن يكون مثالياً. استخدم الجزء من يديك فوق راحة اليد لتدحرج الأنبوب وأبعِد يديك لتمدّ الأنبوب حتى يصبح نحو 8 إنشات. ضع ذلك الجزء من اليد على أحد طرفي الأنبوب. ثم أمسكه، وباليد الأخرى أمسك الطرف الآخر ولُفّه حول مفاصل أصابعك. باليد الأولى، اجمع الطرفين واضغطهما معاً. دحرج هذه القطعة المتصلة على الطاولة لتجعلها مستديرة وتساعد على إغلاق خطوط الإغلاق. كرّر ذلك لجميع قطع البيغل وضعها على صينية خبز مرشوشة بالزيت. غلّف الصينية بغلاف بلاستيكي واترك البيغل إما يختمر نهائياً لمدة ساعة، أو يرتفع في الثلاجة طوال الليل.";
+"Boil the bagels.\nPreheat the oven to 450º F. Then get the boiling water bath ready. You can use 2-3 quarts of water, 1 tbsp of baking soda, and 1.5 tbsp of malt syrup (not powder). Add the baking soda and malt syrup once the water is boiling. If you put the bagels in the fridge, make sure they have rest at room temp for 30-60 minutes before boiling. Boil the bagels in batches, making sure they aren't crowded. They should boil for 30-60 seconds per side and then removed to a drying rack so they can lose excess water. As soon as your done boiling all the bagels, get the desired toppings onto the bagels, such as everything seasoning, sesame seeds, dried garlic, or just flaky salt." = "اسلق البيغل.\nسخّن الفرن مسبقاً إلى 450º F. ثم جهّز حمّام الماء المغلي. يمكنك استخدام 2-3 لترات من الماء، و1 ملعقة كبيرة من صودا الخبز، و1.5 ملعقة كبيرة من شراب المالت (ليس المسحوق). أضف صودا الخبز وشراب المالت بمجرد أن يغلي الماء. إذا وضعت البيغل في الثلاجة، فتأكّد من أنه ارتاح في درجة حرارة الغرفة 30-60 دقيقة قبل السلق. اسلق البيغل على دفعات، مع الحرص على ألّا يكون مزدحماً. ينبغي أن يُسلق 30-60 ثانية لكل جانب ثم يُنقل إلى رفّ تجفيف ليفقد الماء الزائد. بمجرد أن تنتهي من سلق كل البيغل، ضع الإضافات المرغوبة عليه، مثل خلطة everything، أو بذور السمسم، أو الثوم المجفّف، أو مجرد ملح خشن.";
+"Bake the bagels.\nPlace the bagels into the oven on a baking sheet (or if you're fancy, you can bake these on a baking steel/stone). Baking at 450 for 16-18 minutes, turning the baking sheet 180º halfway through for even baking." = "اخبز البيغل.\nضع البيغل في الفرن على صينية خبز (أو، إذا أردت التأنّق، يمكنك خبزه على صفيحة/حجر فولاذي). اخبز عند 450 لمدة 16-18 دقيقة، مع تدوير الصينية 180º في منتصف الوقت للحصول على خبز متساوٍ.";
+"Make the poolish.\nCombine all the poolish ingredients into a bowl. Use your fingers or the handle of a wooden spoon to incorporate completely. Let this ferment for 12-18 hours. It should smell really strong and be bubbly when it's ready." = "حضّر البوليش.\nاخلط جميع مكوّنات البوليش في وعاء. استخدم أصابعك أو مقبض ملعقة خشبية للدمج بالكامل. اترك هذا يختمر 12-18 ساعة. ينبغي أن تكون رائحته قوية جداً وأن يكون مليئاً بالفقاعات عندما يصبح جاهزاً.";
+"Mix the ingredients.\nPut the remaining flour into the bowl of a stand mixer. Put the remaining water and yeast into the poolish to help it release from the bowl. Pour the poolish, yeast, and water mixture into the mixing bowl. Add the malt powder or malt syrup into the bowl. Begin mixing on low-medium speed for 3 minutes. Then add the salt and continue mixing for another 7-12 minutes. The dough is ready when it's smooth and ideally it should pass the window pane test. You should be able to slowly stretch it so thin, you can see light through it. Once it's been mixed for 15 minutes, though, you don't want to mix any more." = "اخلط المكوّنات.\nضع الدقيق المتبقّي في وعاء الخلّاط الكهربائي. ضع الماء والخميرة المتبقّيين في البوليش لمساعدته على الانفصال عن الوعاء. اسكب خليط البوليش والخميرة والماء في الوعاء. أضف مسحوق المالت أو شراب المالت إلى الوعاء. ابدأ الخلط على سرعة منخفضة إلى متوسطة لمدة 3 دقائق. ثم أضف الملح واستمر في الخلط 7-12 دقيقة أخرى. تكون العجينة جاهزة عندما تصبح ناعمة ويُفضَّل أن تجتاز اختبار النافذة. ينبغي أن تتمكّن من مدّها ببطء رقيقة جداً بحيث يمرّ الضوء من خلالها. لكن بمجرد أن تُخلط لمدة 15 دقيقة، لا ترغب في الخلط أكثر.";
+
+/* Calculator result view */
+"Dough" = "العجين";
+"Final Dough" = "العجين النهائي";
+"plus additional ingredients" = "بالإضافة إلى مكوّنات إضافية";
+"Changes from default" = "التغييرات عن الوصفة الافتراضية";
+"Add a note about this batch..." = "أضف ملاحظة عن هذه الدفعة...";
+
+/* Batch 2 localization */
+"recipe.copy_name" = "نسخة من %@";
+"create.instructions.tap_hint" = "اضغط للتعديل، اضغط مطوّلاً للنقل أو الحذف، اسحب لإعادة الترتيب.";
+"share.note.header" = "ملاحظة";
+"share.note.placeholder" = "أضف ملاحظة (اختياري)";
+"share.note.footer" = "ملاحظة شخصية يمكن للمستلم قراءتها من الوصفة.";
+"calculator.preferment.section_title" = "التخمير المسبق: %@";
+"settings.backup.footer" = "تتضمن النسخ الاحتياطية كل الوصفات. يؤدي الاستعادة إلى استبدال مكتبة وصفاتك الحالية.";
+"settings.recently_deleted.nav_title" = "المحذوفة مؤخراً";
+"settings.recently_deleted.empty.title" = "لا توجد وصفات محذوفة مؤخراً";
+"settings.recently_deleted.empty.description" = "ستظهر الوصفات المحذوفة هنا لمدة 30 يوماً.";
+"settings.recently_deleted.footer" = "تُحذف الوصفات نهائياً بعد 30 يوماً.";
+"settings.recently_deleted.restore" = "استعادة";
+"settings.recently_deleted.delete_permanently" = "حذف نهائي";
+"settings.recently_deleted.delete_all" = "حذف الكل";
+"settings.recently_deleted.delete_permanently_title" = "حذف نهائي؟";
+"settings.recently_deleted.delete_all_permanently_title" = "حذف الكل نهائياً؟";
+"settings.recently_deleted.delete_permanently_message" = "ستُحذف هذه الوصفة فوراً. لا يمكن التراجع عن هذا.";
+"settings.recently_deleted.delete_all_permanently_message" = "ستُحذف جميع الوصفات المحذوفة مؤخراً فوراً. لا يمكن التراجع عن هذا.";
+"unit.volume.teaspoon" = "ملاعق صغيرة";
+"unit.volume.tablespoon" = "ملاعق كبيرة";
+"unit.volume.cup" = "أكواب";
+"unit.volume.ounce" = "أونصات";
+"unit.volume.milliliter" = "مل";
+"unit.volume.deciliter" = "دل";
+"unit.volume.liter" = "ل";
+"calculated.percent_total" = "إجمالي %@";
+"settings.recently_deleted.expires_in_one" = "يُحذف خلال يوم واحد";
+"settings.recently_deleted.expires_in_other" = "يُحذف خلال %d أيام";
+"unit.volume.teaspoon.one" = "ملعقة صغيرة";
+"unit.volume.tablespoon.one" = "ملعقة كبيرة";
+"unit.volume.cup.one" = "كوب";
+"unit.volume.ounce.one" = "أونصة";
+"create.instructions.move_to_position" = "انقل إلى موضع…";
+"create.instructions.move_step.title" = "نقل الخطوة";
+"create.instructions.move_step.prompt" = "أدخل رقم الخطوة (1–%d)";
+"create.instructions.move_step.placeholder" = "رقم الخطوة";
+"create.instructions.move_step.action" = "نقل";

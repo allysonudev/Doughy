@@ -8,18 +8,18 @@ import XCTest
 final class RecipeEditUITests: DoughyUITestCase {
 
     func testEditRecipeNameAndSave() throws {
-        app.editRecipe(named: "Neopolitan Pizza")
+        app.editRecipe(named: "Neapolitan Pizza")
 
         let nameField = app.textFields["recipeNameField"]
         XCTAssertTrue(nameField.waitForExistence(timeout: 5))
-        nameField.clearAndType("Neopolitan Pizza Updated", app: app)
+        nameField.clearAndType("Neapolitan Pizza Updated", app: app)
 
         app.tapDetailsNext()
         app.tapIngredientsNext()
         app.saveRecipe()
 
-        XCTAssertTrue(app.staticTexts["Neopolitan Pizza Updated"].waitForExistence(timeout: 5))
-        XCTAssertFalse(app.staticTexts["Neopolitan Pizza"].exists)
+        XCTAssertTrue(app.staticTexts["Neapolitan Pizza Updated"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["Neapolitan Pizza"].exists)
     }
 
     func testEditRecipeWithPrefermentAndSave() throws {

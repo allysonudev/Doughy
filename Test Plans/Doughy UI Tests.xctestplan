@@ -13,7 +13,9 @@
   },
   "testTargets" : [
     {
-      "parallelizable" : true,
+      "skippedTests" : [
+        "DoughyUITestCase"
+      ],
       "target" : {
         "containerPath" : "container:Doughy.xcodeproj",
         "identifier" : "AA000000000000000000000A",

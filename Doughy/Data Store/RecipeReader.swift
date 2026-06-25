@@ -30,18 +30,22 @@ class RecipeReader: NSObject {
     }
     
     func getRecipe(collection: String, name: String) -> XCRecipe? {
-        let fetchRequest = NSFetchRequest<XCRecipe>(entityName: "XCRecipe")
-        fetchRequest.predicate = NSPredicate(format: "collection == %@", collection)
-        fetchRequest.predicate = NSPredicate(format: "name == %@", name)
-        
-        do {
-            let results = try self.coreDataGateway.managedObjectConext.fetch(fetchRequest)
-            return results.isEmpty ? nil : results[0]
+        return RecipeReader.match(name: name, in: getRecipes(collection: collection))
+    }
+
+    /// Finds the stored recipe matching `name` among `candidates`. Callers pass a
+    /// recipe's *display* name, which for a built-in recipe is localized while the
+    /// stored name stays canonical — so an exact stored-name match is tried first
+    /// (user recipes, English, unmodified defaults), then a fallback that resolves
+    /// each default's localized display name the same way it's presented.
+    static func match(name: String, in candidates: [XCRecipe]) -> XCRecipe? {
+        if let exact = candidates.first(where: { $0.name == name }) {
+            return exact
         }
-        catch {
-            print("No recipe found for name \(name) collection \(collection)")
+        return candidates.first { xc in
+            guard let key = xc.value(forKey: "defaultKey") as? String else { return false }
+            return DefaultLocalization.recipeDisplayName(storedName: xc.name ?? "", defaultKey: key) == name
         }
-        return nil
     }
     
     func getRecipes(collection: String) -> [XCRecipe] {

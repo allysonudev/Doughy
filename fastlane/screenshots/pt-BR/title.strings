@@ -1,0 +1,5 @@
+/* DRAFT — review wording. Keep one space around "=". */
+"01_RecipeList" = "Todas as receitas, organizadas";
+"02_Calculator" = "Ajuste para qualquer quantidade";
+"03_Result" = "Pesos exatos, na hora";
+"04_CreateRecipe" = "Crie receitas do seu jeito";

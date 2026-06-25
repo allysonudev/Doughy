@@ -9,8 +9,8 @@ import FoundationModels
 #endif
 
 enum DoughyShortcut {
-    static let scanRecipe = "org.georgie.Doughy.scanRecipe"
-    static let openRecipe = "org.georgie.Doughy.openRecipe"
+    static let scanRecipe = "org.curiousurick.Doughy.scanRecipe"
+    static let openRecipe = "org.curiousurick.Doughy.openRecipe"
     static let collectionUserInfoKey = "collection"
     static let nameUserInfoKey = "name"
 }

@@ -1,0 +1,5 @@
+/* DRAFT — review wording. Keep one space around "=". */
+"01_RecipeList" = "Allar uppskriftir, skipulagðar";
+"02_Calculator" = "Skalaðu í hvaða magn sem er";
+"03_Result" = "Nákvæm þyngd, samstundis";
+"04_CreateRecipe" = "Búðu til uppskriftir á þinn hátt";

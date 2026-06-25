@@ -20,8 +20,15 @@ class PercentFormatter: NSObject {
     }
 
     func format(percent: Double) -> String {
-        let percentString = formatter.string(from: NSNumber(floatLiteral: percent))!
-        return "\(percentString)%"
+        "\(formatNumber(percent: percent))\(percentSymbol)"
     }
+
+    /// Just the locale-formatted number, without the percent symbol.
+    func formatNumber(percent: Double) -> String {
+        formatter.string(from: NSNumber(floatLiteral: percent)) ?? "\(percent)"
+    }
+
+    /// The locale's percent symbol (e.g. "٪" in Arabic, "%" in Latin locales).
+    var percentSymbol: String { formatter.percentSymbol ?? "%" }
 
 }

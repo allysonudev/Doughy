@@ -114,7 +114,7 @@ struct CalculatorView: View {
                         .keyboardType(.decimalPad)
                         .frame(width: 100)
                         .accessibilityIdentifier("singleDoughWeightField")
-                    Text("g").foregroundStyle(.secondary)
+                    Text(String(localized: "unit.grams.short", defaultValue: "g")).foregroundStyle(.secondary)
                 }
             }
 
@@ -249,44 +249,56 @@ struct CalculatorView: View {
                     HStack {
                         Text(ingredient.name)
                         Spacer()
-                        TextField(
-                            String(format: "%.4g", ingredient.defaultWeight ?? 0),
-                            value: Binding(
-                                get: { ingredientWeights[index] },
-                                set: { ingredientWeights[index] = $0 }
-                            ),
-                            format: .number
-                        )
-                        .multilineTextAlignment(.trailing)
-                        .keyboardType(.decimalPad)
-                        .frame(width: 70)
-                        .accessibilityIdentifier("ingredientWeightField_\(index)")
-                        Text("g").foregroundStyle(.secondary)
+                        HStack(spacing: 4) {
+                            TextField(
+                                String(format: "%.4g", ingredient.defaultWeight ?? 0),
+                                value: Binding(
+                                    get: { ingredientWeights[index] },
+                                    set: { ingredientWeights[index] = $0 }
+                                ),
+                                format: .number
+                            )
+                            .multilineTextAlignment(.trailing)
+                            .keyboardType(.decimalPad)
+                            .frame(width: 70)
+                            .accessibilityIdentifier("ingredientWeightField_\(index)")
+                            Text(String(localized: "unit.grams.short", defaultValue: "g")).foregroundStyle(.secondary)
+                        }
+                        .environment(\.layoutDirection, .leftToRight)
                     }
                 } else if ingredient.isFlour {
                     HStack {
                         Text(ingredient.name)
                         Spacer()
-                        Text(PercentFormatter.shared.format(percent: ingredient.defaultPercentage))
-                            .foregroundStyle(.secondary)
+                        HStack(spacing: 4) {
+                            Text(PercentFormatter.shared.formatNumber(percent: ingredient.defaultPercentage))
+                                .frame(width: 70, alignment: .trailing)
+                                .foregroundStyle(.secondary)
+                            Text(PercentFormatter.shared.percentSymbol)
+                                .foregroundStyle(.secondary)
+                        }
+                        .environment(\.layoutDirection, .leftToRight)
                     }
                 } else {
                     HStack {
                         Text(ingredient.name)
                         Spacer()
-                        TextField(
-                            String(format: "%.4g", ingredient.defaultPercentage),
-                            value: Binding(
-                                get: { ingredientPercents[index] },
-                                set: { ingredientPercents[index] = $0 }
-                            ),
-                            format: .number
-                        )
-                        .multilineTextAlignment(.trailing)
-                        .keyboardType(.decimalPad)
-                        .frame(width: 70)
-                        .accessibilityIdentifier("ingredientPercentField_\(index)")
-                        Text("%").foregroundStyle(.secondary)
+                        HStack(spacing: 4) {
+                            TextField(
+                                String(format: "%.4g", ingredient.defaultPercentage),
+                                value: Binding(
+                                    get: { ingredientPercents[index] },
+                                    set: { ingredientPercents[index] = $0 }
+                                ),
+                                format: .number
+                            )
+                            .multilineTextAlignment(.trailing)
+                            .keyboardType(.decimalPad)
+                            .frame(width: 70)
+                            .accessibilityIdentifier("ingredientPercentField_\(index)")
+                            Text("%").foregroundStyle(.secondary)
+                        }
+                        .environment(\.layoutDirection, .leftToRight)
                     }
                 }
             }
@@ -387,61 +399,76 @@ struct CalculatorView: View {
 
     @ViewBuilder
     private func prefermentAdjustSection(preferment: Preferment) -> some View {
-        Section("Preferment: \(preferment.name)") {
+        Section(String(format: String(localized: "calculator.preferment.section_title", defaultValue: "Preferment: %@"), preferment.name)) {
             HStack {
                 Text("Flour of Total")
                 Spacer()
-                TextField(
-                    String(format: "%.4g", preferment.flourPercentage),
-                    value: $prefermentTotalPercent,
-                    format: .number
-                )
-                .multilineTextAlignment(.trailing)
-                .keyboardType(.decimalPad)
-                .frame(width: 70)
-                Text("%").foregroundStyle(.secondary)
+                HStack(spacing: 4) {
+                    TextField(
+                        String(format: "%.4g", preferment.flourPercentage),
+                        value: $prefermentTotalPercent,
+                        format: .number
+                    )
+                    .multilineTextAlignment(.trailing)
+                    .keyboardType(.decimalPad)
+                    .frame(width: 70)
+                    Text("%").foregroundStyle(.secondary)
+                }
+                .environment(\.layoutDirection, .leftToRight)
             }
             ForEach(Array(preferment.ingredients.enumerated()), id: \.offset) { index, ingredient in
                 if isWeightRecipe {
                     HStack {
                         Text(ingredient.name)
                         Spacer()
-                        TextField(
-                            String(format: "%.4g", ingredient.defaultWeight ?? 0),
-                            value: Binding(
-                                get: { prefermentIngredientWeights[index] },
-                                set: { prefermentIngredientWeights[index] = $0 }
-                            ),
-                            format: .number
-                        )
-                        .multilineTextAlignment(.trailing)
-                        .keyboardType(.decimalPad)
-                        .frame(width: 70)
-                        Text("g").foregroundStyle(.secondary)
+                        HStack(spacing: 4) {
+                            TextField(
+                                String(format: "%.4g", ingredient.defaultWeight ?? 0),
+                                value: Binding(
+                                    get: { prefermentIngredientWeights[index] },
+                                    set: { prefermentIngredientWeights[index] = $0 }
+                                ),
+                                format: .number
+                            )
+                            .multilineTextAlignment(.trailing)
+                            .keyboardType(.decimalPad)
+                            .frame(width: 70)
+                            Text(String(localized: "unit.grams.short", defaultValue: "g")).foregroundStyle(.secondary)
+                        }
+                        .environment(\.layoutDirection, .leftToRight)
                     }
                 } else if ingredient.isFlour {
                     HStack {
                         Text(ingredient.name)
                         Spacer()
-                        Text(PercentFormatter.shared.format(percent: ingredient.defaultPercentage))
-                            .foregroundStyle(.secondary)
+                        HStack(spacing: 4) {
+                            Text(PercentFormatter.shared.formatNumber(percent: ingredient.defaultPercentage))
+                                .frame(width: 70, alignment: .trailing)
+                                .foregroundStyle(.secondary)
+                            Text(PercentFormatter.shared.percentSymbol)
+                                .foregroundStyle(.secondary)
+                        }
+                        .environment(\.layoutDirection, .leftToRight)
                     }
                 } else {
                     HStack {
                         Text(ingredient.name)
                         Spacer()
-                        TextField(
-                            String(format: "%.4g", ingredient.defaultPercentage),
-                            value: Binding(
-                                get: { prefermentIngredientPercents[index] },
-                                set: { prefermentIngredientPercents[index] = $0 }
-                            ),
-                            format: .number
-                        )
-                        .multilineTextAlignment(.trailing)
-                        .keyboardType(.decimalPad)
-                        .frame(width: 70)
-                        Text("%").foregroundStyle(.secondary)
+                        HStack(spacing: 4) {
+                            TextField(
+                                String(format: "%.4g", ingredient.defaultPercentage),
+                                value: Binding(
+                                    get: { prefermentIngredientPercents[index] },
+                                    set: { prefermentIngredientPercents[index] = $0 }
+                                ),
+                                format: .number
+                            )
+                            .multilineTextAlignment(.trailing)
+                            .keyboardType(.decimalPad)
+                            .frame(width: 70)
+                            Text("%").foregroundStyle(.secondary)
+                        }
+                        .environment(\.layoutDirection, .leftToRight)
                     }
                 }
             }

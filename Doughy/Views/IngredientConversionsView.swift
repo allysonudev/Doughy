@@ -301,11 +301,11 @@ private struct AddConversionSheet: View {
                 Section {
                     Picker(String(localized: "conversions.unit", defaultValue: "Unit"), selection: $unit) {
                         ForEach(units, id: \.self) { u in
-                            Text(VolumeUnitFormatter.label(unit: u, amount: 1).capitalized).tag(u)
+                            Text(VolumeUnitFormatter.pickerLabel(unit: u)).tag(u)
                         }
                     }
                     HStack {
-                        Text(String(format: String(localized: "conversions.grams_per_unit", defaultValue: "Grams per %@"), VolumeUnitFormatter.label(unit: unit, amount: 1)))
+                        Text(String(format: String(localized: "conversions.grams_per_unit", defaultValue: "Grams per %@"), VolumeUnitFormatter.pickerLabel(unit: unit)))
                         Spacer()
                         TextField("0", value: $gramsPerUnit, format: .number.precision(.fractionLength(0...2)))
                             .multilineTextAlignment(.trailing)
@@ -316,7 +316,7 @@ private struct AddConversionSheet: View {
                 } header: {
                     Text(String(localized: "conversions.conversion", defaultValue: "Conversion"))
                 } footer: {
-                    Text(String(format: String(localized: "conversions.grams_per_unit.footer", defaultValue: "Enter how many grams are in one %@ of this ingredient."), VolumeUnitFormatter.label(unit: unit, amount: 1)))
+                    Text(String(format: String(localized: "conversions.grams_per_unit.footer", defaultValue: "Enter how many grams are in one %@ of this ingredient."), VolumeUnitFormatter.pickerLabel(unit: unit)))
                 }
             }
             .navigationTitle(String(localized: "action.add_ingredient", defaultValue: "Add Ingredient"))

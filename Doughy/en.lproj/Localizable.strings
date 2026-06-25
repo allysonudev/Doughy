@@ -64,7 +64,7 @@
 "density.ingredient.powdered_sugar" = "Powdered Sugar";
 "density.ingredient.rice_flour" = "Rice Flour";
 "density.ingredient.rye_flour" = "Rye Flour";
-"density.ingredient.sea_salt" = "Sea Salt";
+"density.ingredient.fine_sea_salt" = "Fine Sea Salt";
 "density.ingredient.seeds" = "Seeds";
 "density.ingredient.self_rising_flour" = "Self-Rising Flour";
 "density.ingredient.semolina_flour" = "Semolina Flour";
@@ -133,7 +133,7 @@
 "create.flours.main.percent_remaining" = "%.4g%% remaining to reach 100%%";
 "create.flours.preferment.percent_remaining" = "%.4g%% remaining to reach 100%% of the preferment's flour.";
 "create.ingredient_name" = "Ingredient Name";
-"create.ingredients.percent_total" = "%.4g%% total";
+"create.ingredients.percent_total" = "%@ total";
 "create.mode.percent.description" = "Best for flour-based doughs where ingredients scale from total flour";
 "create.mode.percent.title" = "By Baker's Percentage";
 "create.mode.scan.description" = "Use Apple Intelligence to read a recipe from a photo or screenshot, entirely on-device and offline";
@@ -349,3 +349,54 @@
 "default_recipe_new_york_pizza" = "New York Pizza";
 "default_recipe_bagels" = "Bagels";
 "default_recipe_bagels_with_poolish" = "Bagels With Poolish";
+"default_collection.pizza" = "Pizza";
+"default_collection.bagels" = "Bagels";
+"default_ingredient.fine_sea_salt" = "Fine Sea Salt";
+"default_ingredient.sugar" = "Sugar";
+"default_ingredient.poolish" = "Poolish";
+
+/* Calculator result view */
+"Dough" = "Dough";
+"Final Dough" = "Final Dough";
+"plus additional ingredients" = "plus additional ingredients";
+"Changes from default" = "Changes from default";
+"Add a note about this batch..." = "Add a note about this batch...";
+
+/* Batch 2 localization */
+"recipe.copy_name" = "Copy of %@";
+"create.instructions.tap_hint" = "Tap to edit, hold to move or delete, drag to reorder.";
+"share.note.header" = "Note";
+"share.note.placeholder" = "Add a note (optional)";
+"share.note.footer" = "A personal note the recipient can read from the recipe.";
+"calculator.preferment.section_title" = "Preferment: %@";
+"settings.backup.footer" = "Backups include every recipe. Restoring a backup replaces your current recipe library.";
+"settings.recently_deleted.nav_title" = "Recently Deleted";
+"settings.recently_deleted.empty.title" = "No Recently Deleted Recipes";
+"settings.recently_deleted.empty.description" = "Deleted recipes will appear here for 30 days.";
+"settings.recently_deleted.footer" = "Recipes are permanently deleted after 30 days.";
+"settings.recently_deleted.restore" = "Restore";
+"settings.recently_deleted.delete_permanently" = "Delete Permanently";
+"settings.recently_deleted.delete_all" = "Delete All";
+"settings.recently_deleted.delete_permanently_title" = "Delete Permanently?";
+"settings.recently_deleted.delete_all_permanently_title" = "Delete All Permanently?";
+"settings.recently_deleted.delete_permanently_message" = "This recipe will be deleted immediately. This can't be undone.";
+"settings.recently_deleted.delete_all_permanently_message" = "All recently deleted recipes will be deleted immediately. This can't be undone.";
+"unit.volume.teaspoon" = "Teaspoons";
+"unit.volume.tablespoon" = "Tablespoons";
+"unit.volume.cup" = "Cups";
+"unit.volume.ounce" = "Ounces";
+"unit.volume.milliliter" = "ml";
+"unit.volume.deciliter" = "dl";
+"unit.volume.liter" = "l";
+"calculated.percent_total" = "%@ total";
+"settings.recently_deleted.expires_in_one" = "Deletes in 1 day";
+"settings.recently_deleted.expires_in_other" = "Deletes in %d days";
+"unit.volume.teaspoon.one" = "teaspoon";
+"unit.volume.tablespoon.one" = "tablespoon";
+"unit.volume.cup.one" = "cup";
+"unit.volume.ounce.one" = "ounce";
+"create.instructions.move_to_position" = "Move to position…";
+"create.instructions.move_step.title" = "Move Step";
+"create.instructions.move_step.prompt" = "Enter a step number (1–%d)";
+"create.instructions.move_step.placeholder" = "Step number";
+"create.instructions.move_step.action" = "Move";

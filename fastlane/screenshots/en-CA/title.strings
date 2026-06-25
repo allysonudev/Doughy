@@ -1,0 +1,5 @@
+/* DRAFT — review wording. Keep one space around "=". */
+"01_RecipeList" = "Every recipe, organized";
+"02_Calculator" = "Scale to any batch size";
+"03_Result" = "Exact weights, instantly";
+"04_CreateRecipe" = "Build recipes your way";

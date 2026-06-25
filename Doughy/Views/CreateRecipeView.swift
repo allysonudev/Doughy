@@ -201,19 +201,19 @@ private struct MoveStepSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Move Step")
+            Text(String(localized: "create.instructions.move_step.title", defaultValue: "Move Step"))
                 .font(.headline)
-            Text("Enter a step number (1–\(total))")
+            Text(String(format: String(localized: "create.instructions.move_step.prompt", defaultValue: "Enter a step number (1–%d)"), total))
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
-            TextField("Step number", text: $text)
+            TextField(String(localized: "create.instructions.move_step.placeholder", defaultValue: "Step number"), text: $text)
                 .keyboardType(.numberPad)
                 .textFieldStyle(.roundedBorder)
                 .focused($isFocused)
             HStack {
                 Spacer()
-                Button("Cancel") { onDismiss() }
-                Button("Move") {
+                Button(String(localized: "action.cancel", defaultValue: "Cancel")) { onDismiss() }
+                Button(String(localized: "create.instructions.move_step.action", defaultValue: "Move")) {
                     if isValid, let t = target { onMove(t) }
                     onDismiss()
                 }
@@ -613,7 +613,7 @@ struct CreateRecipeView: View {
     }
 
     private static func copyName(for name: String) -> String {
-        "Copy of \(name)"
+        String(format: String(localized: "recipe.copy_name", defaultValue: "Copy of %@"), name)
     }
 
     private var effectiveCollection: String {
@@ -1050,7 +1050,7 @@ struct CreateRecipeView: View {
             Section("Collection") {
                 if !collections.isEmpty && !isNewCollection {
                     Picker("Collection", selection: $collectionName) {
-                        ForEach(collections, id: \.self) { Text($0).tag($0) }
+                        ForEach(collections, id: \.self) { Text(DefaultLocalization.collectionName($0)).tag($0) }
                     }
                     .accessibilityIdentifier("collectionPicker")
                     .onAppear {
@@ -1085,13 +1085,16 @@ struct CreateRecipeView: View {
                     HStack {
                         Text("Default Dough Weight")
                         Spacer()
-                        TextField("500", value: $defaultWeight, format: FlexibleDecimalStyle(fractionDigits: 0...2))
-                            .multilineTextAlignment(.trailing)
-                            .keyboardType(.decimalPad)
-                            .frame(width: 80)
-                            .accessibilityIdentifier("defaultWeightField")
-                            .accessibilityLabel("Default dough weight in grams")
-                        Text("g").foregroundStyle(.secondary)
+                        HStack(spacing: 4) {
+                            TextField("500", value: $defaultWeight, format: FlexibleDecimalStyle(fractionDigits: 0...2))
+                                .multilineTextAlignment(.trailing)
+                                .keyboardType(.decimalPad)
+                                .frame(width: 80)
+                                .accessibilityIdentifier("defaultWeightField")
+                                .accessibilityLabel("Default dough weight in grams")
+                            Text(String(localized: "unit.grams.short", defaultValue: "g")).foregroundStyle(.secondary)
+                        }
+                        .environment(\.layoutDirection, .leftToRight)
                     }
                 }
             }
@@ -1225,14 +1228,17 @@ struct CreateRecipeView: View {
                                             pendingValueRowID: $pendingValueRowID,
                                             exclude: Set(flours.map { $0.name.lowercased() }.filter { !$0.isEmpty }))
                         Spacer()
-                        TextField("0", value: $flours[index].value, format: FlexibleDecimalStyle(fractionDigits: 0...4))
-                            .multilineTextAlignment(.trailing)
-                            .keyboardType(.decimalPad)
-                            .frame(width: 70)
-                            .accessibilityIdentifier("flourValueField_\(index)")
-                            .accessibilityLabel("\(flours[index].name.isEmpty ? "Flour" : flours[index].name), \(isPercent ? "percentage" : "grams")")
-                            .focused($focusedValueRowID, equals: flours[index].id)
-                        Text(isPercent ? "%" : "g").foregroundStyle(.secondary)
+                        HStack(spacing: 4) {
+                            TextField("0", value: $flours[index].value, format: FlexibleDecimalStyle(fractionDigits: 0...4))
+                                .multilineTextAlignment(.trailing)
+                                .keyboardType(.decimalPad)
+                                .frame(width: 70)
+                                .accessibilityIdentifier("flourValueField_\(index)")
+                                .accessibilityLabel("\(flours[index].name.isEmpty ? "Flour" : flours[index].name), \(isPercent ? "percentage" : "grams")")
+                                .focused($focusedValueRowID, equals: flours[index].id)
+                            Text(isPercent ? "%" : String(localized: "unit.grams.short", defaultValue: "g")).foregroundStyle(.secondary)
+                        }
+                        .environment(\.layoutDirection, .leftToRight)
                     }
                 }
                 .onDelete { offsets in
@@ -1305,7 +1311,7 @@ struct CreateRecipeView: View {
                                     .accessibilityIdentifier("ingredientValueField_\(index)")
                                     .accessibilityLabel("\(ingredients[index].name.isEmpty ? "Ingredient" : ingredients[index].name), \(isPercent ? "percentage" : "grams")")
                                     .focused($focusedValueRowID, equals: ingredients[index].id)
-                                Text(isPercent ? "%" : "g").foregroundStyle(.secondary)
+                                Text(isPercent ? "%" : String(localized: "unit.grams.short", defaultValue: "g")).foregroundStyle(.secondary)
                             }
                             if isPercent && containsPreferment {
                                 let name = ingredients[index].name
@@ -1313,26 +1319,30 @@ struct CreateRecipeView: View {
                                     .first { $0.name.caseInsensitiveCompare(name) == .orderedSame }?.value
                                 if let prefVal, prefVal > 0.001, !name.isEmpty {
                                     let combined = prefermentContribution(prefVal) + (ingredients[index].value ?? 0)
-                                    Text(String(format: String(localized: "create.ingredients.percent_total", defaultValue: "%.4g%% total"), combined))
+                                    Text(String(format: String(localized: "create.ingredients.percent_total", defaultValue: "%@ total"), PercentFormatter.shared.format(percent: combined)))
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
                                 }
                             }
                         }
+                        .environment(\.layoutDirection, .leftToRight)
                     }
                     HStack {
                         Text("Temperature (optional)")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                         Spacer()
-                        TextField("–", value: $ingredients[index].tempValue, format: FlexibleDecimalStyle(fractionDigits: 0...1))
-                            .multilineTextAlignment(.trailing)
-                            .keyboardType(.decimalPad)
-                            .frame(width: 60)
-                            .focused($focusedTempRowID, equals: ingredients[index].id)
-                            .accessibilityIdentifier("ingredientTempField_\(index)")
-                            .accessibilityLabel("\(ingredients[index].name.isEmpty ? "Ingredient" : ingredients[index].name) temperature in °\(useCelsius ? "C" : "F")")
-                        Text("°\(useCelsius ? "C" : "F")").foregroundStyle(.secondary)
+                        HStack(spacing: 4) {
+                            TextField("–", value: $ingredients[index].tempValue, format: FlexibleDecimalStyle(fractionDigits: 0...1))
+                                .multilineTextAlignment(.trailing)
+                                .keyboardType(.decimalPad)
+                                .frame(width: 60)
+                                .focused($focusedTempRowID, equals: ingredients[index].id)
+                                .accessibilityIdentifier("ingredientTempField_\(index)")
+                                .accessibilityLabel("\(ingredients[index].name.isEmpty ? "Ingredient" : ingredients[index].name) temperature in \(TemperatureFormatter.shared.unitSymbol(useCelsius: useCelsius))")
+                            Text(TemperatureFormatter.shared.unitSymbol(useCelsius: useCelsius)).foregroundStyle(.secondary)
+                        }
+                        .environment(\.layoutDirection, .leftToRight)
                     }
                     .contentShape(Rectangle())
                     .onTapGesture { focusedTempRowID = ingredients[index].id }
@@ -1388,12 +1398,12 @@ struct CreateRecipeView: View {
                                 .accessibilityIdentifier("extraIngredientAmountField_\(index)")
                             Menu {
                                 ForEach(extraIngredientUnits, id: \.self) { unit in
-                                    Button(VolumeUnitFormatter.menuName(unit: unit)) {
+                                    Button(VolumeUnitFormatter.pickerLabel(unit: unit)) {
                                         extraIngredients[index].unit = unit
                                     }
                                 }
                             } label: {
-                                Text(VolumeUnitFormatter.menuName(unit: extra.unit))
+                                Text(VolumeUnitFormatter.pickerLabel(unit: extra.unit))
                             }
                             .accessibilityIdentifier("extraIngredientUnitMenu_\(index)")
                         }
@@ -1687,7 +1697,7 @@ struct CreateRecipeView: View {
 
     private var prefermentForm: some View {
         let isPercent = inputMode == .byPercent
-        let unit = isPercent ? "%" : "g"
+        let unit = isPercent ? "%" : String(localized: "unit.grams.short", defaultValue: "g")
         return Form {
             Section("Preferment Details") {
                 TextField("Name (e.g. Biga, Poolish)", text: $prefermentName)
@@ -1698,12 +1708,15 @@ struct CreateRecipeView: View {
                     HStack {
                         Text("% of Total Flour")
                         Spacer()
-                        TextField("0", value: $prefermentFlourPercent, format: FlexibleDecimalStyle(fractionDigits: 0...4))
-                            .multilineTextAlignment(.trailing)
-                            .keyboardType(.decimalPad)
-                            .frame(width: 70)
-                            .accessibilityIdentifier("prefermentFlourPercentField")
-                        Text("%").foregroundStyle(.secondary)
+                        HStack(spacing: 4) {
+                            TextField("0", value: $prefermentFlourPercent, format: FlexibleDecimalStyle(fractionDigits: 0...4))
+                                .multilineTextAlignment(.trailing)
+                                .keyboardType(.decimalPad)
+                                .frame(width: 70)
+                                .accessibilityIdentifier("prefermentFlourPercentField")
+                            Text("%").foregroundStyle(.secondary)
+                        }
+                        .environment(\.layoutDirection, .leftToRight)
                     }
                 }
             }
@@ -1719,13 +1732,16 @@ struct CreateRecipeView: View {
                                             pendingValueRowID: $pendingValueRowID,
                                             exclude: Set(prefermentFlours.map { $0.name.lowercased() }.filter { !$0.isEmpty }))
                         Spacer()
-                        TextField("0", value: $prefermentFlours[index].value, format: FlexibleDecimalStyle(fractionDigits: 0...4))
-                            .multilineTextAlignment(.trailing)
-                            .keyboardType(.decimalPad)
-                            .frame(width: 70)
-                            .accessibilityIdentifier("prefermentFlourValueField_\(index)")
-                            .focused($focusedValueRowID, equals: prefermentFlours[index].id)
-                        Text(unit).foregroundStyle(.secondary)
+                        HStack(spacing: 4) {
+                            TextField("0", value: $prefermentFlours[index].value, format: FlexibleDecimalStyle(fractionDigits: 0...4))
+                                .multilineTextAlignment(.trailing)
+                                .keyboardType(.decimalPad)
+                                .frame(width: 70)
+                                .accessibilityIdentifier("prefermentFlourValueField_\(index)")
+                                .focused($focusedValueRowID, equals: prefermentFlours[index].id)
+                            Text(unit).foregroundStyle(.secondary)
+                        }
+                        .environment(\.layoutDirection, .leftToRight)
                     }
                 }
                 .onDelete { prefermentFlours.remove(atOffsets: $0) }
@@ -1765,13 +1781,16 @@ struct CreateRecipeView: View {
                                             pendingValueRowID: $pendingValueRowID,
                                             exclude: Set(prefermentIngredientRows.map { $0.name.lowercased() }.filter { !$0.isEmpty }))
                         Spacer()
-                        TextField("0", value: $prefermentIngredientRows[index].value, format: FlexibleDecimalStyle(fractionDigits: 0...4))
-                            .multilineTextAlignment(.trailing)
-                            .keyboardType(.decimalPad)
-                            .frame(width: 70)
-                            .accessibilityIdentifier("prefermentIngredientValueField_\(index)")
-                            .focused($focusedValueRowID, equals: prefermentIngredientRows[index].id)
-                        Text(unit).foregroundStyle(.secondary)
+                        HStack(spacing: 4) {
+                            TextField("0", value: $prefermentIngredientRows[index].value, format: FlexibleDecimalStyle(fractionDigits: 0...4))
+                                .multilineTextAlignment(.trailing)
+                                .keyboardType(.decimalPad)
+                                .frame(width: 70)
+                                .accessibilityIdentifier("prefermentIngredientValueField_\(index)")
+                                .focused($focusedValueRowID, equals: prefermentIngredientRows[index].id)
+                            Text(unit).foregroundStyle(.secondary)
+                        }
+                        .environment(\.layoutDirection, .leftToRight)
                     }
                 }
                 .onDelete { prefermentIngredientRows.remove(atOffsets: $0) }
@@ -1877,7 +1896,7 @@ struct CreateRecipeView: View {
             if !extraIngredients.isEmpty {
                 Section {
                     ForEach(extraIngredients) { extra in
-                        LabeledContent(extra.name, value: VolumeUnitFormatter.format(amount: extra.amount, unit: extra.unit))
+                        LabeledContent(extra.name, value: VolumeUnitFormatter.localizedFormat(amount: extra.amount, unit: extra.unit))
                     }
                 } header: {
                     Text("Additional Ingredients")
@@ -1942,7 +1961,7 @@ struct CreateRecipeView: View {
                                     moveStepText = ""
                                     showMoveStepAlert = true
                                 } label: {
-                                    Label("Move to position…", systemImage: "arrow.up.arrow.down")
+                                    Label(String(localized: "create.instructions.move_to_position", defaultValue: "Move to position…"), systemImage: "arrow.up.arrow.down")
                                 }
                                 Button(role: .destructive) {
                                     if editingStepIndex == index { editingStepIndex = nil }
@@ -1958,7 +1977,7 @@ struct CreateRecipeView: View {
             } header: {
                 Text("Instructions (Optional)")
             } footer: {
-                Text("Tap to edit, hold to move or delete, drag to reorder.")
+                Text(String(localized: "create.instructions.tap_hint", defaultValue: "Tap to edit, hold to move or delete, drag to reorder."))
             }
 
             Section("Add Step") {

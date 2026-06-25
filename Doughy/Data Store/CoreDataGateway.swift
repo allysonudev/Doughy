@@ -28,7 +28,7 @@ class CoreDataGateway: NSObject {
         let cloudContainer = NSPersistentCloudKitContainer(name: "Doughy")
         if let desc = cloudContainer.persistentStoreDescriptions.first {
             desc.cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(
-                containerIdentifier: "iCloud.org.georgie.Doughy"
+                containerIdentifier: "iCloud.org.curiousurick.Doughy"
             )
             desc.setOption(true as NSNumber, forKey: NSMigratePersistentStoresAutomaticallyOption)
             desc.setOption(true as NSNumber, forKey: NSInferMappingModelAutomaticallyOption)

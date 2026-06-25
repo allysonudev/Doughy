@@ -70,7 +70,7 @@
 "density.ingredient.powdered_sugar" = "粉砂糖";
 "density.ingredient.rice_flour" = "米粉";
 "density.ingredient.rye_flour" = "ライ麦粉";
-"density.ingredient.sea_salt" = "海塩";
+"density.ingredient.fine_sea_salt" = "細かい海塩";
 "density.ingredient.seeds" = "種実類";
 "density.ingredient.self_rising_flour" = "薄力粉（ベーキングパウダー入り）";
 "density.ingredient.semolina_flour" = "セモリナ粉";
@@ -140,7 +140,7 @@
 "create.flours.main.percent_remaining" = "100%%まであと%.4g%%";
 "create.flours.preferment.percent_remaining" = "前種の小麦粉100%%まであと%.4g%%。";
 "create.ingredient_name" = "食材名";
-"create.ingredients.percent_total" = "合計 %.4g%%";
+"create.ingredients.percent_total" = "合計 %@";
 "create.mode.percent.description" = "小麦粉を基準に食材を配合する、粉を使った生地に最適";
 "create.mode.percent.title" = "ベーカーズパーセントで入力";
 "create.mode.scan.description" = "Apple Intelligenceを使って写真やスクリーンショットからレシピを読み取ります。完全にオンデバイスでオフラインで処理されます";
@@ -360,3 +360,75 @@
 "default_recipe_new_york_pizza" = "ニューヨーク風ピザ";
 "default_recipe_bagels" = "ベーグル";
 "default_recipe_bagels_with_poolish" = "プーリッシュベーグル";
+"default_collection.pizza" = "ピザ";
+"default_collection.bagels" = "ベーグル";
+"default_ingredient.fine_sea_salt" = "細かい海塩";
+"default_ingredient.sugar" = "砂糖";
+"default_ingredient.poolish" = "ポーリッシュ";
+
+/* Default recipe instructions (localized only for the built-in recipes) */
+"Mix all the ingredients.\nAdd water to the mixing bowl. Add yeast to the water and stir until combined. You can let it sit for 10 minutes to proof or move to the next step if you trust your yeast. Then add the flour. Use your hands to combine the ingredients together until fully incorporated. The doughy will be  kind of sticky and won't be smooth yet. Add the salt and incorporate it into the dough until fully mixed up. Should only take about 30 seconds. Cover the mixing bowl with a cloth." = "すべての材料を混ぜます。\nミキシングボウルに水を入れます。水にイーストを加え、混ざるまでかき混ぜます。10分ほど置いて予備発酵させてもよいですし、イーストを信頼しているなら次の手順に進んでもかまいません。次に小麦粉を加えます。手を使って材料が完全になじむまで混ぜ合わせます。生地は少しべたつき、まだなめらかにはなりません。塩を加え、生地に完全になじむまで混ぜ込みます。30秒ほどで済むはずです。ボウルを布で覆います。";
+"Stretch and fold.\nLet the dough rest for 30 minutes. Then begin your stretch and folds. Remove the cloth. Wet your hands and loosen the dough from the sides. Making sure to keep your hands damp (not dripping, this will add hydration to the dough), grab one edge of the dough. Lift it as far as it will go without tearing (make sure it doesn't tear) and fold it into the center. Turn the bowl and repeat this until you come back to the first spot you folded. Repeat 30 minute rest and stretch and fold 3-4 times until your dough can be stretched so thin, you can see light through it. This is called the window pane test." = "ストレッチ＆フォールド。\n生地を30分休ませます。それからストレッチ＆フォールドを始めます。布を外します。手をぬらし、生地を縁から剥がします。手を湿らせたまま（したたるほどではなく、生地に水分を加えてしまうので）、生地の端をつかみます。破れない範囲でできるだけ引き上げ（破れないように注意してください）、中央へ折り込みます。ボウルを回し、最初に折った位置に戻るまで繰り返します。30分の休ませとストレッチ＆フォールドを3〜4回繰り返し、生地が光を通すほど薄く伸ばせるようになるまで続けます。これをウィンドウペインテストといいます。";
+"Bulk ferment.\nLet the dough sit out on the counter for 8-18 hours, depending on the temperature of the room. What you're looking for is that the dough has doubled in size. Because of the small amount of yeast, it will take a long time to rise. This is a good thing because it lets the yeast release more gas, which helps with flavor. If you find your dough is getting to 2x size too quickly, you can move it to a colder part of the house, or consider moving it to the fridge (for up to 24 hours, long than that in bulk ferment will mean the flour might start to break down if you're using 00 flour. Bread flour can last longer)." = "一次発酵。\n部屋の温度に応じて、生地を作業台の上で8〜18時間置いておきます。目安は生地が2倍の大きさにふくらむことです。イーストの量が少ないため、ふくらむのに長い時間がかかります。これは良いことで、イーストがより多くのガスを出し、風味が良くなるからです。生地がふくらむのが速すぎる場合は、家の中の涼しい場所に移すか、冷蔵庫に入れることを検討してください（最長24時間。一次発酵でそれより長く置くと、00粉を使っている場合は小麦粉が分解し始めることがあります。強力粉ならより長くもちます）。";
+"Divide and shape into balls.\n Search on youtube and pick a video to help learn to shape the dough balls. https://www.youtube.com/results?search_query=how+to+shape+pizza+dough+balls It's very difficult to describe by text.  \nIf you just need a refresher, here you go. Dump the mass onto an unfloured counter. Divide the dough into preferred dough ball size. About 270 for a 10 inch pizza. Fold the edges into the center and flip it over. Take your hands and cup around the back of the pizza with pinkies touching and pull the ball toward you. The friction of the counter will cause the front of the dough to tighten into the center. Turn the dough 90º and repeat until the ball is tight and smooth.\nPlace all the dough balls into a tray to proof." = "分割して丸めます。\n YouTubeで検索し、生地の丸め方を学べる動画を選びましょう。https://www.youtube.com/results?search_query=how+to+shape+pizza+dough+balls 文章で説明するのはとても難しいのです。\n復習だけでよければ、こちらです。打ち粉をしていない作業台に生地を取り出します。お好みの大きさに分割します。25cmのピザならおよそ270です。縁を中央へ折り込み、裏返します。小指どうしを合わせてピザの後ろで手をカップ状にし、生地を手前に引きます。作業台との摩擦で生地の前面が中央へと張っていきます。生地を90º回し、丸が張ってなめらかになるまで繰り返します。\nすべての生地玉をトレーに並べて最終発酵させます。";
+"Proof the dough for between 2 and 8 hours at room temperature or 24 hours in the refrigerator." = "生地を室温で2〜8時間、または冷蔵庫で24時間、最終発酵させます。";
+"Shape your pizza.\nThis is again something that is best explained by video. Vito Iacopelli is an excentric pizzaioli who has hundreds of videos on Pizza. Here's his shaping video https://www.youtube.com/watch?v=h75bxDwT1Ko" = "ピザを成形します。\nこれもやはり動画で見るのが一番わかりやすいです。ヴィト・イアコペリは風変わりなピッツァイオーロで、ピザに関する動画を何百本も投稿しています。こちらが彼の成形動画です https://www.youtube.com/watch?v=h75bxDwT1Ko";
+"Cook at the hottest temperature you can. For home, cook on a baking steel which has been preheated to 500ºF or more for 1 hour. For browning, you can turn on your broiler for the last 2 minutes. You should be able to cook in about 5-8 minutes depending on your surface (stone transfers heat slower than steel) and oven temperature. A wood or gas-fired oven is best. You can cook at 932º F in about 60-90 seconds." = "できるだけ高い温度で焼きます。家庭では、1時間かけて500ºF以上に予熱したベーキングスチールの上で焼きます。焼き色をつけるには、最後の2分間だけブロイラー（上火グリル）をつけてもよいでしょう。焼き面（石はスチールより熱の伝わりが遅い）とオーブンの温度にもよりますが、5〜8分ほどで焼けるはずです。薪窯またはガス窯が最適です。932º Fなら60〜90秒ほどで焼けます。";
+"Put the dough out onto the counter. Knead the dough for about 2-3 minutes. Then rest the dough into mixing bowl for about 15 minutes. Knead the dough for another 2-3 minutes. By now, the dough should be smooth and you should be able to stretch it so thin, you can see light through it. This is called the window pane test." = "生地を作業台に取り出します。2〜3分ほどこねます。それからミキシングボウルの中で15分ほど生地を休ませます。さらに2〜3分こねます。この頃には生地はなめらかになり、光を通すほど薄く伸ばせるはずです。これをウィンドウペインテストといいます。";
+"Bulk ferment.\nLet the dough sit out on the counter for 2-3 hours, depending on the temperature of the room. What you're looking for is that the dough has doubled in size. If you find your dough is getting to 2x size too quickly, you can move it to a colder part of the house. You can also bulk ferment in the refrigerator for 24 hours to give it a longer rise, which improves the flavor." = "一次発酵。\n部屋の温度に応じて、生地を作業台の上で2〜3時間置いておきます。目安は生地が2倍の大きさにふくらむことです。ふくらむのが速すぎる場合は、家の中の涼しい場所に移してください。冷蔵庫で24時間一次発酵させて、より長く発酵させることもでき、これにより風味が良くなります。";
+"Shape your pizza.\nThis is again something that is best explained by video. Pagliacci is a Seattle-based pizza chain that made a few videos a few years ago. They don't make NY style pizza, but their shaping instructions are great. Here's their hand-tossed shaping video https://www.youtube.com/watch?v=VIJlRXMfW50" = "ピザを成形します。\nこれもやはり動画で見るのが一番わかりやすいです。パリアッチはシアトルを拠点とするピザチェーンで、数年前にいくつか動画を作りました。彼らはニューヨークスタイルのピザは作りませんが、その成形の説明はとても優れています。こちらが彼らの手投げ成形の動画です https://www.youtube.com/watch?v=VIJlRXMfW50";
+"Cook at the hottest temperature you can. For home, cook on a baking steel which has been preheated to 500ºF or more for 1 hour. For browning, you can turn on your broiler for the last 2 minutes. You should be able to cook in about 5-8 minutes depending on your surface (stone transfers heat slower than steel) and oven temperature. A gas-fired oven is considered authentic to NY but wood-fired ovens will work as well. You can cook at 750º F in about 3-4 minutes." = "できるだけ高い温度で焼きます。家庭では、1時間かけて500ºF以上に予熱したベーキングスチールの上で焼きます。焼き色をつけるには、最後の2分間だけブロイラー（上火グリル）をつけてもよいでしょう。焼き面（石はスチールより熱の伝わりが遅い）とオーブンの温度にもよりますが、5〜8分ほどで焼けるはずです。ガス窯はニューヨークでは本格的とされますが、薪窯でも同様にうまく焼けます。750º Fなら3〜4分ほどで焼けます。";
+"Autolyse the flour and water.\nIn the bowl of a stand mixer, add the flour and water, leaving a small amount of water separate for the yeast. Mix just until combined. Let it rest for 20 minutes. After 10 minutes, combine the remaining water and the yeast to proof." = "小麦粉と水のオートリーズ。\nスタンドミキサーのボウルに小麦粉と水を入れ、イースト用に少量の水を取り分けておきます。まとまる程度にだけ混ぜます。20分休ませます。10分後、残りの水とイーストを合わせて予備発酵させます。";
+"Mix the remaining ingredients.\nPour the yeast and water mixture into the mixing bowl. Add the malt powder or malt syrup into the bowl. Begin mixing on low-medium speed for 3 minutes. Then add the salt and continue mixing for another 7-12 minutes. The dough is ready when it's smooth and ideally it should pass the window pane test. You should be able to slowly stretch it so thin, you can see light through it. Once it's been mixed for 15 minutes, though, you don't want to mix any more." = "残りの材料を混ぜます。\nイーストと水を合わせたものをボウルに注ぎます。モルトパウダーまたはモルトシロップをボウルに加えます。低〜中速で3分混ぜ始めます。それから塩を加え、さらに7〜12分混ぜ続けます。生地はなめらかになり、できればウィンドウペインテストに通れば完成です。ゆっくりと光を通すほど薄く伸ばせるはずです。ただし、15分こねたら、それ以上は混ぜないようにしましょう。";
+"Bulk ferment the dough.\nDump the dough on an unfloured work surface. Tighten the dough into a ball and place in a lightly-oiled bowl, seam-side down. Cover and let it rise for 1-1.5 hours, until it's doubled in size." = "生地の一次発酵。\n打ち粉をしていない作業台に生地を取り出します。生地を張らせて丸くまとめ、軽く油をひいたボウルにとじ目を下にして入れます。覆いをして、2倍の大きさになるまで1〜1.5時間発酵させます。";
+"Divide and shape into balls.\nDivide the dough into 105-115 gram dough balls. Tighten them like you would a pizza, except these are much smaller. Let them rest for 10 minutes. To shape a bagel, you roll it out into a relatively round rectangle. Roll it up along the long side so you have a tube. Close up the seams by pinching, it doesn't have to be perfect Use the part of your hands above your palm to roll the tube and pull your hands apart to stretch out the tube until it's about 8 inches. Place that part of the hand on one end of the tube. Then grab it and with the other hand, grab the other end and wrap it around the knuckles. With the first hand, take both ends and squeeze them together. Roll this combined piece on the table to make it round and help close up the seams. Repeat this for all the bagels and place on a spray-oiled baking sheet. Wrap the baking sheet in plastic wrap and either let them proof for 1 hour, or rise in the fridge overnight." = "分割して丸めます。\n生地を105〜115グラムの玉に分割します。ピザと同じように張らせますが、こちらはずっと小さくします。10分休ませます。ベーグルを成形するには、ほぼ丸みのある長方形に伸ばします。長い辺に沿って巻き上げ、筒状にします。つなぎ目をつまんでとじます。完璧でなくてかまいません。手のひらより上の部分を使って筒を転がし、両手を引き離して約8インチになるまで筒を伸ばします。その手の部分を筒の片端に当てます。それをつかみ、もう一方の手でもう片方の端を取り、指の関節に巻きつけます。最初の手で両端を合わせて押さえます。このつないだ生地をテーブルの上で転がして丸くし、つなぎ目をとじやすくします。すべてのベーグルでこれを繰り返し、油をスプレーした天板に並べます。天板をラップで包み、ベーグルを1時間最終発酵させるか、冷蔵庫で一晩発酵させます。";
+"Boil the bagels.\nPreheat the oven to 450º F. Then get the boiling water bath ready. You can use 2-3 quarts of water, 1 tbsp of baking soda, and 1.5 tbsp of malt syrup (not powder). Add the baking soda and malt syrup once the water is boiling. If you put the bagels in the fridge, make sure they have rest at room temp for 30-60 minutes before boiling. Boil the bagels in batches, making sure they aren't crowded. They should boil for 30-60 seconds per side and then removed to a drying rack so they can lose excess water. As soon as your done boiling all the bagels, get the desired toppings onto the bagels, such as everything seasoning, sesame seeds, dried garlic, or just flaky salt." = "ベーグルをゆでます。\nオーブンを450º Fに予熱します。それから沸騰した湯のゆで湯を用意します。水2〜3クォート、重曹大さじ1、モルトシロップ（粉ではなく）大さじ1.5を使うとよいでしょう。湯が沸いたら重曹とモルトシロップを加えます。ベーグルを冷蔵庫に入れていた場合は、ゆでる前に室温で30〜60分休ませてください。ベーグルは詰め込みすぎないよう、数回に分けてゆでます。片面30〜60秒ゆでてから、余分な水分を切るために網に取ります。すべてのベーグルをゆで終えたらすぐに、エブリシングシーズニング、ごま、乾燥ガーリック、または単にフレーク状の塩など、お好みのトッピングをのせます。";
+"Bake the bagels.\nPlace the bagels into the oven on a baking sheet (or if you're fancy, you can bake these on a baking steel/stone). Baking at 450 for 16-18 minutes, turning the baking sheet 180º halfway through for even baking." = "ベーグルを焼きます。\nベーグルを天板にのせてオーブンに入れます（凝りたいなら、ベーキングスチールやストーンの上で焼くこともできます）。450で16〜18分焼き、均一に焼けるよう途中で天板を180º回します。";
+"Make the poolish.\nCombine all the poolish ingredients into a bowl. Use your fingers or the handle of a wooden spoon to incorporate completely. Let this ferment for 12-18 hours. It should smell really strong and be bubbly when it's ready." = "プーリッシュを作ります。\nプーリッシュの材料をすべてボウルに合わせます。指または木べらの柄を使って完全になじませます。これを12〜18時間発酵させます。できあがると、とても強い香りがして泡立っているはずです。";
+"Mix the ingredients.\nPut the remaining flour into the bowl of a stand mixer. Put the remaining water and yeast into the poolish to help it release from the bowl. Pour the poolish, yeast, and water mixture into the mixing bowl. Add the malt powder or malt syrup into the bowl. Begin mixing on low-medium speed for 3 minutes. Then add the salt and continue mixing for another 7-12 minutes. The dough is ready when it's smooth and ideally it should pass the window pane test. You should be able to slowly stretch it so thin, you can see light through it. Once it's been mixed for 15 minutes, though, you don't want to mix any more." = "材料を混ぜます。\n残りの小麦粉をスタンドミキサーのボウルに入れます。残りの水とイーストをプーリッシュに入れ、ボウルから離れやすくします。プーリッシュ、イースト、水を合わせたものをミキシングボウルに注ぎます。モルトパウダーまたはモルトシロップをボウルに加えます。低〜中速で3分混ぜ始めます。それから塩を加え、さらに7〜12分混ぜ続けます。生地はなめらかになり、できればウィンドウペインテストに通れば完成です。ゆっくりと光を通すほど薄く伸ばせるはずです。ただし、15分こねたら、それ以上は混ぜないようにしましょう。";
+
+/* Calculator result view */
+"Dough" = "生地";
+"Final Dough" = "最終生地";
+"plus additional ingredients" = "＋追加の材料";
+"Changes from default" = "デフォルトからの変更";
+"Add a note about this batch..." = "このバッチについてメモを追加...";
+
+/* Batch 2 localization */
+"recipe.copy_name" = "%@のコピー";
+"create.instructions.tap_hint" = "タップして編集、長押しで移動または削除、ドラッグして並べ替え。";
+"share.note.header" = "メモ";
+"share.note.placeholder" = "メモを追加（任意）";
+"share.note.footer" = "受取人がレシピから読めるメモです。";
+"calculator.preferment.section_title" = "プレファーメント: %@";
+"settings.backup.footer" = "バックアップにはすべてのレシピが含まれます。バックアップを復元すると、現在のレシピライブラリが置き換えられます。";
+"settings.recently_deleted.nav_title" = "最近削除した項目";
+"settings.recently_deleted.empty.title" = "最近削除されたレシピはありません";
+"settings.recently_deleted.empty.description" = "削除されたレシピは30日間ここに表示されます。";
+"settings.recently_deleted.footer" = "レシピは30日後に完全に削除されます。";
+"settings.recently_deleted.restore" = "復元";
+"settings.recently_deleted.delete_permanently" = "完全に削除";
+"settings.recently_deleted.delete_all" = "すべて削除";
+"settings.recently_deleted.delete_permanently_title" = "完全に削除しますか？";
+"settings.recently_deleted.delete_all_permanently_title" = "すべて完全に削除しますか？";
+"settings.recently_deleted.delete_permanently_message" = "このレシピはすぐに削除されます。この操作は取り消せません。";
+"settings.recently_deleted.delete_all_permanently_message" = "最近削除されたすべてのレシピがすぐに削除されます。この操作は取り消せません。";
+"unit.volume.teaspoon" = "小さじ";
+"unit.volume.tablespoon" = "大さじ";
+"unit.volume.cup" = "カップ";
+"unit.volume.ounce" = "オンス";
+"unit.volume.milliliter" = "ml";
+"unit.volume.deciliter" = "dl";
+"unit.volume.liter" = "l";
+"calculated.percent_total" = "合計 %@";
+"settings.recently_deleted.expires_in_one" = "1日後に削除";
+"settings.recently_deleted.expires_in_other" = "%d日後に削除";
+"unit.volume.teaspoon.one" = "小さじ";
+"unit.volume.tablespoon.one" = "大さじ";
+"unit.volume.cup.one" = "カップ";
+"unit.volume.ounce.one" = "オンス";
+"create.instructions.move_to_position" = "位置に移動…";
+"create.instructions.move_step.title" = "ステップを移動";
+"create.instructions.move_step.prompt" = "ステップ番号を入力（1–%d）";
+"create.instructions.move_step.placeholder" = "ステップ番号";
+"create.instructions.move_step.action" = "移動";

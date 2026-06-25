@@ -34,4 +34,8 @@ class TemperatureFormatter: NSObject {
         formatter.string(from: Measurement(value: temperature.value,
                                            unit: temperature.measurement.unit))
     }
+
+    func unitSymbol(useCelsius: Bool) -> String {
+        formatter.string(from: useCelsius ? UnitTemperature.celsius : UnitTemperature.fahrenheit)
+    }
 }

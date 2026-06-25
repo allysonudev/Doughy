@@ -31,11 +31,14 @@ class PrefermentConverter: NSObject {
         return coreData
     }
     
-    func convertToExternal(preferment: XCPreferment) -> Preferment {
-        let name = preferment.name!
+    /// - Parameter localizeName: When true, the preferment name and its ingredient
+    ///   names are localized. Only set for the app's built-in default recipes.
+    func convertToExternal(preferment: XCPreferment, localizeName: Bool = false) -> Preferment {
+        let storedName = preferment.name!
+        let name = localizeName ? DefaultLocalization.ingredientName(storedName) : storedName
         let flourPercentage = preferment.flourPercentage!.doubleValue
         let ingredients = preferment.sortedIngredients.map {
-            ingredientConverter.convertToExternal(ingredient: $0)
+            ingredientConverter.convertToExternal(ingredient: $0, localizeName: localizeName)
         }
         
         return Preferment(name: name, flourPercentage: flourPercentage, ingredients: ingredients)

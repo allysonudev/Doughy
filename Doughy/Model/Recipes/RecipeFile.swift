@@ -98,7 +98,7 @@ struct PrefermentFileData: Codable, Equatable {
 
 enum RecipeFile {
     static let fileExtension = "doughy"
-    static let uti = "org.georgie.doughy.recipe"
+    static let uti = "org.curiousurick.doughy.recipe"
 
     static func payload(from recipe: any RecipeProtocol, author: String?, note: String? = nil) -> RecipeFilePayload {
         let trimmedAuthor = author?.trimmingCharacters(in: .whitespaces)

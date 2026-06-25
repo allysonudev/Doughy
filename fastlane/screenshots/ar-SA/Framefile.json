@@ -1,0 +1,10 @@
+{
+  "default": {
+    "background": "../background.jpg",
+    "padding": 100,
+    "show_complete_image": true,
+    "title_below_image": false,
+    "title": { "font": "../fonts/NotoSansArabic.ttf", "color": "#412402" }
+  },
+  "data": []
+}

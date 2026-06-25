@@ -84,7 +84,31 @@ extension Settings {
         } else {
             backfillDefaultRecipeKeys()
             fixNeapolitanSpelling()
+            fixBagelMaltSpelling()
         }
+    }
+
+    private func fixBagelMaltSpelling() {
+        let migrationKey = "hasFixedBagelMaltSpelling"
+        guard !userDefaults.bool(forKey: migrationKey) else { return }
+        let oldName = "Non-diastic Malt"
+        let newName = "Non-Diastatic Malt"
+        let bagelKeys: Set<String> = [
+            DefaultRecipeFactory.Key.bagels,
+            DefaultRecipeFactory.Key.bagelsWithPoolish,
+        ]
+        for recipe in recipeReader.getRecipes() {
+            guard let key = recipe.value(forKey: "defaultKey") as? String,
+                  bagelKeys.contains(key) else { continue }
+            for ingredient in recipe.sortedIngredients where ingredient.name == oldName {
+                ingredient.name = newName
+            }
+            for ingredient in recipe.preferment?.sortedIngredients ?? [] where ingredient.name == oldName {
+                ingredient.name = newName
+            }
+        }
+        try? coreDataGateway.managedObjectConext.save()
+        userDefaults.set(true, forKey: migrationKey)
     }
 
     private func fixNeapolitanSpelling() {

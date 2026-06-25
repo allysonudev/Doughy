@@ -30,17 +30,17 @@ struct RecipeShareView: View {
                 }
 
                 Section {
-                    TextField("Add a note (optional)", text: $shareNote, axis: .vertical)
+                    TextField(String(localized: "share.note.placeholder", defaultValue: "Add a note (optional)"), text: $shareNote, axis: .vertical)
                         .lineLimit(3...6)
                 } header: {
-                    Text("Note")
+                    Text(String(localized: "share.note.header", defaultValue: "Note"))
                 } footer: {
-                    Text("A personal note the recipient can read from the recipe.")
+                    Text(String(localized: "share.note.footer", defaultValue: "A personal note the recipient can read from the recipe."))
                 }
 
                 Section("Recipe") {
                     LabeledContent("Name", value: recipe.name)
-                    LabeledContent("Collection", value: recipe.collection)
+                    LabeledContent("Collection", value: DefaultLocalization.collectionName(recipe.collection))
                     LabeledContent("Ingredients", value: "\(recipe.ingredients.count)")
                     if let pr = recipe as? PrefermentRecipe {
                         LabeledContent("Preferment", value: pr.preferment.name)

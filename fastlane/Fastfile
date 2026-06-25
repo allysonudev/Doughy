@@ -1,12 +1,118 @@
+require "fileutils"
+require "tmpdir"
+
 default_platform(:ios)
+
+def app_store_connect_locale_for_screenshots(locale)
+  return "no" if locale == "nb"
+  return nil if locale == "is"
+
+  locale
+end
+
+def staged_screenshot_filenames(locale_dir)
+  Dir.children(locale_dir).sort.select do |entry|
+    path = File.join(locale_dir, entry)
+    next false unless File.file?(path)
+    next false unless File.extname(entry).downcase == ".png"
+
+    if entry.include?("iPhone")
+      entry.end_with?("_framed.png")
+    elsif entry.include?("iPad")
+      !entry.end_with?("_framed.png")
+    else
+      false
+    end
+  end
+end
+
+def staged_screenshot_filename(filename)
+  return filename if filename.end_with?("_framed.png")
+
+  if filename.include?("iPad")
+    basename = File.basename(filename, ".png")
+    return "#{basename}_ipadPro129_framed.png"
+  end
+
+  filename
+end
 
 platform :ios do
   desc "Capture localized App Store screenshots, then add device frames + captions"
   lane :screenshots do
-    capture_ios_screenshots          # reads fastlane/Snapfile
-    # Absolute path (__dir__ = the fastlane/ folder) so framing finds the shots
-    # regardless of fastlane's working directory.
-    frame_screenshots(white: true, path: File.expand_path("screenshots", __dir__))
-    UI.success("Framed screenshots are in fastlane/screenshots/<locale>/ (look for *_framed.png)")
+    capture_ios_screenshots   # reads fastlane/Snapfile — must run in a real terminal (needs a TTY)
+    frame_all_locales
+    UI.success("Done — framed shots at fastlane/screenshots/<locale>/*_framed.png")
+  end
+
+  desc "Frame + caption already-captured screenshots (no recapture). Re-run after editing captions."
+  lane :frame_all_locales do
+    root = File.expand_path("screenshots", __dir__)
+    Dir.children(root).sort.each do |entry|
+      dir = File.join(root, entry)
+      # One frameit pass per locale folder so each uses its own Framefile.json —
+      # and therefore its own font (Poppins for Latin; Noto for ja/ko/ar-SA/hi).
+      next unless File.directory?(dir) && File.exist?(File.join(dir, "Framefile.json"))
+      frame_screenshots(white: true, path: dir)
+    end
+  end
+
+  private_lane :stage_app_store_screenshots do
+    source_root = File.expand_path("screenshots", __dir__)
+    staged_root = Dir.mktmpdir("doughy-app-store-screenshots-")
+    uploaded_locales = []
+    screenshot_count = 0
+
+    Dir.children(source_root).sort.each do |entry|
+      source_dir = File.join(source_root, entry)
+      next unless File.directory?(source_dir)
+
+      app_store_locale = app_store_connect_locale_for_screenshots(entry)
+      unless app_store_locale
+        UI.message("Skipping #{entry}: App Store Connect has no matching screenshot localization")
+        next
+      end
+
+      filenames = staged_screenshot_filenames(source_dir)
+      next if filenames.empty?
+
+      destination_dir = File.join(staged_root, app_store_locale)
+      FileUtils.mkdir_p(destination_dir)
+
+      filenames.each do |filename|
+        staged_name = staged_screenshot_filename(filename)
+        FileUtils.cp(File.join(source_dir, filename), File.join(destination_dir, staged_name))
+        screenshot_count += 1
+      end
+
+      uploaded_locales << "#{entry} -> #{app_store_locale}"
+    end
+
+    UI.user_error!("No App Store screenshots were found under #{source_root}") if screenshot_count.zero?
+
+    UI.message("Prepared screenshot locales: #{uploaded_locales.join(', ')}")
+    UI.success("Prepared #{screenshot_count} screenshots for App Store Connect at #{staged_root}")
+    staged_root
+  end
+
+  desc "Upload the latest localized screenshots to App Store Connect for version 1.1"
+  lane :upload_screenshots do |options|
+    app_version = options[:app_version] || "1.1"
+    staged_root = stage_app_store_screenshots
+
+    begin
+      deliver(
+        app_identifier: "org.curiousurick.Doughy",
+        app_version: app_version,
+        screenshots_path: staged_root,
+        skip_binary_upload: true,
+        skip_metadata: true,
+        force: true,
+        overwrite_screenshots: true,
+        run_precheck_before_submit: false
+      )
+    ensure
+      FileUtils.rm_rf(staged_root) if staged_root && Dir.exist?(staged_root)
+    end
   end
 end

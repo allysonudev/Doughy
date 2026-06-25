@@ -123,7 +123,7 @@ struct SettingsView: View {
         } header: {
             Text("Library")
         } footer: {
-            Text("Backups include every recipe. Restoring a backup replaces your current recipe library.")
+            Text(String(localized: "settings.backup.footer", defaultValue: "Backups include every recipe. Restoring a backup replaces your current recipe library."))
         }
     }
 
@@ -271,22 +271,22 @@ private struct RecentlyDeletedRecipesView: View {
         List {
             if store.deletedRecipes.isEmpty {
                 ContentUnavailableView(
-                    "No Recently Deleted Recipes",
+                    String(localized: "settings.recently_deleted.empty.title", defaultValue: "No Recently Deleted Recipes"),
                     systemImage: "trash",
-                    description: Text("Deleted recipes will appear here for 30 days.")
+                    description: Text(String(localized: "settings.recently_deleted.empty.description", defaultValue: "Deleted recipes will appear here for 30 days."))
                 )
             } else {
                 Section {
                     ForEach(store.deletedRecipes) { deletedRecipe in
                         deletedRecipeRow(deletedRecipe)
                             .swipeActions(edge: .leading) {
-                                Button("Restore") {
+                                Button(String(localized: "settings.recently_deleted.restore", defaultValue: "Restore")) {
                                     restore(deletedRecipe)
                                 }
                                 .tint(.green)
                             }
                             .swipeActions(edge: .trailing) {
-                                Button("Delete", role: .destructive) {
+                                Button(String(localized: "settings.recently_deleted.delete_permanently", defaultValue: "Delete Permanently"), role: .destructive) {
                                     pendingPermanentDelete = deletedRecipe
                                 }
                             }
@@ -294,25 +294,25 @@ private struct RecentlyDeletedRecipesView: View {
                                 Button {
                                     restore(deletedRecipe)
                                 } label: {
-                                    Label("Restore", systemImage: "arrow.uturn.backward")
+                                    Label(String(localized: "settings.recently_deleted.restore", defaultValue: "Restore"), systemImage: "arrow.uturn.backward")
                                 }
                                 Button(role: .destructive) {
                                     pendingPermanentDelete = deletedRecipe
                                 } label: {
-                                    Label("Delete Permanently", systemImage: "trash")
+                                    Label(String(localized: "settings.recently_deleted.delete_permanently", defaultValue: "Delete Permanently"), systemImage: "trash")
                                 }
                             }
                     }
                 } footer: {
-                    Text("Recipes are permanently deleted after 30 days.")
+                    Text(String(localized: "settings.recently_deleted.footer", defaultValue: "Recipes are permanently deleted after 30 days."))
                 }
             }
         }
-        .navigationTitle("Recently Deleted")
+        .navigationTitle(String(localized: "settings.recently_deleted.nav_title", defaultValue: "Recently Deleted"))
         .toolbar {
             if !store.deletedRecipes.isEmpty {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Delete All", role: .destructive) {
+                    Button(String(localized: "settings.recently_deleted.delete_all", defaultValue: "Delete All"), role: .destructive) {
                         showingDeleteAllConfirmation = true
                     }
                 }
@@ -322,34 +322,34 @@ private struct RecentlyDeletedRecipesView: View {
             store.refresh()
         }
         .alert(
-            "Delete Permanently?",
+            String(localized: "settings.recently_deleted.delete_permanently_title", defaultValue: "Delete Permanently?"),
             isPresented: Binding(
                 get: { pendingPermanentDelete != nil },
                 set: { if !$0 { pendingPermanentDelete = nil } }
             )
         ) {
-            Button("Delete Permanently", role: .destructive) {
+            Button(String(localized: "settings.recently_deleted.delete_permanently", defaultValue: "Delete Permanently"), role: .destructive) {
                 if let pendingPermanentDelete {
                     store.permanentlyDelete(pendingPermanentDelete)
                 }
                 pendingPermanentDelete = nil
             }
-            Button("Cancel", role: .cancel) {
+            Button(String(localized: "action.cancel", defaultValue: "Cancel"), role: .cancel) {
                 pendingPermanentDelete = nil
             }
         } message: {
-            Text("This recipe will be deleted immediately. This can't be undone.")
+            Text(String(localized: "settings.recently_deleted.delete_permanently_message", defaultValue: "This recipe will be deleted immediately. This can't be undone."))
         }
         .alert(
-            "Delete All Permanently?",
+            String(localized: "settings.recently_deleted.delete_all_permanently_title", defaultValue: "Delete All Permanently?"),
             isPresented: $showingDeleteAllConfirmation
         ) {
-            Button("Delete All", role: .destructive) {
+            Button(String(localized: "settings.recently_deleted.delete_all", defaultValue: "Delete All"), role: .destructive) {
                 store.permanentlyDeleteAllRecentlyDeleted()
             }
-            Button("Cancel", role: .cancel) {}
+            Button(String(localized: "action.cancel", defaultValue: "Cancel"), role: .cancel) {}
         } message: {
-            Text("All recently deleted recipes will be deleted immediately. This can't be undone.")
+            Text(String(localized: "settings.recently_deleted.delete_all_permanently_message", defaultValue: "All recently deleted recipes will be deleted immediately. This can't be undone."))
         }
         .alert("Could Not Restore Recipe", isPresented: Binding(
             get: { errorMessage != nil },
@@ -365,9 +365,9 @@ private struct RecentlyDeletedRecipesView: View {
         VStack(alignment: .leading, spacing: 4) {
             Text(deletedRecipe.name)
                 .font(.headline)
-            Text(deletedRecipe.collection)
+            Text(DefaultLocalization.collectionName(deletedRecipe.collection))
                 .foregroundStyle(.secondary)
-            Text("Deletes in \(daysRemainingText(for: deletedRecipe))")
+            Text(deletesInText(for: deletedRecipe))
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
@@ -382,11 +382,14 @@ private struct RecentlyDeletedRecipesView: View {
         }
     }
 
-    private func daysRemainingText(for deletedRecipe: DeletedRecipe) -> String {
+    private func deletesInText(for deletedRecipe: DeletedRecipe) -> String {
         let expirationDate = Calendar.current.date(byAdding: .day, value: 30, to: deletedRecipe.deletedAt)
             ?? deletedRecipe.deletedAt
         let days = Calendar.current.dateComponents([.day], from: Date(), to: expirationDate).day ?? 0
         let displayedDays = max(days, 0)
-        return displayedDays == 1 ? "1 day" : "\(displayedDays) days"
+        if displayedDays == 1 {
+            return String(localized: "settings.recently_deleted.expires_in_one", defaultValue: "Deletes in 1 day")
+        }
+        return String(format: String(localized: "settings.recently_deleted.expires_in_other", defaultValue: "Deletes in %d days"), displayedDays)
     }
 }
