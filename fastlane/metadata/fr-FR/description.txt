@@ -1,0 +1,19 @@
+Doughy est un calculateur de pâte de précision conçu pour les boulangers amateurs qui raisonnent en pourcentages.
+
+Que vous étiriez une pizza napolitaine, prépariez des bagels en fermentation à froid ou expérimentiez un nouveau levain, Doughy vous aide à ajuster n'importe quelle recette au poids grâce aux pourcentages boulangers. Pas de devinettes. Pas de calcul mental.
+
+Comment ça marche
+Définissez le poids de pâte souhaité et Doughy calcule automatiquement chaque ingrédient à l'aide des pourcentages boulangers. Augmentez les quantités pour un dîner entre amis ou réduisez-les pour une demi-miche. Les proportions restent parfaites dans tous les cas.
+
+Fonctionnalités
+• Recettes intégrées pour pizza napolitaine, pizza new-yorkaise, bagels classiques et bagels avec préférment
+• Créez et enregistrez vos propres recettes avec ingrédients et instructions personnalisés
+• Conversions de volume en poids pour les ingrédients courants. Une balance reste idéale, mais n'est plus indispensable pour les ingrédients du placard
+• Historique des recettes : enregistrez des instantanés pour comparer vos fournées et suivre les changements
+• Partagez vos recettes en exportant un fichier .doughy avec nom d'expéditeur facultatif et note personnelle
+• Sauvegardez et restaurez toute votre bibliothèque Doughy
+• Prend en charge les unités métriques et impériales
+• Disponible en 16 langues
+
+Pour qui
+Doughy s'adresse aux boulangers qui veulent travailler comme des professionnels, mais aussi à ceux qui apprécient encore la commodité des tasses et cuillères tout en voulant expérimenter avec leurs recettes préférées. L'application est gratuite, open source et sans publicité.

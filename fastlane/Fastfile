@@ -115,4 +115,19 @@ platform :ios do
       FileUtils.rm_rf(staged_root) if staged_root && Dir.exist?(staged_root)
     end
   end
+
+  desc "Upload localized App Store metadata only for version 1.1"
+  lane :upload_metadata do |options|
+    app_version = options[:app_version] || "1.1"
+
+    deliver(
+      app_identifier: "org.curiousurick.Doughy",
+      app_version: app_version,
+      metadata_path: File.expand_path("metadata", __dir__),
+      skip_binary_upload: true,
+      skip_screenshots: true,
+      force: true,
+      run_precheck_before_submit: false
+    )
+  end
 end

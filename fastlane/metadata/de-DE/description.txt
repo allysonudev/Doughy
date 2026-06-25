@@ -1,0 +1,19 @@
+Doughy ist ein präziser Teigrechner für Hobbybäcker, die in Prozenten denken.
+
+Ob du eine neapolitanische Pizza ausziehst, Bagels kalt gehen lässt oder mit einem neuen Sauerteig experimentierst: Doughy hilft dir, jedes Rezept per Gewicht mit Bäckerprozenten zu skalieren. Kein Rätselraten. Kein Kopfrechnen.
+
+So funktioniert's
+Lege dein gewünschtes Teiggewicht fest und Doughy berechnet automatisch jede Zutat anhand der Bäckerprozente. Skaliere nach oben für ein Abendessen mit Gästen oder nach unten für einen halben Laib. Die Verhältnisse bleiben in beiden Fällen perfekt.
+
+Funktionen
+• Integrierte Rezepte für neapolitanische Pizza, New York Pizza, klassische Bagels und Bagels mit Vorteig
+• Eigene Rezepte mit benutzerdefinierten Zutaten und Anweisungen erstellen und speichern
+• Umrechnungen von Volumen in Gewicht für gängige Zutaten. Küchenwaagen sind weiterhin ideal, aber für Vorratszutaten nicht mehr zwingend nötig
+• Rezeptverlauf: Speichere Schnappschüsse, um Backdurchgänge zu vergleichen und Änderungen nachzuverfolgen
+• Teile deine Rezepte durch Export einer .doughy-Datei mit optionalem Absendernamen und persönlicher Notiz
+• Backup und Wiederherstellung deiner gesamten Doughy-Bibliothek
+• Unterstützt metrische und imperiale Einheiten
+• Verfügbar in 16 Sprachen
+
+Für wen es gedacht ist
+Doughy ist für Bäcker, die so arbeiten möchten wie Profis, und für alle, die den Komfort von Cups und Löffeln schätzen, aber trotzdem mit ihren Lieblingsrezepten experimentieren wollen. Es ist kostenlos, Open Source und ohne Werbung.

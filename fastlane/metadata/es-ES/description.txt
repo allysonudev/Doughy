@@ -1,0 +1,19 @@
+Doughy es una calculadora de masas de alta precisión creada para panaderos caseros que piensan en porcentajes.
+
+Tanto si estás estirando una pizza napolitana, haciendo fermentación en frío para bagels o experimentando con una nueva masa madre, Doughy te ayuda a escalar cualquier receta por peso con matemáticas panaderas. Sin adivinanzas. Sin cálculos mentales.
+
+Cómo funciona
+Define el peso final de masa que quieres y Doughy calcula automáticamente cada ingrediente usando porcentajes panaderos. Escala la receta para una cena con amigos o redúcela para media hogaza. Las proporciones siguen siendo perfectas en ambos casos.
+
+Funciones
+• Recetas integradas para pizza napolitana, pizza estilo Nueva York, bagels clásicos y bagels con prefermento
+• Crea y guarda tus propias recetas con ingredientes e instrucciones personalizadas
+• Conversiones de volumen a peso para ingredientes comunes. La báscula sigue siendo lo ideal, pero ya no es imprescindible para ingredientes básicos de despensa
+• Historial de recetas: guarda instantáneas para comparar tandas y seguir qué cambió
+• Comparte tus recetas exportando un archivo .doughy con nombre del remitente opcional y una nota amistosa
+• Haz copias de seguridad y restaura toda tu biblioteca de Doughy
+• Compatible con unidades métricas e imperiales
+• Disponible en 16 idiomas
+
+Para quién es
+Doughy es para panaderos que quieren trabajar como los profesionales, o para quienes siguen disfrutando de la comodidad de tazas y cucharas pero quieren experimentar con sus recetas favoritas. Es gratis, de código abierto y sin anuncios.

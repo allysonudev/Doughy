@@ -1,0 +1,19 @@
+Doughy è un calcolatore di impasti di precisione pensato per i panificatori casalinghi che ragionano in percentuali.
+
+Che tu stia stendendo una pizza napoletana, facendo maturare bagel in frigorifero o sperimentando con un nuovo lievito madre, Doughy ti aiuta a scalare qualsiasi ricetta in base al peso con la matematica del panificatore. Niente supposizioni. Niente calcoli a mente.
+
+Come funziona
+Imposta il peso finale dell'impasto e Doughy calcola automaticamente ogni ingrediente usando le percentuali del panificatore. Aumenta le dosi per una cena con amici o riducile per mezzo filone. I rapporti restano perfetti in ogni caso.
+
+Funzionalità
+• Ricette integrate per pizza napoletana, pizza New York, bagel classici e bagel con prefermento
+• Crea e salva le tue ricette con ingredienti e istruzioni personalizzati
+• Conversioni da volume a peso per ingredienti comuni. La bilancia resta preferibile, ma non è più indispensabile per gli ingredienti da dispensa
+• Cronologia ricette: salva istantanee per confrontare le infornate e tenere traccia di ciò che è cambiato
+• Condividi le tue ricette esportando un file .doughy con nome mittente opzionale e una nota amichevole
+• Backup e ripristino dell'intera libreria Doughy
+• Supporta unità metriche e imperiali
+• Disponibile in 16 lingue
+
+Per chi è pensato
+Doughy è per chi vuole lavorare come i panificatori professionisti, ma anche per chi apprezza ancora la comodità di tazze e cucchiai e vuole sperimentare con le proprie ricette preferite. È gratis, open source e senza pubblicità.

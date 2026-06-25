@@ -39,6 +39,14 @@ Frame + caption already-captured screenshots (no recapture). Re-run after editin
 
 Upload the latest localized screenshots to App Store Connect for version 1.1
 
+### ios upload_metadata
+
+```sh
+[bundle exec] fastlane ios upload_metadata
+```
+
+Upload localized App Store metadata only for version 1.1
+
 ----
 
 This README.md is auto-generated and will be re-generated every time [_fastlane_](https://fastlane.tools) is run.

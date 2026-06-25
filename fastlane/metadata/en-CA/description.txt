@@ -1,0 +1,19 @@
+Doughy is a precision dough calculator built for home bakers who think in percentages.
+
+Whether you're stretching a Neapolitan pizza, cold-proofing bagels, or experimenting with a new sourdough, Doughy helps you scale any recipe by weight with baker's math. No guesswork. No mental math.
+
+How it works
+Set your target dough weight and Doughy calculates every ingredient automatically using baker's percentages. Scale up for a dinner party or scale down for a half loaf. The ratios stay perfect either way.
+
+Features
+• Built-in recipes for Neapolitan pizza, New York pizza, standard bagels, and preferment bagels
+• Create and save your own recipes with custom ingredients and instructions
+• Volume-to-weight conversions for common ingredients. Kitchen scales are preferred, but no longer required for pantry staples
+• Recipe history: save snapshots so you can compare batches and track what changed
+• Share your recipes by exporting a .doughy file with an optional sender name and friendly note
+• Backup and restore your entire Doughy library
+• Supports metric and imperial units
+• Available in 16 languages
+
+Who it's for
+Doughy is for bakers who want to work the way professional bakers do, and for bakers who still enjoy the convenience of cups and spoons but want to experiment with their favourite recipes. It's free, open source, and has no ads.

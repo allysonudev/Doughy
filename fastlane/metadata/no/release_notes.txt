@@ -1,0 +1,8 @@
+• Skann oppskrifter med Apple Intelligence på enheten. Opprett oppskrifter på under ett minutt fra et skjermbilde eller et bilde. Krever iPhone 15 eller nyere.
+• Flere språk: Doughy er nå tilgjengelig på 16 språk, inkludert spansk, fransk, tysk, islandsk, arabisk, hindi, japansk, koreansk og flere.
+• Ingredienskonverteringer: La til volum-til-vekt-konverteringer for vanlige pantryingredienser, pluss skalering etter eggstørrelse i Innstillinger.
+• Støtte for metriske og imperiale volummål.
+• Del oppskrifter med venner ved å eksportere en .doughy-oppskriftsfil.
+• Sikkerhetskopier og gjenopprett oppskriftsbiblioteket ditt.
+• Oppskriftshistorikk: Lagre notater om justeringene dine og hvordan hvert bak ble. Hver redigering er tilgjengelig å se tilbake på.
+• Feilrettinger og forbedringer for tilgjengelighet.

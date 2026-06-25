@@ -1,0 +1,19 @@
+Doughy er en præcis dejberegner bygget til hjemmebagere, der tænker i procenter.
+
+Uanset om du strækker en napolitansk pizza, koldhæver bagels eller eksperimenterer med en ny surdej, hjælper Doughy dig med at skalere enhver opskrift efter vægt med bagerprocenter. Ingen gætterier. Ingen hovedregning.
+
+Sådan virker det
+Indstil din ønskede dejvægt, og Doughy beregner automatisk hver ingrediens ud fra bagerprocenter. Skalér op til en middag med gæster eller ned til et halvt brød. Forholdene forbliver perfekte uanset hvad.
+
+Funktioner
+• Indbyggede opskrifter på napolitansk pizza, New York-pizza, klassiske bagels og bagels med fordej
+• Opret og gem dine egne opskrifter med tilpassede ingredienser og instruktioner
+• Omregninger fra volumen til vægt for almindelige ingredienser. Køkkenvægte er stadig bedst, men ikke længere nødvendige for basisvarer i spisekammeret
+• Opskriftshistorik: Gem snapshots, så du kan sammenligne bag og følge med i, hvad der ændrede sig
+• Del dine opskrifter ved at eksportere en .doughy-fil med valgfrit afsendernavn og en venlig note
+• Sikkerhedskopiér og gendan hele dit Doughy-bibliotek
+• Understøtter metriske og imperiale enheder
+• Tilgængelig på 16 sprog
+
+Hvem det er til
+Doughy er til bagere, der vil arbejde som professionelle bagere, og til bagere, der stadig nyder bekvemmeligheden ved kopper og skeer, men gerne vil eksperimentere med deres yndlingsopskrifter. Det er gratis, open source og uden reklamer.

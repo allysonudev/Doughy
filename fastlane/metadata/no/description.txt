@@ -1,0 +1,19 @@
+Doughy er en presis deigkalkulator laget for hjemmebakere som tenker i prosent.
+
+Enten du strekker en napolitansk pizza, kaldhever bagels eller eksperimenterer med en ny surdeig, hjelper Doughy deg med å skalere enhver oppskrift etter vekt med bakerprosenter. Ingen gjetting. Ingen hoderegning.
+
+Slik fungerer det
+Velg ønsket deigvekt, så beregner Doughy automatisk hver ingrediens ved hjelp av bakerprosenter. Skaler opp til et middagsselskap eller ned til et halvt brød. Forholdene holder seg perfekte uansett.
+
+Funksjoner
+• Innebygde oppskrifter for napolitansk pizza, New York-pizza, klassiske bagels og bagels med fordeig
+• Opprett og lagre dine egne oppskrifter med egne ingredienser og instruksjoner
+• Volum-til-vekt-konverteringer for vanlige ingredienser. Kjøkkenvekt er fortsatt best, men ikke lenger nødvendig for basisvarer i pantryet
+• Oppskriftshistorikk: Lagre øyeblikksbilder så du kan sammenligne bakster og se hva som endret seg
+• Del oppskriftene dine ved å eksportere en .doughy-fil med valgfritt avsendernavn og en vennlig melding
+• Sikkerhetskopier og gjenopprett hele Doughy-biblioteket ditt
+• Støtter metriske og imperiale enheter
+• Tilgjengelig på 16 språk
+
+Hvem det er for
+Doughy er for bakere som vil jobbe slik profesjonelle bakere gjør, og for bakere som fortsatt liker bekvemmeligheten ved kopper og skjeer, men vil eksperimentere med favorittoppskriftene sine. Appen er gratis, åpen kildekode og uten annonser.

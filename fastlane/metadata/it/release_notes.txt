@@ -1,0 +1,8 @@
+• Scansiona ricette con Apple Intelligence sul dispositivo. Crea ricette in meno di un minuto da uno screenshot o una foto. Richiede iPhone 15 o successivo.
+• Più lingue: Doughy è ora disponibile in 16 lingue, tra cui spagnolo, francese, tedesco, islandese, arabo, hindi, giapponese, coreano e altre.
+• Conversioni ingredienti: aggiunte conversioni da volume a peso per ingredienti comuni da dispensa, oltre al ridimensionamento per dimensione delle uova nelle Impostazioni.
+• Supporto per misure volumetriche metriche e imperiali.
+• Condividi le ricette con i tuoi amici esportando un file ricetta .doughy.
+• Backup e ripristino della tua libreria di ricette.
+• Cronologia ricette: Salva note sulle modifiche che hai fatto e su come è venuta ogni infornata. Ogni modifica resta disponibile per essere consultata in seguito.
+• Correzioni di bug e miglioramenti dell'accessibilità.
