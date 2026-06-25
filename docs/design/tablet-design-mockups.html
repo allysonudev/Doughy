@@ -1,0 +1,814 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Doughy Tablet Design Mockups</title>
+  <style>
+    :root {
+      --ink: #1d1b18;
+      --muted: #6f665d;
+      --paper: #fbfaf7;
+      --panel: #ffffff;
+      --line: #ded7cc;
+      --accent: #2f7d68;
+      --accent-soft: #dcebe5;
+      --gold: #a66f2d;
+      --gold-soft: #f3e2c8;
+      --rose: #9c4f5f;
+      --rose-soft: #f1dbe0;
+      --blue: #496f91;
+      --blue-soft: #dfe8f0;
+      --shadow: 0 18px 55px rgba(39, 32, 24, 0.12);
+      --radius: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: #eee9df;
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.4;
+    }
+
+    header {
+      padding: 32px 32px 12px;
+      max-width: 1180px;
+      margin: 0 auto;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      font-size: 34px;
+      font-weight: 760;
+      letter-spacing: 0;
+    }
+
+    header p {
+      max-width: 760px;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 16px;
+    }
+
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 16px 32px 48px;
+      display: grid;
+      gap: 28px;
+    }
+
+    .mockup-section {
+      background: rgba(255, 255, 255, 0.58);
+      border: 1px solid rgba(159, 145, 125, 0.32);
+      border-radius: 8px;
+      padding: 20px;
+    }
+
+    .section-heading {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 16px;
+    }
+
+    .section-heading h2 {
+      font-size: 22px;
+      letter-spacing: 0;
+    }
+
+    .tag {
+      color: var(--muted);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .device {
+      background: #25211d;
+      border-radius: 30px;
+      padding: 14px;
+      box-shadow: var(--shadow);
+    }
+
+    .screen {
+      height: 620px;
+      overflow: hidden;
+      background: var(--paper);
+      border-radius: 18px;
+      border: 1px solid #12100e;
+      display: grid;
+    }
+
+    .workbench {
+      grid-template-columns: 260px 1fr 330px;
+    }
+
+    .session {
+      grid-template-columns: 82px 1fr;
+    }
+
+    .studio {
+      grid-template-columns: 220px 1fr 330px;
+    }
+
+    .pane {
+      min-width: 0;
+      border-right: 1px solid var(--line);
+      background: var(--panel);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .pane:last-child {
+      border-right: 0;
+    }
+
+    .pane-muted {
+      background: #f6f2ea;
+    }
+
+    .pane-accent {
+      background: #f8f8f4;
+    }
+
+    .toolbar {
+      height: 58px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 16px;
+      border-bottom: 1px solid var(--line);
+      flex: 0 0 auto;
+    }
+
+    .toolbar strong {
+      font-size: 17px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .toolbar .spacer {
+      flex: 1;
+    }
+
+    .icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      background: #ebe4d8;
+      color: var(--ink);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .icon-button {
+      width: 32px;
+      height: 32px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .content {
+      padding: 16px;
+      overflow: hidden;
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+
+    .rail {
+      background: #342f29;
+      color: #fff8ed;
+      border-right: 0;
+      align-items: center;
+      padding: 14px 0;
+      gap: 16px;
+    }
+
+    .rail .rail-item {
+      width: 46px;
+      height: 46px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      background: rgba(255, 255, 255, 0.1);
+      font-size: 19px;
+    }
+
+    .rail .rail-item.active {
+      background: var(--accent);
+    }
+
+    .collection-title {
+      margin: 4px 0 2px;
+      color: var(--muted);
+      text-transform: uppercase;
+      font-size: 11px;
+      font-weight: 760;
+      letter-spacing: 0.08em;
+    }
+
+    .recipe-row,
+    .outline-row,
+    .step-row {
+      min-height: 42px;
+      border-radius: 8px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--ink);
+    }
+
+    .recipe-row.selected,
+    .outline-row.selected,
+    .step-row.selected {
+      background: var(--accent-soft);
+      color: #123f35;
+      font-weight: 720;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: var(--gold);
+      flex: 0 0 auto;
+    }
+
+    .dot.green {
+      background: var(--accent);
+    }
+
+    .dot.rose {
+      background: var(--rose);
+    }
+
+    .tiny {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .hero-metric {
+      background: var(--accent-soft);
+      border: 1px solid #b9d3c9;
+      border-radius: 8px;
+      padding: 16px;
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .hero-metric strong {
+      display: block;
+      font-size: 28px;
+      line-height: 1.1;
+    }
+
+    .fields {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .session .fields {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .session-focus-grid {
+      display: grid;
+      grid-template-columns: 270px minmax(0, 1fr);
+      gap: 12px;
+      align-items: start;
+    }
+
+    .session .ingredient {
+      padding: 7px 0;
+    }
+
+    .session .instruction {
+      padding: 7px 0;
+    }
+
+    .field,
+    .block {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      padding: 12px;
+    }
+
+    .field label,
+    .block h3 {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 720;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .field .value {
+      font-size: 21px;
+      font-weight: 720;
+    }
+
+    .input-line {
+      height: 34px;
+      border-radius: 6px;
+      background: #f2eee6;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding: 0 10px;
+      color: var(--ink);
+      font-weight: 680;
+    }
+
+    .button {
+      height: 42px;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #fff;
+      display: grid;
+      place-items: center;
+      font-weight: 760;
+    }
+
+    .button.secondary {
+      background: var(--blue-soft);
+      color: #244661;
+    }
+
+    .ingredient {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .ingredient:last-child {
+      border-bottom: 0;
+    }
+
+    .ingredient strong {
+      font-size: 15px;
+    }
+
+    .amount {
+      text-align: right;
+      font-weight: 760;
+    }
+
+    .subnav {
+      display: flex;
+      gap: 8px;
+    }
+
+    .pill {
+      border-radius: 999px;
+      padding: 7px 10px;
+      background: #eee8dc;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 680;
+    }
+
+    .pill.active {
+      background: var(--gold-soft);
+      color: #684015;
+    }
+
+    .big-readout {
+      border-radius: 8px;
+      padding: 16px;
+      background: var(--gold-soft);
+      border: 1px solid #dec394;
+    }
+
+    .big-readout .label {
+      color: #714817;
+      font-size: 12px;
+      font-weight: 760;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .big-readout .number {
+      display: block;
+      margin-top: 6px;
+      font-size: 38px;
+      line-height: 1;
+      font-weight: 800;
+    }
+
+    .instruction {
+      display: grid;
+      grid-template-columns: 32px 1fr;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .instruction:last-child {
+      border-bottom: 0;
+    }
+
+    .num {
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      background: var(--blue-soft);
+      color: #294b66;
+      display: grid;
+      place-items: center;
+      font-weight: 760;
+    }
+
+    .source-photo {
+      height: 190px;
+      border-radius: 8px;
+      background:
+        linear-gradient(145deg, rgba(29, 27, 24, 0.15), rgba(29, 27, 24, 0.02)),
+        repeating-linear-gradient(0deg, #f7efe2, #f7efe2 14px, #eadcc7 15px);
+      border: 1px solid #d8c7ac;
+      padding: 16px;
+      color: #6b5130;
+      font-weight: 760;
+    }
+
+    .preview-card {
+      border-radius: 8px;
+      background: #fff;
+      border: 1px solid var(--line);
+      padding: 12px;
+    }
+
+    .swatch-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .swatch {
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      border: 2px solid #fff;
+      box-shadow: 0 0 0 1px var(--line);
+    }
+
+    .notes {
+      margin-top: 14px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .note {
+      border: 1px solid rgba(159, 145, 125, 0.35);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.64);
+      padding: 12px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .note strong {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--ink);
+    }
+
+    @media (max-width: 920px) {
+      header,
+      main {
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+
+      .device {
+        overflow-x: auto;
+      }
+
+      .screen {
+        width: 1040px;
+      }
+
+      .notes {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Doughy Tablet Mockups</h1>
+    <p>Three low-fidelity directions for iPad and Android tablets. The emerging direction is B for the main bake-session screen and C for the create/edit Recipe Studio.</p>
+  </header>
+
+  <main>
+    <section class="mockup-section">
+      <div class="section-heading">
+        <h2>Proposal A: Recipe Library Workbench</h2>
+        <span class="tag">library stays visible · calculator center · result/history on the right</span>
+      </div>
+
+      <div class="device">
+        <div class="screen workbench">
+          <aside class="pane pane-muted">
+            <div class="toolbar">
+              <strong>Doughy</strong>
+              <span class="spacer"></span>
+              <span class="icon-button">+</span>
+            </div>
+            <div class="content">
+              <div class="collection-title">Pizza</div>
+              <div class="recipe-row selected"><span class="dot green"></span><span>Neapolitan Dough</span></div>
+              <div class="recipe-row"><span class="dot"></span><span>Detroit Pan Pizza</span></div>
+              <div class="recipe-row"><span class="dot rose"></span><span>Weekend Focaccia</span></div>
+              <div class="collection-title">Bread</div>
+              <div class="recipe-row"><span class="dot"></span><span>No-Knead Loaf</span></div>
+              <div class="recipe-row"><span class="dot green"></span><span>Sourdough Batard</span></div>
+              <div class="collection-title">Recently Opened</div>
+              <div class="recipe-row"><span class="dot rose"></span><span>Cinnamon Rolls</span></div>
+            </div>
+          </aside>
+
+          <section class="pane">
+            <div class="toolbar">
+              <span class="icon">N</span>
+              <strong>Neapolitan Dough</strong>
+              <span class="spacer"></span>
+              <span class="icon-button">↗</span>
+              <span class="icon-button">✎</span>
+            </div>
+            <div class="content">
+              <div class="hero-metric">
+                <div>
+                  <span class="tiny">Current batch</span>
+                  <strong>3 doughs</strong>
+                </div>
+                <div class="tiny">780 g total</div>
+              </div>
+              <div class="fields">
+                <div class="field">
+                  <label>Number of doughs</label>
+                  <div class="input-line">3</div>
+                </div>
+                <div class="field">
+                  <label>Single dough weight</label>
+                  <div class="input-line">260 g</div>
+                </div>
+              </div>
+              <div class="block">
+                <h3>Adjust dough ingredients</h3>
+                <div class="ingredient"><strong>Flour</strong><span class="amount">100%</span></div>
+                <div class="ingredient"><strong>Water</strong><span class="amount">62%</span></div>
+                <div class="ingredient"><strong>Salt</strong><span class="amount">2.8%</span></div>
+                <div class="ingredient"><strong>Yeast</strong><span class="amount">0.12%</span></div>
+              </div>
+              <div class="button">Calculate</div>
+            </div>
+          </section>
+
+          <aside class="pane pane-accent">
+            <div class="toolbar">
+              <strong>Calculated Result</strong>
+              <span class="spacer"></span>
+              <span class="icon-button">◷</span>
+            </div>
+            <div class="content">
+              <div class="big-readout">
+                <span class="label">Dough total</span>
+                <span class="number">780 g</span>
+              </div>
+              <div class="block">
+                <h3>Dough</h3>
+                <div class="ingredient"><strong>Flour</strong><span class="amount">481 g</span></div>
+                <div class="ingredient"><strong>Water</strong><span class="amount">298 g</span></div>
+                <div class="ingredient"><strong>Salt</strong><span class="amount">13 g</span></div>
+                <div class="ingredient"><strong>Yeast</strong><span class="amount">0.6 g</span></div>
+              </div>
+              <div class="block">
+                <h3>Instructions</h3>
+                <div class="instruction"><span class="num">1</span><span>Mix until no dry flour remains.</span></div>
+                <div class="instruction"><span class="num">2</span><span>Rest, fold, then refrigerate overnight.</span></div>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
+
+      <div class="notes">
+        <div class="note"><strong>Main difference</strong>The recipe list remains the anchor. Opening a recipe changes the workspace instead of replacing the library.</div>
+        <div class="note"><strong>Best for</strong>Everyday tablet use and the lowest-risk first redesign.</div>
+        <div class="note"><strong>Implementation feel</strong>Adaptive shell around existing screens: split view on iPad, list-detail/supporting panes on Android.</div>
+      </div>
+    </section>
+
+    <section class="mockup-section">
+      <div class="section-heading">
+        <h2>Proposal B: Bake Session Focus</h2>
+        <span class="tag">last recipe opens first · adjust as a mode · counter-friendly readout</span>
+      </div>
+
+      <div class="device">
+        <div class="screen session">
+          <nav class="pane rail">
+            <div class="rail-item active">◉</div>
+            <div class="rail-item">☰</div>
+            <div class="rail-item">＋</div>
+            <div class="rail-item">⚙</div>
+          </nav>
+
+          <section class="pane">
+            <div class="toolbar">
+              <span class="icon">N</span>
+              <strong>Neapolitan Dough Session</strong>
+              <span class="spacer"></span>
+              <span class="pill active">Recipe</span>
+              <span class="pill">Adjust</span>
+            </div>
+            <div class="content">
+              <div class="hero-metric">
+                <div>
+                  <span class="tiny">Last active recipe</span>
+                  <strong>Tonight's pizza</strong>
+                </div>
+              </div>
+              <div class="fields">
+                <div class="field">
+                  <label>Quantity</label>
+                  <div class="value">3</div>
+                </div>
+                <div class="field">
+                  <label>Single batch size</label>
+                  <div class="value">260 g</div>
+                </div>
+                <div class="field">
+                  <label>Total batch size</label>
+                  <div class="value">780 g</div>
+                </div>
+              </div>
+              <div class="session-focus-grid">
+                <div class="block">
+                  <h3>Ingredients</h3>
+                  <div class="ingredient"><strong>Flour</strong><span class="amount">481 g</span></div>
+                  <div class="ingredient"><strong>Water</strong><span class="amount">298 g</span></div>
+                  <div class="ingredient"><strong>Salt</strong><span class="amount">13 g</span></div>
+                  <div class="ingredient"><strong>Yeast</strong><span class="amount">0.6 g</span></div>
+                </div>
+                <div class="block">
+                  <h3>Instructions</h3>
+                  <div class="instruction"><span class="num">1</span><span>Mix dough.</span></div>
+                  <div class="instruction"><span class="num">2</span><span>Rest 20 minutes.</span></div>
+                  <div class="instruction"><span class="num">3</span><span>Fold once, then cover.</span></div>
+                  <div class="instruction"><span class="num">4</span><span>Cold ferment overnight.</span></div>
+                  <div class="instruction"><span class="num">5</span><span>Divide, ball, and proof.</span></div>
+                  <div class="instruction"><span class="num">6</span><span>Bake on a hot steel.</span></div>
+                </div>
+              </div>
+              <div class="block">
+                <h3>Session note</h3>
+                <div class="ingredient"><strong>Last used</strong><span class="amount">3 doughs</span></div>
+                <div class="ingredient"><strong>Repeat default</strong><span class="amount">260 g each</span></div>
+              </div>
+              <div class="button secondary">Save bake note</div>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <div class="notes">
+        <div class="note"><strong>Main difference</strong>The selected recipe is the home base. A compact ingredients column stays beside the longer instructions; adjustment is handled by the top mode control.</div>
+        <div class="note"><strong>Best for</strong>Using Doughy on the counter while actively making something.</div>
+        <div class="note"><strong>Implementation feel</strong>More redesign work. It may want new session concepts and stronger history/note integration.</div>
+      </div>
+    </section>
+
+    <section class="mockup-section">
+      <div class="section-heading">
+        <h2>Proposal C: Recipe Studio</h2>
+        <span class="tag">creation/editing first · section navigator · live preview and source material</span>
+      </div>
+
+      <div class="device">
+        <div class="screen studio">
+          <aside class="pane pane-muted">
+            <div class="toolbar">
+              <strong>Edit Recipe</strong>
+            </div>
+            <div class="content">
+              <div class="outline-row selected">Details</div>
+              <div class="outline-row">Flours</div>
+              <div class="outline-row">Ingredients</div>
+              <div class="outline-row">Preferment</div>
+              <div class="outline-row">Instructions</div>
+              <div class="outline-row">Preview & save</div>
+              <div class="block">
+                <h3>Scan review</h3>
+                <div class="tiny">2 ingredient choices</div>
+                <div class="tiny">1 conversion suggestion</div>
+              </div>
+            </div>
+          </aside>
+
+          <section class="pane">
+            <div class="toolbar">
+              <span class="icon">✎</span>
+              <strong>Recipe Details</strong>
+              <span class="spacer"></span>
+              <span class="icon-button">✓</span>
+            </div>
+            <div class="content">
+              <div class="fields">
+                <div class="field">
+                  <label>Name</label>
+                  <div class="input-line">Neapolitan Dough</div>
+                </div>
+                <div class="field">
+                  <label>Collection</label>
+                  <div class="input-line">Pizza</div>
+                </div>
+              </div>
+              <div class="block">
+                <h3>Icon and color</h3>
+                <div class="swatch-row">
+                  <span class="swatch" style="background:#2f7d68"></span>
+                  <span class="swatch" style="background:#a66f2d"></span>
+                  <span class="swatch" style="background:#9c4f5f"></span>
+                  <span class="swatch" style="background:#496f91"></span>
+                </div>
+              </div>
+              <div class="block">
+                <h3>Flours</h3>
+                <div class="ingredient"><strong>Bread flour</strong><span class="amount">100%</span></div>
+                <div class="ingredient"><strong>Add flour</strong><span class="amount">＋</span></div>
+              </div>
+              <div class="block">
+                <h3>Ingredients</h3>
+                <div class="ingredient"><strong>Water</strong><span class="amount">62%</span></div>
+                <div class="ingredient"><strong>Salt</strong><span class="amount">2.8%</span></div>
+                <div class="ingredient"><strong>Yeast</strong><span class="amount">0.12%</span></div>
+              </div>
+            </div>
+          </section>
+
+          <aside class="pane pane-accent">
+            <div class="toolbar">
+              <strong>Preview / Source</strong>
+              <span class="spacer"></span>
+              <span class="pill active">Preview</span>
+              <span class="pill">Scan</span>
+            </div>
+            <div class="content">
+              <div class="source-photo">Source photo or pasted recipe stays visible during review</div>
+              <div class="preview-card">
+                <h3>Live recipe preview</h3>
+                <div class="ingredient"><strong>Default weight</strong><span class="amount">260 g</span></div>
+                <div class="ingredient"><strong>Hydration</strong><span class="amount">62%</span></div>
+                <div class="ingredient"><strong>Ingredients</strong><span class="amount">4</span></div>
+              </div>
+              <div class="preview-card">
+                <h3>Validation</h3>
+                <div class="step-row selected">Water recognized as dough ingredient</div>
+                <div class="step-row">Rosemary can stay as tablespoons</div>
+                <div class="step-row">Instructions ready</div>
+              </div>
+              <div class="button">Save recipe</div>
+            </div>
+          </aside>
+        </div>
+      </div>
+
+      <div class="notes">
+        <div class="note"><strong>Main difference</strong>This is the tablet create/edit flow, not the main app shell. The space is spent on editing, review, and source material.</div>
+        <div class="note"><strong>Best for</strong>Recipe scanning, cleanup, and complex recipe creation.</div>
+        <div class="note"><strong>Implementation feel</strong>Highest cost. It asks for extracted editor sections and tablet-specific composition.</div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
