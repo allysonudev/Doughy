@@ -46,7 +46,7 @@
 "density.ingredient.coconut_oil" = "Óleo de coco";
 "density.ingredient.cornmeal" = "Fubá";
 "density.ingredient.cream" = "Creme de leite";
-"density.ingredient.diamond_crystal_kosher_salt" = "Diamond Crystal Sal Kosher";
+"density.ingredient.diamond_crystal_kosher_salt" = "Sal kosher grosso";
 "density.ingredient.diastatic_malt" = "Malte diastático";
 "density.ingredient.fresh_yeast" = "Fermento fresco";
 "density.ingredient.gluten_free_flour_blend" = "Mistura de farinha sem glúten";
@@ -56,7 +56,7 @@
 "density.ingredient.maple_syrup" = "Xarope de bordo";
 "density.ingredient.milk" = "Leite";
 "density.ingredient.molasses" = "Melaço";
-"density.ingredient.morton_kosher_salt" = "Morton Sal Kosher";
+"density.ingredient.morton_kosher_salt" = "Sal kosher";
 "density.ingredient.non_diastatic_malt" = "Malte não diastático";
 "density.ingredient.nuts" = "Castanhas";
 "density.ingredient.oat_flour" = "Farinha de aveia";

@@ -521,6 +521,12 @@ struct RecipeScanner {
             && !lowerName.contains("diamond") {
             return .mortonKosherSalt
         }
+        // The model occasionally assigns a density-based category to a plain
+        // "egg"/"eggs" ingredient, which would make the resolver treat it like a
+        // volume-based ingredient instead of preserving it as a count.
+        if lowerName.range(of: #"\beggs?\b"#, options: .regularExpression) != nil {
+            return .eggs
+        }
         return ingredient.category
     }
 

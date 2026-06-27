@@ -46,7 +46,7 @@
 "density.ingredient.coconut_oil" = "Coconut Oil";
 "density.ingredient.cornmeal" = "Polenta / Cornmeal";
 "density.ingredient.cream" = "Cream";
-"density.ingredient.diamond_crystal_kosher_salt" = "Diamond Crystal Kosher Salt";
+"density.ingredient.diamond_crystal_kosher_salt" = "Large Kosher Salt";
 "density.ingredient.diastatic_malt" = "Diastatic Malt";
 "density.ingredient.fresh_yeast" = "Fresh Yeast";
 "density.ingredient.gluten_free_flour_blend" = "Gluten-Free Flour Blend";
@@ -56,7 +56,7 @@
 "density.ingredient.maple_syrup" = "Maple Syrup";
 "density.ingredient.milk" = "Milk";
 "density.ingredient.molasses" = "Molasses";
-"density.ingredient.morton_kosher_salt" = "Morton Kosher Salt";
+"density.ingredient.morton_kosher_salt" = "Kosher Salt";
 "density.ingredient.non_diastatic_malt" = "Non-Diastatic Malt";
 "density.ingredient.nuts" = "Nuts";
 "density.ingredient.oat_flour" = "Oat Flour";
@@ -367,6 +367,8 @@
 "share.note.placeholder" = "Add a note (optional)";
 "share.note.footer" = "A personal note the recipient can read from the recipe.";
 "calculator.preferment.section_title" = "Preferment: %@";
+"Back Up Recipe Library" = "Back Up Recipe Library";
+"Restore Recipe Library" = "Restore Recipe Library";
 "settings.backup.footer" = "Backups include every recipe. Restoring a backup replaces your current recipe library.";
 "settings.recently_deleted.nav_title" = "Recently Deleted";
 "settings.recently_deleted.empty.title" = "No Recently Deleted Recipes";

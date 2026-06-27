@@ -48,7 +48,7 @@
 "density.ingredient.coconut_oil" = "Huile de coco";
 "density.ingredient.cornmeal" = "Semoule de maïs";
 "density.ingredient.cream" = "Crème";
-"density.ingredient.diamond_crystal_kosher_salt" = "Diamond Crystal Sel Casher";
+"density.ingredient.diamond_crystal_kosher_salt" = "Gros sel casher";
 "density.ingredient.diastatic_malt" = "Malt diastatique";
 "density.ingredient.fresh_yeast" = "Levure fraîche";
 "density.ingredient.gluten_free_flour_blend" = "Mélange de farine sans gluten";
@@ -58,7 +58,7 @@
 "density.ingredient.maple_syrup" = "Sirop d'érable";
 "density.ingredient.milk" = "Lait";
 "density.ingredient.molasses" = "Mélasse";
-"density.ingredient.morton_kosher_salt" = "Morton Sel Casher";
+"density.ingredient.morton_kosher_salt" = "Sel casher";
 "density.ingredient.non_diastatic_malt" = "Malt non diastatique";
 "density.ingredient.nuts" = "Fruits à coque";
 "density.ingredient.oat_flour" = "Farine d'avoine";

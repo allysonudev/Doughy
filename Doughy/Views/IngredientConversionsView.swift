@@ -11,6 +11,8 @@ import SwiftUI
 struct IngredientConversionsView: View {
     private let store = IngredientDensityStore.shared
     private let conversionStore = IngredientConversionStore.shared
+    private let eggFieldWidth: CGFloat = 64
+    private let eggResetButtonWidth: CGFloat = 28
 
     @State private var values: [IngredientCategory: Double] = [:]
     @State private var displayUnits: [IngredientCategory: DensityUnit] = [:]
@@ -187,10 +189,9 @@ struct IngredientConversionsView: View {
                 store.setDefaultEggSize(newValue)
             }
 
+            eggHeaderRow
             ForEach(EggSize.allCases) { size in
-                ForEach(EggPart.allCases) { part in
-                    eggRow(for: size, part: part)
-                }
+                eggSizeRow(for: size)
             }
         } header: {
             Text(String(localized: "conversions.eggs", defaultValue: "Eggs"))
@@ -200,43 +201,110 @@ struct IngredientConversionsView: View {
     }
 
     @ViewBuilder
-    private func eggRow(for size: EggSize, part: EggPart) -> some View {
-        HStack {
-            Text("\(size.localizedDisplayName) \(part.localizedDisplayName)")
-            Spacer()
-            TextField(
-                "",
-                value: eggBinding(for: size, part: part),
-                format: .number.precision(.fractionLength(0...2))
-            )
-            .multilineTextAlignment(.trailing)
-            .keyboardType(.decimalPad)
-            .frame(width: 70)
-            .accessibilityIdentifier("eggGramsField_\(size.rawValue)_\(part.rawValue)")
-            .accessibilityLabel("\(size.localizedDisplayName) \(part.localizedDisplayName), grams")
-
-            Text(String(localized: "unit.grams.short", defaultValue: "g"))
-                .foregroundStyle(.secondary)
-        }
-        .swipeActions(edge: .trailing) {
-            if store.isCustomized(size, part: part) {
-                Button("Reset") {
-                    store.resetToDefault(for: size, part: part)
-                    eggValues[size, default: [:]][part] = size.defaultGrams(for: part)
-                }
-                .tint(.blue)
+    private var eggHeaderRow: some View {
+        HStack(spacing: 8) {
+            Color.clear
+                .frame(maxWidth: .infinity)
+            Color.clear
+                .frame(width: eggResetButtonWidth)
+            ForEach(EggPart.allCases) { part in
+                Text(part.localizedDisplayName)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.85)
+                    .frame(width: eggFieldWidth)
             }
         }
+        .accessibilityHidden(true)
+    }
+
+    @ViewBuilder
+    private func eggSizeRow(for size: EggSize) -> some View {
+        HStack(spacing: 8) {
+            Text(size.localizedDisplayName)
+                .lineLimit(2)
+                .minimumScaleFactor(0.85)
+                .multilineTextAlignment(.leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            if eggRowIsCustomized(size) {
+                Button {
+                    resetEggRow(size)
+                } label: {
+                    Image(systemName: "arrow.counterclockwise")
+                        .foregroundStyle(.blue)
+                }
+                .buttonStyle(.plain)
+                .frame(width: eggResetButtonWidth)
+                .accessibilityLabel("\(String(localized: "Reset", defaultValue: "Reset")) \(size.localizedDisplayName)")
+            } else {
+                Color.clear
+                    .frame(width: eggResetButtonWidth)
+                    .accessibilityHidden(true)
+            }
+
+            ForEach(EggPart.allCases) { part in
+                compactEggField(for: size, part: part)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func compactEggField(for size: EggSize, part: EggPart) -> some View {
+        TextField(
+            "",
+            value: eggBinding(for: size, part: part),
+            format: .number.precision(.fractionLength(0...2))
+        )
+        .textFieldStyle(.roundedBorder)
+        .multilineTextAlignment(.trailing)
+        .keyboardType(.decimalPad)
+        .padding(.trailing, 18)
+        .frame(width: eggFieldWidth)
+        .overlay(alignment: .trailing) {
+            Text(String(localized: "unit.grams.short", defaultValue: "g"))
+                .foregroundStyle(.secondary)
+                .font(.caption)
+                .padding(.trailing, 8)
+                .allowsHitTesting(false)
+        }
+        .accessibilityIdentifier("eggGramsField_\(size.rawValue)_\(part.rawValue)")
+        .accessibilityLabel("\(size.localizedDisplayName) \(part.localizedDisplayName), grams")
     }
 
     private func eggBinding(for size: EggSize, part: EggPart) -> Binding<Double> {
         Binding(
             get: { eggValues[size]?[part] ?? size.defaultGrams(for: part) },
             set: { newValue in
-                eggValues[size, default: [:]][part] = newValue
-                store.setGramsPerEgg(newValue, for: size, part: part)
+                setEggValue(newValue, for: size, part: part)
+                if abs(newValue - size.defaultGrams(for: part)) < 0.0001 {
+                    store.resetToDefault(for: size, part: part)
+                } else {
+                    store.setGramsPerEgg(newValue, for: size, part: part)
+                }
             }
         )
+    }
+
+    private func eggRowIsCustomized(_ size: EggSize) -> Bool {
+        EggPart.allCases.contains { part in
+            abs((eggValues[size]?[part] ?? size.defaultGrams(for: part)) - size.defaultGrams(for: part)) >= 0.0001
+        }
+    }
+
+    private func resetEggRow(_ size: EggSize) {
+        for part in EggPart.allCases {
+            store.resetToDefault(for: size, part: part)
+            setEggValue(size.defaultGrams(for: part), for: size, part: part)
+        }
+    }
+
+    private func setEggValue(_ value: Double, for size: EggSize, part: EggPart) {
+        var parts = eggValues[size] ?? [:]
+        parts[part] = value
+        eggValues[size] = parts
     }
 
     private func unit(for category: IngredientCategory) -> DensityUnit {

@@ -52,7 +52,7 @@
 "density.ingredient.coconut_oil" = "Kokosöl";
 "density.ingredient.cornmeal" = "Maisgrieß";
 "density.ingredient.cream" = "Sahne";
-"density.ingredient.diamond_crystal_kosher_salt" = "Diamond Crystal Koscheres Salz";
+"density.ingredient.diamond_crystal_kosher_salt" = "Grobes koscheres Salz";
 "density.ingredient.diastatic_malt" = "Diastatisches Malz";
 "density.ingredient.fresh_yeast" = "Frischhefe";
 "density.ingredient.gluten_free_flour_blend" = "Glutenfreie Mehlmischung";
@@ -62,7 +62,7 @@
 "density.ingredient.maple_syrup" = "Ahornsirup";
 "density.ingredient.milk" = "Milch";
 "density.ingredient.molasses" = "Melasse";
-"density.ingredient.morton_kosher_salt" = "Morton Koscheres Salz";
+"density.ingredient.morton_kosher_salt" = "Koscheres Salz";
 "density.ingredient.non_diastatic_malt" = "Nicht-diastatisches Malz";
 "density.ingredient.nuts" = "Nüsse";
 "density.ingredient.oat_flour" = "Hafermehl";

@@ -46,7 +46,7 @@
 "density.ingredient.coconut_oil" = "Aceite de coco";
 "density.ingredient.cornmeal" = "Harina de maíz";
 "density.ingredient.cream" = "Crema";
-"density.ingredient.diamond_crystal_kosher_salt" = "Diamond Crystal Sal Kosher";
+"density.ingredient.diamond_crystal_kosher_salt" = "Sal kosher gruesa";
 "density.ingredient.diastatic_malt" = "Malta diastásica";
 "density.ingredient.fresh_yeast" = "Levadura fresca";
 "density.ingredient.gluten_free_flour_blend" = "Mezcla de harina sin gluten";
@@ -56,7 +56,7 @@
 "density.ingredient.maple_syrup" = "Jarabe de arce";
 "density.ingredient.milk" = "Leche";
 "density.ingredient.molasses" = "Melaza";
-"density.ingredient.morton_kosher_salt" = "Morton Sal Kosher";
+"density.ingredient.morton_kosher_salt" = "Sal kosher";
 "density.ingredient.non_diastatic_malt" = "Malta no diastásica";
 "density.ingredient.nuts" = "Nueces";
 "density.ingredient.oat_flour" = "Harina de avena";

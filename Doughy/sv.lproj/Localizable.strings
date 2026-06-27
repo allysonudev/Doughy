@@ -52,7 +52,7 @@
 "density.ingredient.coconut_oil" = "Kokosolja";
 "density.ingredient.cornmeal" = "Majsgryn";
 "density.ingredient.cream" = "Grädde";
-"density.ingredient.diamond_crystal_kosher_salt" = "Diamond Crystal kosher salt";
+"density.ingredient.diamond_crystal_kosher_salt" = "Grov kosher salt";
 "density.ingredient.diastatic_malt" = "Diastatisk malt";
 "density.ingredient.fresh_yeast" = "Färsk jäst";
 "density.ingredient.gluten_free_flour_blend" = "Glutenfri mjölblandning";
@@ -62,7 +62,7 @@
 "density.ingredient.maple_syrup" = "Lönnsirap";
 "density.ingredient.milk" = "Mjölk";
 "density.ingredient.molasses" = "Melass";
-"density.ingredient.morton_kosher_salt" = "Morton kosher salt";
+"density.ingredient.morton_kosher_salt" = "Kosher salt";
 "density.ingredient.non_diastatic_malt" = "Icke-diastatisk malt";
 "density.ingredient.nuts" = "Nötter";
 "density.ingredient.oat_flour" = "Havremjöl";

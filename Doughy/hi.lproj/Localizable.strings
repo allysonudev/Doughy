@@ -46,7 +46,7 @@
 "density.ingredient.coconut_oil" = "नारियल तेल";
 "density.ingredient.cornmeal" = "मक्के का आटा";
 "density.ingredient.cream" = "क्रीम";
-"density.ingredient.diamond_crystal_kosher_salt" = "Diamond Crystal Kosher Salt";
+"density.ingredient.diamond_crystal_kosher_salt" = "मोटा कोषेर नमक";
 "density.ingredient.diastatic_malt" = "डायस्टैटिक माल्ट";
 "density.ingredient.fresh_yeast" = "ताज़ा यीस्ट";
 "density.ingredient.gluten_free_flour_blend" = "ग्लूटेन-फ़्री आटा मिश्रण";
@@ -56,7 +56,7 @@
 "density.ingredient.maple_syrup" = "मेपल सिरप";
 "density.ingredient.milk" = "दूध";
 "density.ingredient.molasses" = "शीरा";
-"density.ingredient.morton_kosher_salt" = "Morton Kosher Salt";
+"density.ingredient.morton_kosher_salt" = "कोषेर नमक";
 "density.ingredient.non_diastatic_malt" = "नॉन-डायस्टैटिक माल्ट";
 "density.ingredient.nuts" = "मेवे";
 "density.ingredient.oat_flour" = "ओट का आटा";
@@ -263,6 +263,8 @@
 "Number of Doughs" = "डो की संख्या";
 "OK" = "ठीक है";
 "Other Ingredients" = "अन्य सामग्री";
+"Back Up Recipe Library" = "रेसिपी लाइब्रेरी का बैकअप लें";
+"Restore Recipe Library" = "रेसिपी लाइब्रेरी पुनर्स्थापित करें";
 "Photo Library" = "फ़ोटो लाइब्रेरी";
 "Please close and reopen Doughy to apply the language change." = "भाषा परिवर्तन लागू करने के लिए कृपया Doughy को बंद करके फिर से खोलें।";
 "Preferment" = "प्रीफ़र्मेंट";

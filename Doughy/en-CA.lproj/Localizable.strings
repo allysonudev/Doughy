@@ -367,6 +367,8 @@
 "share.note.placeholder" = "Add a note (optional)";
 "share.note.footer" = "A personal note the recipient can read from the recipe.";
 "calculator.preferment.section_title" = "Preferment: %@";
+"Back Up Recipe Library" = "Back Up Recipe Library";
+"Restore Recipe Library" = "Restore Recipe Library";
 "settings.backup.footer" = "Backups include every recipe. Restoring a backup replaces your current recipe library.";
 "settings.recently_deleted.nav_title" = "Recently Deleted";
 "settings.recently_deleted.empty.title" = "No Recently Deleted Recipes";

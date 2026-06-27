@@ -52,7 +52,7 @@
 "density.ingredient.coconut_oil" = "Olio di cocco";
 "density.ingredient.cornmeal" = "Farina di mais";
 "density.ingredient.cream" = "Panna";
-"density.ingredient.diamond_crystal_kosher_salt" = "Diamond Crystal Sale Kosher";
+"density.ingredient.diamond_crystal_kosher_salt" = "Sale kosher grosso";
 "density.ingredient.diastatic_malt" = "Malto diastatico";
 "density.ingredient.fresh_yeast" = "Lievito fresco";
 "density.ingredient.gluten_free_flour_blend" = "Mix di farine senza glutine";
@@ -62,7 +62,7 @@
 "density.ingredient.maple_syrup" = "Sciroppo d'acero";
 "density.ingredient.milk" = "Latte";
 "density.ingredient.molasses" = "Melassa";
-"density.ingredient.morton_kosher_salt" = "Morton Sale Kosher";
+"density.ingredient.morton_kosher_salt" = "Sale kosher";
 "density.ingredient.non_diastatic_malt" = "Malto non diastatico";
 "density.ingredient.nuts" = "Frutta secca";
 "density.ingredient.oat_flour" = "Farina d'avena";

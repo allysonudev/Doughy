@@ -10,7 +10,7 @@ import UIKit
 struct ScanRecipeIntent: AppIntent {
     static var title: LocalizedStringResource = "Scan Recipe"
     static var description = IntentDescription(
-        "Scan a recipe photo and import it into Doughy. Apple Intelligence will read the text and extract ingredients automatically.",
+        "Scan a recipe photo and import it into Doughy to read the text and extract ingredients automatically.",
         categoryName: "Recipe"
     )
     static let openAppWhenRun = true

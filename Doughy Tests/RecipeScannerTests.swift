@@ -459,6 +459,36 @@ final class RecipeScannerTests: XCTestCase {
         #endif
     }
 
+    func testResolverNormalizesPlainEggNamesToCountExtras() throws {
+        guard #available(iOS 26, *) else {
+            throw XCTSkip("RecipeScanner requires iOS 26.")
+        }
+        #if canImport(FoundationModels)
+        for name in ["egg", "eggs"] {
+            let ingredient = ParsedIngredient(hasExplicitWeightGrams: false,
+                                              name: name,
+                                              alternativeName: "",
+                                              category: .milk,
+                                              weightGrams: 0,
+                                              volumeAmount: 2,
+                                              volumeUnit: .cup,
+                                              eggSize: .unspecified,
+                                              eggPart: .whole,
+                                              isFlour: false,
+                                              isPreferment: false)
+
+            let resolved = RecipeScanner.resolve(ingredient)
+
+            XCTAssertEqual(resolved.weightGrams, 0, accuracy: 0.001, "Expected \(name) to stay count-based")
+            XCTAssertTrue(resolved.isExtra, "Expected \(name) to remain an extra ingredient")
+            XCTAssertEqual(resolved.extraAmount, 2, accuracy: 0.001)
+            XCTAssertEqual(resolved.extraUnit, .count)
+        }
+        #else
+        throw XCTSkip("FoundationModels is not available in this build.")
+        #endif
+    }
+
     func testResolverTreatsImplausibleCupAmountAsMisplacedGrams() throws {
         guard #available(iOS 26, *) else {
             throw XCTSkip("RecipeScanner requires iOS 26.")

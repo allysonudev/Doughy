@@ -52,7 +52,7 @@
 "density.ingredient.coconut_oil" = "ココナッツオイル";
 "density.ingredient.cornmeal" = "コーンミール";
 "density.ingredient.cream" = "クリーム";
-"density.ingredient.diamond_crystal_kosher_salt" = "Diamond Crystal コーシャーソルト";
+"density.ingredient.diamond_crystal_kosher_salt" = "大粒コーシャーソルト";
 "density.ingredient.diastatic_malt" = "活性モルト";
 "density.ingredient.fresh_yeast" = "生イースト";
 "density.ingredient.gluten_free_flour_blend" = "グルテンフリー粉ブレンド";
@@ -62,7 +62,7 @@
 "density.ingredient.maple_syrup" = "メープルシロップ";
 "density.ingredient.milk" = "牛乳";
 "density.ingredient.molasses" = "糖蜜";
-"density.ingredient.morton_kosher_salt" = "Morton コーシャーソルト";
+"density.ingredient.morton_kosher_salt" = "コーシャーソルト";
 "density.ingredient.non_diastatic_malt" = "非活性モルト";
 "density.ingredient.nuts" = "ナッツ";
 "density.ingredient.oat_flour" = "オート麦粉";
