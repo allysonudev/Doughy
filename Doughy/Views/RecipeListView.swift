@@ -11,6 +11,7 @@ struct RecipeListView: View {
     @State private var editingRecipe: RecipeWrapper?
     @State private var copyingRecipe: RecipeWrapper?
     @State private var sharingRecipe: RecipeWrapper?
+    @State private var historyRecipe: RecipeWrapper?
     @State private var showingSettings = false
     @State private var pendingShareAuthor: String = ""
     @State private var deletionError: String?
@@ -34,7 +35,7 @@ struct RecipeListView: View {
                 phoneContent
             }
         }
-        .sheet(isPresented: $showingCreate, onDismiss: {
+        .fullScreenCover(isPresented: $showingCreate, onDismiss: {
             store.refresh()
             intentScanImage = nil
             initialWebsiteImportURL = nil
@@ -45,16 +46,22 @@ struct RecipeListView: View {
                              initialWebsiteImportURL: initialWebsiteImportURL)
                 .environment(store)
         }
-        .sheet(item: $editingRecipe, onDismiss: { store.refresh() }) { wrapper in
+        .fullScreenCover(item: $editingRecipe, onDismiss: { store.refresh() }) { wrapper in
             CreateRecipeView(editingRecipe: wrapper.recipe)
                 .environment(store)
         }
-        .sheet(item: $copyingRecipe, onDismiss: { store.refresh() }) { wrapper in
+        .fullScreenCover(item: $copyingRecipe, onDismiss: { store.refresh() }) { wrapper in
             CreateRecipeView(copyingRecipe: wrapper.recipe)
                 .environment(store)
         }
         .sheet(item: $sharingRecipe, onDismiss: { pendingShareAuthor = "" }) { wrapper in
             RecipeShareView(recipe: wrapper.recipe, initialAuthorName: pendingShareAuthor)
+        }
+        .sheet(item: $historyRecipe, onDismiss: { store.refresh() }) { wrapper in
+            NavigationStack {
+                RecipeHistoryView(recipe: wrapper.recipe)
+            }
+            .environment(store)
         }
         .sheet(isPresented: $showingSettings) {
             NavigationStack {
@@ -163,7 +170,13 @@ struct RecipeListView: View {
             Divider()
             Group {
                 if let wrapper = selectedRecipe ?? firstRecipeWrapper {
-                    TabletBakeSessionView(recipe: wrapper.recipe)
+                    TabletBakeSessionView(
+                        recipe: wrapper.recipe,
+                        onEdit: { editingRecipe = wrapper },
+                        onCopy: { copyingRecipe = wrapper },
+                        onShare: { sharingRecipe = wrapper },
+                        onHistory: { historyRecipe = wrapper }
+                    )
                         .id(wrapper.id)
                 } else {
                     ContentUnavailableView(
@@ -367,7 +380,7 @@ struct RecipeListView: View {
                     showingTabletLibrary.toggle()
                 }
             } label: {
-                Image(systemName: "list.bullet")
+                Image(systemName: "sidebar.left")
                     .font(.title3)
                     .frame(width: 46, height: 46)
             }
@@ -381,7 +394,7 @@ struct RecipeListView: View {
                     .font(.title3)
                     .frame(width: 46, height: 46)
             }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(.bordered)
             .accessibilityIdentifier("addRecipeButton")
             .accessibilityLabel("Add recipe")
 
@@ -447,6 +460,65 @@ struct RecipeListView: View {
     }
 }
 
+private struct TabletRepeatButton: View {
+    let systemImage: String
+    let isProminent: Bool
+    let action: () -> Void
+
+    @State private var repeatTask: Task<Void, Never>?
+
+    var body: some View {
+        styledButton
+            .onLongPressGesture(minimumDuration: 0.35, maximumDistance: 44) {
+            } onPressingChanged: { isPressing in
+                if isPressing {
+                    startRepeating()
+                } else {
+                    stopRepeating()
+                }
+            }
+            .onDisappear {
+                stopRepeating()
+            }
+    }
+
+    @ViewBuilder
+    private var styledButton: some View {
+        if isProminent {
+            button
+                .buttonStyle(.borderedProminent)
+        } else {
+            button
+                .buttonStyle(.bordered)
+        }
+    }
+
+    private var button: some View {
+        Button(action: action) {
+            Image(systemName: systemImage)
+                .frame(width: 44, height: 36)
+        }
+    }
+
+    private func startRepeating() {
+        guard repeatTask == nil else { return }
+        repeatTask = Task {
+            try? await Task.sleep(nanoseconds: 450_000_000)
+            while !Task.isCancelled {
+                await MainActor.run {
+                    action()
+                }
+                try? await Task.sleep(nanoseconds: 120_000_000)
+            }
+        }
+    }
+
+    private func stopRepeating() {
+        repeatTask?.cancel()
+        repeatTask = nil
+    }
+}
+
 // Wraps any RecipeProtocol so it can be used with NavigationLink(value:) and sheet(item:).
 struct RecipeWrapper: Identifiable, Hashable {
     let id: ObjectIdentifier
@@ -481,20 +553,43 @@ private enum TabletBakeSessionKeys {
 
 private struct TabletBakeSessionView: View {
     let recipe: any RecipeProtocol
+    let onEdit: () -> Void
+    let onCopy: () -> Void
+    let onShare: () -> Void
+    let onHistory: () -> Void
 
     @Environment(RecipeStore.self) private var store
     @State private var mode: TabletBakeSessionMode = .recipe
     @State private var quantity = 1
     @State private var singleBatchSize: Double
+    @State private var ingredientPercents: [Int: Double] = [:]
+    @State private var extraIngredientAmounts: [Int: Double] = [:]
+    @State private var ingredientTemps: [Int: Double] = [:]
+    @State private var prefermentIngredientPercents: [Int: Double] = [:]
+    @State private var ingredientWeights: [Int: Double] = [:]
+    @State private var prefermentIngredientWeights: [Int: Double] = [:]
+    @State private var prefermentTotalPercent: Double?
     @State private var calculatedRecipe: (any CalculatedRecipeProtocol)?
     @State private var calculationError: String?
     @State private var noteText = ""
 
     private let calculator = Calculator.shared
+    private let settings = Settings.shared
     private let weightFormatter = WeightFormatter.shared
+    private let percentFormatter = PercentFormatter.shared
 
-    init(recipe: any RecipeProtocol) {
+    init(
+        recipe: any RecipeProtocol,
+        onEdit: @escaping () -> Void,
+        onCopy: @escaping () -> Void,
+        onShare: @escaping () -> Void,
+        onHistory: @escaping () -> Void
+    ) {
         self.recipe = recipe
+        self.onEdit = onEdit
+        self.onCopy = onCopy
+        self.onShare = onShare
+        self.onHistory = onHistory
         let defaults = UserDefaults.standard
         let savedQuantity = defaults.integer(forKey: TabletBakeSessionKeys.quantity(for: recipe))
         let savedSize = defaults.double(forKey: TabletBakeSessionKeys.singleBatchSize(for: recipe))
@@ -516,6 +611,22 @@ private struct TabletBakeSessionView: View {
 
     private var extraIngredients: [CalculatedIngredient] {
         calculatedRecipe?.ingredients.filter { $0.extraAmount != nil } ?? []
+    }
+
+    private var preferment: Preferment? {
+        (recipe as? PrefermentRecipe)?.preferment
+    }
+
+    private var hasTemperatures: Bool {
+        recipe.containsVariableTemps()
+    }
+
+    private var isWeightRecipe: Bool {
+        recipe.measurementMode == .weight
+    }
+
+    private var hasAdditionalIngredients: Bool {
+        recipe.ingredients.contains { $0.extraAmount != nil }
     }
 
     var body: some View {
@@ -542,18 +653,23 @@ private struct TabletBakeSessionView: View {
             saveBatchSettings()
             calculate()
         }
+        .onChange(of: ingredientPercents) { _, _ in calculate() }
+        .onChange(of: extraIngredientAmounts) { _, _ in calculate() }
+        .onChange(of: ingredientTemps) { _, _ in calculate() }
+        .onChange(of: prefermentIngredientPercents) { _, _ in calculate() }
+        .onChange(of: ingredientWeights) { _, _ in calculate() }
+        .onChange(of: prefermentIngredientWeights) { _, _ in calculate() }
+        .onChange(of: prefermentTotalPercent) { _, _ in calculate() }
     }
 
     private var header: some View {
         HStack(spacing: 16) {
             VStack(alignment: .leading, spacing: 4) {
-                Text("Last active recipe")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
                 Text(recipe.name)
                     .font(.largeTitle.bold())
             }
             Spacer()
+            tabletToolbarButtons
             Picker("Mode", selection: $mode) {
                 ForEach(TabletBakeSessionMode.allCases, id: \.self) { mode in
                     Text(mode.rawValue).tag(mode)
@@ -564,6 +680,25 @@ private struct TabletBakeSessionView: View {
         }
         .padding(.horizontal, 28)
         .padding(.vertical, 18)
+    }
+
+    private var tabletToolbarButtons: some View {
+        HStack(spacing: 8) {
+            toolbarButton(systemImage: "pencil", label: "Edit", action: onEdit)
+            toolbarButton(systemImage: "plus.square.on.square", label: "Copy", action: onCopy)
+            toolbarButton(systemImage: "square.and.arrow.up", label: "Share", action: onShare)
+            toolbarButton(systemImage: "clock.arrow.circlepath", label: "History", action: onHistory)
+        }
+    }
+
+    private func toolbarButton(systemImage: String, label: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: systemImage)
+                .font(.body)
+                .frame(width: 34, height: 34)
+        }
+        .buttonStyle(.bordered)
+        .accessibilityLabel(label)
     }
 
     private var recipeFocus: some View {
@@ -651,7 +786,11 @@ private struct TabletBakeSessionView: View {
             }
         }
         .padding(16)
-        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 8))
+        .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 8))
+        .overlay {
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(Color(.separator), lineWidth: 0.7)
+        }
     }
 
     private func finalDoughSection(preferment: CalculatedPreferment) -> some View {
@@ -666,7 +805,11 @@ private struct TabletBakeSessionView: View {
             ingredientRow(name: preferment.name, amount: weightFormatter.format(weight: preferment.weight))
         }
         .padding(16)
-        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 8))
+        .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 8))
+        .overlay {
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(Color(.separator), lineWidth: 0.7)
+        }
     }
 
     private var extraIngredientSection: some View {
@@ -681,19 +824,26 @@ private struct TabletBakeSessionView: View {
             }
         }
         .padding(16)
-        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 8))
+        .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 8))
+        .overlay {
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(Color(.separator), lineWidth: 0.7)
+        }
     }
 
     private func ingredientRow(name: String, amount: String) -> some View {
-        HStack(alignment: .firstTextBaseline) {
-            Text(name)
-                .lineLimit(2)
-            Spacer(minLength: 12)
-            Text(amount)
-                .fontWeight(.semibold)
-                .multilineTextAlignment(.trailing)
+        VStack(spacing: 0) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(name)
+                    .lineLimit(2)
+                Spacer(minLength: 12)
+                Text(amount)
+                    .fontWeight(.semibold)
+                    .multilineTextAlignment(.trailing)
+            }
+            .padding(.vertical, 7)
+            Divider()
         }
-        .padding(.vertical, 7)
     }
 
     private var instructionsColumn: some View {
@@ -727,50 +877,417 @@ private struct TabletBakeSessionView: View {
     }
 
     private var sessionNote: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("Session Note")
-                .font(.headline)
-            TextField("Add a note about this batch...", text: $noteText, axis: .vertical)
-                .textFieldStyle(.roundedBorder)
-            Button("Save Bake Note") {
-                saveNote()
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .firstTextBaseline) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Session Note")
+                        .font(.headline)
+                    Text("Save observations about this bake to the recipe history.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Button("Save Note") {
+                    saveNote()
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(noteText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
-            .buttonStyle(.borderedProminent)
-            .disabled(noteText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+
+            TextField("Crumb, timing, temperature, substitutions...", text: $noteText, axis: .vertical)
+                .lineLimit(4...8)
+                .textFieldStyle(.plain)
+                .padding(12)
+                .frame(maxWidth: .infinity, minHeight: 96, alignment: .topLeading)
+                .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 8))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color(.separator), lineWidth: 0.5)
+                }
         }
+        .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 8))
     }
 
     private var adjustFocus: some View {
-        Form {
-            Section("Batch") {
-                Stepper("Quantity: \(quantity)", value: $quantity, in: 1...99)
-                HStack {
-                    Text("Single Batch Size")
-                    Spacer()
-                    TextField("\(Int(recipe.defaultWeight))",
-                              value: $singleBatchSize,
-                              format: .number)
-                    .multilineTextAlignment(.trailing)
-                    .keyboardType(.decimalPad)
-                    .frame(width: 120)
-                    Text("g")
-                        .foregroundStyle(.secondary)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                Text("Adjust Batch")
+                    .font(.title.bold())
+
+                HStack(alignment: .top, spacing: 18) {
+                    quantityCard
+                    singleBatchSizeCard
+                    totalBatchSizeCard
                 }
-                HStack {
-                    Text("Total Batch Size")
-                    Spacer()
-                    Text(weightFormatter.format(weight: totalBatchSize))
-                        .fontWeight(.semibold)
+
+                HStack(alignment: .top, spacing: 18) {
+                    if preferment != nil {
+                        prefermentAdjustPanel
+                    }
+                    mainDoughAdjustPanel
+                    temperatureAdjustPanel
+                }
+
+                if let error = calculationError {
+                    Text(error)
+                        .font(.callout)
+                        .foregroundStyle(.red)
+                        .padding(.horizontal, 4)
                 }
             }
-            Section {
-                Button("Done") {
-                    mode = .recipe
+            .padding(28)
+        }
+        .scrollDismissesKeyboard(.interactively)
+    }
+
+    private var quantityCard: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("Quantity")
+                .font(.caption)
+                .textCase(.uppercase)
+                .foregroundStyle(.secondary)
+            TextField("1", value: quantityBinding, format: .number)
+                .font(.system(size: 42, weight: .bold, design: .rounded))
+                .keyboardType(.numberPad)
+                .textFieldStyle(.plain)
+                .padding(.vertical, 6)
+                .padding(.horizontal, 10)
+                .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 6))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 6)
+                        .stroke(Color(.separator), lineWidth: 0.5)
+                }
+            Spacer()
+            HStack(spacing: 10) {
+                Button {
+                    quantity = max(1, quantity - 1)
+                } label: {
+                    Image(systemName: "minus")
+                        .frame(width: 44, height: 36)
+                }
+                .buttonStyle(.bordered)
+                .disabled(quantity <= 1)
+
+                Button {
+                    quantity = min(99, quantity + 1)
+                } label: {
+                    Image(systemName: "plus")
+                        .frame(width: 44, height: 36)
+                }
+                .buttonStyle(.borderedProminent)
+            }
+        }
+        .padding(20)
+        .frame(maxWidth: .infinity, minHeight: 190, alignment: .leading)
+        .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 8))
+        .overlay {
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(Color(.separator), lineWidth: 0.7)
+        }
+    }
+
+    private var quantityBinding: Binding<Int> {
+        Binding(
+            get: { quantity },
+            set: { quantity = min(99, max(1, $0)) }
+        )
+    }
+
+    private var totalBatchSizeCard: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("Total Batch Size")
+                .font(.caption)
+                .textCase(.uppercase)
+                .foregroundStyle(.secondary)
+            Text(weightFormatter.format(weight: totalBatchSize))
+                .font(.system(size: 42, weight: .bold, design: .rounded))
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+            Spacer()
+        }
+        .padding(20)
+        .frame(maxWidth: .infinity, minHeight: 190, alignment: .leading)
+        .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 8))
+        .overlay {
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(Color(.separator), lineWidth: 0.7)
+        }
+    }
+
+    private var prefermentAdjustPanel: some View {
+        adjustPanel(title: "Preferment") {
+            if let preferment {
+                adjustInputRow(
+                    title: "Flour of Total",
+                    placeholder: preferment.flourPercentage,
+                    value: $prefermentTotalPercent,
+                    unit: percentFormatter.percentSymbol
+                )
+                ForEach(Array(preferment.ingredients.enumerated()), id: \.offset) { index, ingredient in
+                    if isWeightRecipe {
+                        adjustInputRow(
+                            title: ingredient.name,
+                            placeholder: ingredient.defaultWeight ?? 0,
+                            value: Binding(
+                                get: { prefermentIngredientWeights[index] },
+                                set: { prefermentIngredientWeights[index] = $0 }
+                            ),
+                            unit: String(localized: "unit.grams.short", defaultValue: "g")
+                        )
+                    } else if ingredient.isFlour {
+                        adjustReadOnlyRow(
+                            title: ingredient.name,
+                            value: percentFormatter.format(percent: ingredient.defaultPercentage)
+                        )
+                    } else {
+                        adjustInputRow(
+                            title: ingredient.name,
+                            placeholder: ingredient.defaultPercentage,
+                            value: Binding(
+                                get: { prefermentIngredientPercents[index] },
+                                set: { prefermentIngredientPercents[index] = $0 }
+                            ),
+                            unit: percentFormatter.percentSymbol
+                        )
+                    }
+                }
+            } else {
+                ContentUnavailableView("No Preferment", systemImage: "timer")
+                    .frame(maxWidth: .infinity, minHeight: 180)
+            }
+        }
+    }
+
+    private var mainDoughAdjustPanel: some View {
+        adjustPanel(title: isWeightRecipe ? "Main Dough Weights" : "Main Dough") {
+            ForEach(Array(recipe.ingredients.enumerated()), id: \.offset) { index, ingredient in
+                if ingredient.extraAmount != nil {
+                    EmptyView()
+                } else if isWeightRecipe {
+                    adjustInputRow(
+                        title: ingredient.name,
+                        placeholder: ingredient.defaultWeight ?? 0,
+                        value: Binding(
+                            get: { ingredientWeights[index] },
+                            set: { ingredientWeights[index] = $0 }
+                        ),
+                        unit: String(localized: "unit.grams.short", defaultValue: "g")
+                    )
+                } else if ingredient.isFlour {
+                    adjustReadOnlyRow(
+                        title: ingredient.name,
+                        value: percentFormatter.format(percent: ingredient.defaultPercentage)
+                    )
+                } else {
+                    adjustInputRow(
+                        title: ingredient.name,
+                        placeholder: ingredient.defaultPercentage,
+                        value: Binding(
+                            get: { ingredientPercents[index] },
+                            set: { ingredientPercents[index] = $0 }
+                        ),
+                        unit: percentFormatter.percentSymbol
+                    )
+                }
+            }
+
+            if hasAdditionalIngredients {
+                Divider()
+                Text("Additional Ingredients")
+                    .font(.caption)
+                    .textCase(.uppercase)
+                    .foregroundStyle(.secondary)
+                    .padding(.top, 2)
+                ForEach(Array(recipe.ingredients.enumerated()), id: \.offset) { index, ingredient in
+                    if let amount = ingredient.extraAmount, let unit = ingredient.extraUnit {
+                        adjustInputRow(
+                            title: ingredient.name,
+                            placeholder: amount,
+                            value: Binding(
+                                get: { extraIngredientAmounts[index] },
+                                set: { extraIngredientAmounts[index] = $0 }
+                            ),
+                            unit: VolumeUnitFormatter.label(unit: unit, amount: extraIngredientAmounts[index] ?? amount)
+                        )
+                    }
                 }
             }
         }
-        .scrollDismissesKeyboard(.interactively)
+    }
+
+    private var temperatureAdjustPanel: some View {
+        adjustPanel(title: "Temperature") {
+            if hasTemperatures {
+                ForEach(Array(recipe.ingredients.enumerated()), id: \.offset) { index, ingredient in
+                    if let temperature = ingredient.temperature {
+                        adjustInputRow(
+                            title: ingredient.name,
+                            placeholder: temperature.value,
+                            value: Binding(
+                                get: { ingredientTemps[index] },
+                                set: { ingredientTemps[index] = $0 }
+                            ),
+                            unit: settings.preferredTemp().localizedSymbol
+                        )
+                    }
+                }
+                if let preferment {
+                    ForEach(Array(preferment.ingredients.enumerated()), id: \.offset) { index, ingredient in
+                        if let temperature = ingredient.temperature {
+                            adjustInputRow(
+                                title: "\(preferment.name) – \(ingredient.name)",
+                                placeholder: temperature.value,
+                                value: Binding(
+                                    get: { ingredientTemps[1000 + index] },
+                                    set: { ingredientTemps[1000 + index] = $0 }
+                                ),
+                                unit: settings.preferredTemp().localizedSymbol
+                            )
+                        }
+                    }
+                }
+            } else {
+                ContentUnavailableView("No Temperatures", systemImage: "thermometer.medium")
+                    .frame(maxWidth: .infinity, minHeight: 180)
+            }
+        }
+    }
+
+    private func adjustPanel<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(title)
+                .font(.headline)
+            content()
+            Spacer(minLength: 0)
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, minHeight: 280, alignment: .topLeading)
+        .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 8))
+        .overlay {
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(Color(.separator), lineWidth: 0.7)
+        }
+    }
+
+    private func adjustInputRow(title: String, placeholder: Double, value: Binding<Double?>, unit: String) -> some View {
+        VStack(spacing: 0) {
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
+                Text(title)
+                    .lineLimit(2)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                HStack(spacing: 4) {
+                    TextField(
+                        String(format: "%.4g", placeholder),
+                        value: value,
+                        format: .number
+                    )
+                    .multilineTextAlignment(.trailing)
+                    .keyboardType(.decimalPad)
+                    .textFieldStyle(.plain)
+                    .frame(width: 70)
+                    .padding(.vertical, 5)
+                    .padding(.horizontal, 7)
+                    .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 6))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 6)
+                            .stroke(Color(.separator), lineWidth: 0.5)
+                    }
+                    Text(unit)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .frame(minWidth: 18, alignment: .leading)
+                }
+                .environment(\.layoutDirection, .leftToRight)
+            }
+            .padding(.vertical, 10)
+            Divider()
+        }
+    }
+
+    private func adjustReadOnlyRow(title: String, value: String) -> some View {
+        VStack(spacing: 0) {
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
+                Text(title)
+                    .lineLimit(2)
+                Spacer(minLength: 10)
+                Text(value)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.secondary)
+            }
+            .padding(.vertical, 10)
+            Divider()
+        }
+    }
+
+    private var singleBatchSizeCard: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("Single Batch Size")
+                .font(.caption)
+                .textCase(.uppercase)
+                .foregroundStyle(.secondary)
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                TextField("\(Int(recipe.defaultWeight))",
+                          value: $singleBatchSize,
+                          format: .number)
+                .font(.system(size: 42, weight: .bold, design: .rounded))
+                .keyboardType(.decimalPad)
+                .textFieldStyle(.plain)
+                .frame(minWidth: 80)
+                .padding(.vertical, 6)
+                .padding(.horizontal, 10)
+                .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 6))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 6)
+                        .stroke(Color(.separator), lineWidth: 0.5)
+                }
+                Text(String(localized: "unit.grams.short", defaultValue: "g"))
+                    .font(.title2.bold())
+                    .foregroundStyle(.secondary)
+            }
+            .environment(\.layoutDirection, .leftToRight)
+            Spacer()
+            HStack(spacing: 10) {
+                TabletRepeatButton(systemImage: "minus", isProminent: false) {
+                    decrementSingleBatchSize()
+                }
+
+                TabletRepeatButton(systemImage: "plus", isProminent: true) {
+                    incrementSingleBatchSize()
+                }
+            }
+        }
+        .padding(20)
+        .frame(maxWidth: .infinity, minHeight: 190, alignment: .leading)
+        .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 8))
+        .overlay {
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(Color(.separator), lineWidth: 0.7)
+        }
+    }
+
+    private var singleBatchSizeStep: Double {
+        switch abs(singleBatchSize) {
+        case ..<10:
+            1
+        case ..<100:
+            5
+        case ..<500:
+            10
+        case ..<1_000:
+            25
+        default:
+            50
+        }
+    }
+
+    private func incrementSingleBatchSize() {
+        singleBatchSize += singleBatchSizeStep
+    }
+
+    private func decrementSingleBatchSize() {
+        singleBatchSize = max(1, singleBatchSize - singleBatchSizeStep)
     }
 
     private func calculate() {
@@ -800,30 +1317,38 @@ private struct TabletBakeSessionView: View {
     }
 
     private func measuredIngredients() -> [MeasuredIngredient] {
-        recipe.ingredients.map {
-            MeasuredIngredient(
-                ingredient: $0,
-                percent: $0.defaultPercentage,
-                temperature: $0.temperature,
-                weight: $0.defaultWeight,
-                extraAmountOverride: nil
+        recipe.ingredients.enumerated().map { index, ingredient in
+            var temperature = ingredient.temperature
+            if let rawTemp = ingredientTemps[index] {
+                temperature = Temperature(value: rawTemp, measurement: settings.preferredTemp())
+            }
+            return MeasuredIngredient(
+                ingredient: ingredient,
+                percent: ingredientPercents[index] ?? ingredient.defaultPercentage,
+                temperature: temperature,
+                weight: ingredientWeights[index] ?? ingredient.defaultWeight,
+                extraAmountOverride: extraIngredientAmounts[index]
             )
         }
     }
 
     private func measuredPreferment() -> MeasuredPreferment? {
-        guard let preferment = (recipe as? PrefermentRecipe)?.preferment else { return nil }
+        guard let preferment else { return nil }
         return MeasuredPreferment(
-            ingredients: preferment.ingredients.map {
-                MeasuredIngredient(
-                    ingredient: $0,
-                    percent: $0.defaultPercentage,
-                    temperature: $0.temperature,
-                    weight: $0.defaultWeight
+            ingredients: preferment.ingredients.enumerated().map { index, ingredient in
+                var temperature = ingredient.temperature
+                if let rawTemp = ingredientTemps[1000 + index] {
+                    temperature = Temperature(value: rawTemp, measurement: settings.preferredTemp())
+                }
+                return MeasuredIngredient(
+                    ingredient: ingredient,
+                    percent: prefermentIngredientPercents[index] ?? ingredient.defaultPercentage,
+                    temperature: temperature,
+                    weight: prefermentIngredientWeights[index] ?? ingredient.defaultWeight
                 )
             },
             name: preferment.name,
-            flourPercentage: preferment.flourPercentage
+            flourPercentage: prefermentTotalPercent ?? preferment.flourPercentage
         )
     }
 

@@ -214,6 +214,37 @@
       font-size: 19px;
     }
 
+    .rail .rail-item.new-recipe {
+      font-size: 24px;
+      background: rgba(255, 255, 255, 0.08);
+      font-weight: 300;
+    }
+
+    .rail .rail-item.sidebar-icon {
+      position: relative;
+    }
+
+    .rail .rail-item.sidebar-icon::before {
+      content: "";
+      width: 22px;
+      height: 17px;
+      border: 2px solid currentColor;
+      border-radius: 3px;
+      opacity: 0.9;
+    }
+
+    .rail .rail-item.sidebar-icon::after {
+      content: "";
+      position: absolute;
+      left: 18px;
+      top: 14px;
+      width: 2px;
+      height: 18px;
+      border-radius: 2px;
+      background: currentColor;
+      opacity: 0.9;
+    }
+
     .rail .rail-item.active {
       background: var(--accent);
     }
@@ -466,6 +497,184 @@
       padding: 12px;
     }
 
+    .session-note-panel {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fffdf8;
+      padding: 16px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 14px;
+      align-items: end;
+    }
+
+    .session-note-panel h3 {
+      margin: 0 0 4px;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+    }
+
+    .note-field {
+      min-height: 86px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #f7f2e9;
+      padding: 12px;
+      color: var(--muted);
+    }
+
+    .adjust-screen {
+      grid-template-columns: 82px 1fr;
+    }
+
+    .adjust-toolbar-title {
+      display: grid;
+      gap: 1px;
+    }
+
+    .adjust-content {
+      padding: 16px;
+      overflow: hidden;
+      display: grid;
+      gap: 12px;
+      align-content: stretch;
+    }
+
+    .adjust-summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .adjust-summary-grid.three {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .adjust-workspace {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 1.1fr 1.2fr 0.9fr;
+      gap: 12px;
+    }
+
+    .adjust-column {
+      min-height: 0;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+      align-content: start;
+    }
+
+    .adjust-column h3,
+    .matrix-card h3 {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 720;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .mini-control {
+      min-height: 58px;
+      border-radius: 8px;
+      background: #f7f2e9;
+      padding: 10px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .mini-control strong {
+      display: block;
+      font-size: 15px;
+    }
+
+    .mini-control .amount {
+      min-width: 72px;
+      padding: 7px 9px;
+      border-radius: 6px;
+      background: #fff;
+      border: 1px solid var(--line);
+    }
+
+    .preview-strip {
+      border-radius: 8px;
+      background: #fffdf8;
+      border: 1px solid var(--line);
+      padding: 12px;
+      display: grid;
+      gap: 7px;
+    }
+
+    .adjust-matrix-screen {
+      grid-template-columns: 82px 1fr 280px;
+    }
+
+    .matrix-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      padding: 12px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .matrix-row {
+      display: grid;
+      grid-template-columns: 1.25fr 0.6fr 0.7fr 0.75fr;
+      gap: 8px;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: 14px;
+    }
+
+    .matrix-row:last-child {
+      border-bottom: 0;
+    }
+
+    .matrix-row.header {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 760;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .matrix-value {
+      min-height: 30px;
+      border-radius: 6px;
+      background: #f2eee6;
+      display: grid;
+      place-items: center end;
+      padding: 0 8px;
+      font-weight: 720;
+    }
+
+    .adjust-inspector-screen {
+      grid-template-columns: 82px 210px 1fr 300px;
+    }
+
+    .inspector-list {
+      padding: 14px;
+      display: grid;
+      gap: 8px;
+      align-content: start;
+    }
+
+    .inspector-panel {
+      padding: 16px;
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+
     .swatch-row {
       display: flex;
       gap: 8px;
@@ -638,8 +847,8 @@
         <div class="screen session">
           <nav class="pane rail">
             <div class="rail-item active">◉</div>
-            <div class="rail-item">☰</div>
-            <div class="rail-item">＋</div>
+            <div class="rail-item sidebar-icon"></div>
+            <div class="rail-item new-recipe">+</div>
             <div class="rail-item">⚙</div>
           </nav>
 
@@ -648,13 +857,16 @@
               <span class="icon">N</span>
               <strong>Neapolitan Dough Session</strong>
               <span class="spacer"></span>
+              <span class="icon-button">✎</span>
+              <span class="icon-button">⧉</span>
+              <span class="icon-button">↗</span>
+              <span class="icon-button">◷</span>
               <span class="pill active">Recipe</span>
               <span class="pill">Adjust</span>
             </div>
             <div class="content">
               <div class="hero-metric">
                 <div>
-                  <span class="tiny">Last active recipe</span>
                   <strong>Tonight's pizza</strong>
                 </div>
               </div>
@@ -690,21 +902,287 @@
                   <div class="instruction"><span class="num">6</span><span>Bake on a hot steel.</span></div>
                 </div>
               </div>
-              <div class="block">
-                <h3>Session note</h3>
-                <div class="ingredient"><strong>Last used</strong><span class="amount">3 doughs</span></div>
-                <div class="ingredient"><strong>Repeat default</strong><span class="amount">260 g each</span></div>
+              <div class="session-note-panel">
+                <div>
+                  <h3>Session note</h3>
+                  <p class="tiny">Save observations about this bake to the recipe history.</p>
+                  <div class="note-field">Crust browned faster on the top rack. Try 20°F lower next time.</div>
+                </div>
+                <div class="button secondary">Save note</div>
               </div>
-              <div class="button secondary">Save bake note</div>
             </div>
           </section>
         </div>
       </div>
 
       <div class="notes">
-        <div class="note"><strong>Main difference</strong>The selected recipe is the home base. A compact ingredients column stays beside the longer instructions; adjustment is handled by the top mode control.</div>
+        <div class="note"><strong>Main difference</strong>The selected recipe is the home base. Ingredients stay beside longer instructions, and the session note is a full-width journal panel.</div>
         <div class="note"><strong>Best for</strong>Using Doughy on the counter while actively making something.</div>
         <div class="note"><strong>Implementation feel</strong>More redesign work. It may want new session concepts and stronger history/note integration.</div>
+      </div>
+    </section>
+
+    <section class="mockup-section">
+      <div class="section-heading">
+        <h2>Adjust Mode Directions</h2>
+        <span class="tag">batch controls · preferment · dough percentages · temperatures</span>
+      </div>
+
+      <div class="device">
+        <div class="screen adjust-screen">
+          <nav class="pane rail">
+            <div class="rail-item active">◉</div>
+            <div class="rail-item sidebar-icon"></div>
+            <div class="rail-item new-recipe">+</div>
+            <div class="rail-item">⚙</div>
+          </nav>
+
+          <section class="pane">
+            <div class="toolbar">
+              <span class="icon">N</span>
+              <div class="adjust-toolbar-title">
+                <strong>Adjust Batch</strong>
+                <span class="tiny">Control board direction</span>
+              </div>
+              <span class="spacer"></span>
+              <span class="pill">Recipe</span>
+              <span class="pill active">Adjust</span>
+            </div>
+            <div class="adjust-content">
+              <div class="adjust-summary-grid three">
+                <div class="field">
+                  <label>Quantity</label>
+                  <div class="value">3</div>
+                </div>
+                <div class="field">
+                  <label>Single batch</label>
+                  <div class="value">260 g</div>
+                </div>
+                <div class="field">
+                  <label>Total batch</label>
+                  <div class="value">780 g</div>
+                </div>
+              </div>
+
+              <div class="adjust-workspace">
+                <div class="adjust-column">
+                  <h3>Preferment</h3>
+                  <div class="mini-control"><strong>Flour share</strong><span class="amount">20%</span></div>
+                  <div class="mini-control"><strong>Hydration</strong><span class="amount">100%</span></div>
+                  <div class="mini-control"><strong>Yeast</strong><span class="amount">0.08%</span></div>
+                  <div class="preview-strip">
+                    <span class="tiny">Preferment result</span>
+                    <div class="ingredient"><strong>Flour</strong><span class="amount">96 g</span></div>
+                    <div class="ingredient"><strong>Water</strong><span class="amount">96 g</span></div>
+                  </div>
+                </div>
+
+                <div class="adjust-column">
+                  <h3>Main dough</h3>
+                  <div class="mini-control"><strong>Hydration</strong><span class="amount">62%</span></div>
+                  <div class="mini-control"><strong>Salt</strong><span class="amount">2.8%</span></div>
+                  <div class="mini-control"><strong>Oil</strong><span class="amount">0%</span></div>
+                  <div class="mini-control"><strong>Sugar</strong><span class="amount">0%</span></div>
+                </div>
+
+                <div class="adjust-column">
+                  <h3>Temperature</h3>
+                  <div class="mini-control"><strong>Flour temp</strong><span class="amount">70 F</span></div>
+                  <div class="mini-control"><strong>Preferment water</strong><span class="amount">82 F</span></div>
+                  <div class="mini-control"><strong>Final water</strong><span class="amount">82 F</span></div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <div class="notes">
+        <div class="note"><strong>Idea 1</strong>A broad control board keeps the repeat batch cards at the top, then uses three equal work zones for preferment, main dough, and temperature.</div>
+        <div class="note"><strong>Why it helps</strong>The middle is no longer empty; edits update the recipe result live, then the top Recipe mode returns to the recalculated bake view.</div>
+        <div class="note"><strong>Tradeoff</strong>This is approachable, but less efficient for recipes with many extra ingredients.</div>
+      </div>
+
+      <div class="device" style="margin-top: 18px;">
+        <div class="screen adjust-matrix-screen">
+          <nav class="pane rail">
+            <div class="rail-item active">◉</div>
+            <div class="rail-item sidebar-icon"></div>
+            <div class="rail-item new-recipe">+</div>
+            <div class="rail-item">⚙</div>
+          </nav>
+
+          <section class="pane">
+            <div class="toolbar">
+              <span class="icon">N</span>
+              <div class="adjust-toolbar-title">
+                <strong>Adjust Ingredients</strong>
+                <span class="tiny">Matrix direction</span>
+              </div>
+              <span class="spacer"></span>
+              <span class="pill">Recipe</span>
+              <span class="pill active">Adjust</span>
+            </div>
+            <div class="adjust-content">
+              <div class="adjust-summary-grid three">
+                <div class="field">
+                  <label>Quantity</label>
+                  <div class="value">3</div>
+                </div>
+                <div class="field">
+                  <label>Single batch</label>
+                  <div class="value">260 g</div>
+                </div>
+                <div class="field">
+                  <label>Total batch</label>
+                  <div class="value">780 g</div>
+                </div>
+              </div>
+
+              <div class="matrix-card">
+                <h3>Preferment</h3>
+                <div class="matrix-row header"><span>Ingredient</span><span>%</span><span>Temp</span><span>Batch</span></div>
+                <div class="matrix-row"><strong>Poolish flour</strong><span class="matrix-value">20</span><span class="matrix-value">70 F</span><span class="matrix-value">96 g</span></div>
+                <div class="matrix-row"><strong>Poolish water</strong><span class="matrix-value">20</span><span class="matrix-value">82 F</span><span class="matrix-value">96 g</span></div>
+                <div class="matrix-row"><strong>Poolish yeast</strong><span class="matrix-value">0.08</span><span class="matrix-value">-</span><span class="matrix-value">0.4 g</span></div>
+              </div>
+
+              <div class="matrix-card">
+                <h3>Final dough</h3>
+                <div class="matrix-row header"><span>Ingredient</span><span>%</span><span>Temp</span><span>Batch</span></div>
+                <div class="matrix-row"><strong>Flour</strong><span class="matrix-value">80</span><span class="matrix-value">70 F</span><span class="matrix-value">385 g</span></div>
+                <div class="matrix-row"><strong>Water</strong><span class="matrix-value">42</span><span class="matrix-value">82 F</span><span class="matrix-value">202 g</span></div>
+                <div class="matrix-row"><strong>Salt</strong><span class="matrix-value">2.8</span><span class="matrix-value">-</span><span class="matrix-value">13 g</span></div>
+                <div class="matrix-row"><strong>Yeast</strong><span class="matrix-value">0.12</span><span class="matrix-value">-</span><span class="matrix-value">0.6 g</span></div>
+              </div>
+            </div>
+          </section>
+
+          <aside class="pane pane-accent">
+            <div class="toolbar">
+              <strong>Live Result</strong>
+            </div>
+            <div class="content">
+              <div class="big-readout">
+                <span class="label">Total batch</span>
+                <span class="number">780 g</span>
+              </div>
+              <div class="preview-card">
+                <h3>Balance</h3>
+                <div class="ingredient"><strong>Total hydration</strong><span class="amount">62%</span></div>
+                <div class="ingredient"><strong>Preferment flour</strong><span class="amount">20%</span></div>
+                <div class="ingredient"><strong>Water temp</strong><span class="amount">82 F</span></div>
+              </div>
+              <div class="button">Done</div>
+            </div>
+          </aside>
+        </div>
+      </div>
+
+      <div class="notes">
+        <div class="note"><strong>Idea 2</strong>A matrix treats the iPad like a lightweight spreadsheet: sections stay separated, but every editable value is visible in rows.</div>
+        <div class="note"><strong>Why it helps</strong>Power users can compare preferment and final dough percentages without drilling in and out.</div>
+        <div class="note"><strong>Tradeoff</strong>It is efficient, but it may feel more technical and less warm than the bake-session view.</div>
+      </div>
+
+      <div class="device" style="margin-top: 18px;">
+        <div class="screen adjust-inspector-screen">
+          <nav class="pane rail">
+            <div class="rail-item active">◉</div>
+            <div class="rail-item sidebar-icon"></div>
+            <div class="rail-item new-recipe">+</div>
+            <div class="rail-item">⚙</div>
+          </nav>
+
+          <aside class="pane pane-muted">
+            <div class="toolbar">
+              <strong>Adjust</strong>
+            </div>
+            <div class="inspector-list">
+              <div class="outline-row selected">Batch</div>
+              <div class="outline-row">Preferment</div>
+              <div class="outline-row">Main dough</div>
+              <div class="outline-row">Temperature</div>
+              <div class="outline-row">Extras</div>
+            </div>
+          </aside>
+
+          <section class="pane">
+            <div class="toolbar">
+              <span class="icon">N</span>
+              <div class="adjust-toolbar-title">
+                <strong>Preferment</strong>
+                <span class="tiny">Inspector direction</span>
+              </div>
+              <span class="spacer"></span>
+              <span class="pill">Recipe</span>
+              <span class="pill active">Adjust</span>
+            </div>
+            <div class="inspector-panel">
+              <div class="fields">
+                <div class="field">
+                  <label>Preferment type</label>
+                  <div class="input-line">Poolish</div>
+                </div>
+                <div class="field">
+                  <label>Flour share</label>
+                  <div class="input-line">20%</div>
+                </div>
+              </div>
+              <div class="fields">
+                <div class="field">
+                  <label>Hydration</label>
+                  <div class="input-line">100%</div>
+                </div>
+                <div class="field">
+                  <label>Yeast</label>
+                  <div class="input-line">0.08%</div>
+                </div>
+              </div>
+              <div class="matrix-card">
+                <h3>Preferment ingredients</h3>
+                <div class="ingredient"><strong>Flour</strong><span class="amount">96 g</span></div>
+                <div class="ingredient"><strong>Water</strong><span class="amount">96 g</span></div>
+                <div class="ingredient"><strong>Yeast</strong><span class="amount">0.4 g</span></div>
+              </div>
+              <div class="fields">
+                <div class="field">
+                  <label>Water temp</label>
+                  <div class="input-line">82 F</div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <aside class="pane pane-accent">
+            <div class="toolbar">
+              <strong>Preview</strong>
+            </div>
+            <div class="content">
+              <div class="big-readout">
+                <span class="label">Result</span>
+                <span class="number">3 x 260 g</span>
+              </div>
+              <div class="preview-card">
+                <h3>Recipe impact</h3>
+                <div class="ingredient"><strong>Main flour left</strong><span class="amount">385 g</span></div>
+                <div class="ingredient"><strong>Main water left</strong><span class="amount">202 g</span></div>
+                <div class="ingredient"><strong>Total hydration</strong><span class="amount">62%</span></div>
+              </div>
+              <div class="preview-card">
+                <h3>Next</h3>
+                <div class="step-row selected">Main dough percentages</div>
+                <div class="step-row">Water temperature</div>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
+
+      <div class="notes">
+        <div class="note"><strong>Idea 3</strong>An inspector turns Adjust into a focused editor with a local section list, a large editing surface, and a persistent result preview.</div>
+        <div class="note"><strong>Why it helps</strong>It scales best as the adjust feature grows, especially for preferments, extras, and temperature calculations.</div>
+        <div class="note"><strong>Tradeoff</strong>It is the most iPad-like, but it adds another navigation layer inside Adjust.</div>
       </div>
     </section>
 
