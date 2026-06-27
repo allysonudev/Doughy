@@ -1977,7 +1977,9 @@ struct CreateRecipeView: View {
             } header: {
                 Text("Instructions (Optional)")
             } footer: {
-                Text(String(localized: "create.instructions.tap_hint", defaultValue: "Tap to edit, hold to move or delete, drag to reorder."))
+                if !instructions.isEmpty {
+                    Text(String(localized: "create.instructions.tap_hint", defaultValue: "Tap to edit, hold to move or delete, drag to reorder."))
+                }
             }
 
             Section("Add Step") {
