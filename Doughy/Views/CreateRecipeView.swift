@@ -20,6 +20,42 @@ private enum RecipeInputMode {
     case byWeight
 }
 
+private enum StudioStartOption: CaseIterable {
+    case percent
+    case weight
+    case scan
+
+    var title: String {
+        switch self {
+        case .percent:
+            return String(localized: "create.mode.percent.title", defaultValue: "By Baker's Percentage")
+        case .weight:
+            return String(localized: "create.mode.weight.title", defaultValue: "By Weight")
+        case .scan:
+            return String(localized: "create.mode.scan.title", defaultValue: "Scan a Recipe")
+        }
+    }
+
+    var subtitle: String {
+        switch self {
+        case .percent:
+            return String(localized: "create.mode.percent.description", defaultValue: "Best for flour-based doughs where ingredients scale from total flour")
+        case .weight:
+            return String(localized: "create.mode.weight.description", defaultValue: "Best for entering an existing recipe as-is, recipes without flour, or exact gram amounts")
+        case .scan:
+            return String(localized: "create.mode.scan.description", defaultValue: "Use Apple Intelligence to read a recipe from a photo or screenshot, entirely on-device and offline")
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .percent: return "percent"
+        case .weight: return "scalemass"
+        case .scan: return "camera.viewfinder"
+        }
+    }
+}
+
 private enum SourcePhotoCorner: CaseIterable {
     case topLeading
     case topTrailing
@@ -410,9 +446,13 @@ struct CreateRecipeView: View {
 
     @Environment(RecipeStore.self) private var store
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     @State private var inputMode: RecipeInputMode? = nil  // nil → show mode picker
     @State private var navPath: [CreateStep] = []
+    @State private var selectedStudioStep: CreateStep = .details
+    @State private var selectedStudioStartOption: StudioStartOption = .percent
+    @State private var modeBeforeReturningToStudioStart: RecipeInputMode?
 
     // Scan state
     @State private var showScanOptions = false
@@ -667,7 +707,7 @@ struct CreateRecipeView: View {
         coreView
             .overlay { if isScanning { scanningOverlay } }
             .overlay {
-                if let image = sourcePhotoImage, !isScanning {
+                if let image = sourcePhotoImage, !isScanning, !usesRecipeStudio {
                     SourcePhotoPipView(
                         image: image,
                         corner: $sourcePhotoCorner
@@ -776,6 +816,9 @@ struct CreateRecipeView: View {
         didOpenInitialScanOptions = true
         #if canImport(FoundationModels)
         if #available(iOS 26, *) {
+            if usesStudioStart {
+                selectedStudioStartOption = .scan
+            }
             showScanOptions = true
         }
         #endif
@@ -792,7 +835,7 @@ struct CreateRecipeView: View {
     private var coreView: some View {
         #if canImport(FoundationModels)
         if #available(iOS 26, *) {
-            navigationStack
+            createSurface
                 .photosPicker(isPresented: $showPhotoPicker,
                                selection: $selectedPhotoItem,
                                matching: .images)
@@ -800,20 +843,683 @@ struct CreateRecipeView: View {
                     guard let item else { return }
                         Task { await processPickedPhoto(item) }
                 }
-                .confirmationDialog("Choose Source", isPresented: $showScanOptions,
-                                     titleVisibility: .visible) {
-                    Button("Photo Library") { showPhotoPicker = true }
-                    if UIImagePickerController.isSourceTypeAvailable(.camera) {
-                        Button("Camera") { showCamera = true }
-                    }
-                    Button("Cancel", role: .cancel) {}
-                }
+        } else {
+            createSurface
+        }
+        #else
+        createSurface
+        #endif
+    }
+
+    @ViewBuilder
+    private var createSurface: some View {
+        if usesStudioStart {
+            tabletModeSelectionStudio
+        } else if usesRecipeStudio {
+            tabletRecipeStudio
         } else {
             navigationStack
         }
-        #else
-        navigationStack
+    }
+
+    private var usesStudioStart: Bool {
+        horizontalSizeClass == .regular && editingRecipe == nil && copyingRecipe == nil && inputMode == nil
+    }
+
+    private var usesRecipeStudio: Bool {
+        horizontalSizeClass == .regular && (editingRecipe != nil || copyingRecipe != nil || inputMode != nil)
+    }
+
+    private var tabletModeSelectionStudio: some View {
+        NavigationStack {
+            HStack(spacing: 0) {
+                studioStartOutline
+                    .frame(width: 220)
+
+                Divider()
+
+                studioStartEditor
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                Divider()
+
+                studioStartPreviewPane
+                    .frame(width: 400)
+            }
+            .background(Color(.systemGroupedBackground))
+            .navigationTitle(String(localized: "create.title.new", defaultValue: "New Recipe"))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    closeButton
+                        .accessibilityIdentifier("studioStartCloseButton")
+                }
+            }
+        }
+    }
+
+    private var studioStartOutline: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            VStack(alignment: .leading, spacing: 6) {
+                Text(String(localized: "create.title.new", defaultValue: "New Recipe"))
+                    .font(.headline)
+                Text("Choose a starting point")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+
+            VStack(spacing: 6) {
+                Label("Start", systemImage: "sparkles")
+                    .font(.body.weight(.semibold))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.vertical, 10)
+                    .padding(.horizontal, 12)
+                    .background(Color.accentColor.opacity(0.14), in: RoundedRectangle(cornerRadius: 8))
+
+                Label("Details", systemImage: "text.cursor")
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.vertical, 10)
+                    .padding(.horizontal, 12)
+                Label("Ingredients", systemImage: "list.bullet")
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.vertical, 10)
+                    .padding(.horizontal, 12)
+                Label("Preview & Save", systemImage: "checkmark.circle")
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.vertical, 10)
+                    .padding(.horizontal, 12)
+            }
+
+            Spacer()
+        }
+        .padding(18)
+        .background(Color(.systemBackground))
+    }
+
+    private var studioStartEditor: some View {
+        VStack(spacing: 0) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Choose Starting Point")
+                        .font(.title2.bold())
+                    Text("Pick how you want to build this recipe. The next step opens in the Recipe Studio.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+            }
+            .padding(.horizontal, 24)
+            .padding(.vertical, 18)
+            .background(Color(.systemBackground))
+
+            VStack(alignment: .leading, spacing: 14) {
+                ForEach(StudioStartOption.allCases, id: \.self) { option in
+                    studioStartOptionButton(option)
+                }
+                Spacer()
+            }
+            .padding(24)
+        }
+    }
+
+    private func studioStartOptionButton(_ option: StudioStartOption) -> some View {
+        let isSelected = selectedStudioStartOption == option
+        let isEnabled = studioStartOptionIsEnabled(option)
+
+        return Button {
+            selectedStudioStartOption = option
+        } label: {
+            HStack(alignment: .center, spacing: 14) {
+                Image(systemName: option.systemImage)
+                    .font(.title3)
+                    .frame(width: 34, height: 34)
+                    .foregroundStyle(isSelected ? Color.accentColor : Color.secondary)
+
+                Text(option.title)
+                    .font(.headline)
+
+                Spacer()
+
+                if isSelected {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(Color.accentColor)
+                }
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 8))
+            .overlay {
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(isSelected ? Color.accentColor.opacity(0.65) : Color(.separator), lineWidth: isSelected ? 1.5 : 0.7)
+            }
+        }
+        .buttonStyle(.plain)
+        .opacity(isEnabled ? 1 : 0.55)
+        .accessibilityIdentifier("studioStartOption_\(option)")
+    }
+
+    private var studioStartPreviewPane: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                Text("Preview / Source")
+                    .font(.headline)
+
+                VStack(alignment: .leading, spacing: 12) {
+                    Image(systemName: selectedStudioStartOption.systemImage)
+                        .font(.largeTitle)
+                        .foregroundStyle(Color.accentColor)
+                        .frame(width: 48, height: 48)
+
+                    Text(selectedStudioStartOption.title)
+                        .font(.title3.bold())
+
+                    Text(selectedStudioStartOption == .scan && !selectedStudioStartOptionIsEnabled
+                         ? studioScanUnavailableMessage
+                         : selectedStudioStartOption.subtitle)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(14)
+                .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 8))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color(.separator), lineWidth: 0.7)
+                }
+
+                HStack {
+                    Button(studioStartPrimaryTitle) {
+                        continueFromStudioStart()
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(!selectedStudioStartOptionIsEnabled)
+                    .scanSourceConfirmationDialog(
+                        isPresented: $showScanOptions,
+                        showPhotoPicker: $showPhotoPicker,
+                        showCamera: $showCamera
+                    )
+                    Spacer()
+                }
+            }
+            .padding(18)
+        }
+        .background(Color(.secondarySystemGroupedBackground))
+    }
+
+    private var studioStartPrimaryTitle: String {
+        selectedStudioStartOption == .scan ? "Choose Source" : "Continue"
+    }
+
+    private var selectedStudioStartOptionIsEnabled: Bool {
+        studioStartOptionIsEnabled(selectedStudioStartOption)
+    }
+
+    private func studioStartOptionIsEnabled(_ option: StudioStartOption) -> Bool {
+        option != .scan || studioScanAvailable
+    }
+
+    private var studioScanAvailable: Bool {
+        #if canImport(FoundationModels)
+        if #available(iOS 26, *) {
+            if case .available = SystemLanguageModel.default.availability {
+                return true
+            }
+        }
         #endif
+        return false
+    }
+
+    private var studioScanUnavailableMessage: String {
+        #if canImport(FoundationModels)
+        if #available(iOS 26, *) {
+            switch SystemLanguageModel.default.availability {
+            case .available:
+                return StudioStartOption.scan.subtitle
+            case .unavailable(.deviceNotEligible):
+                return String(localized: "create.mode.scan.device_not_eligible", defaultValue: "Requires iPhone 15 or later")
+            case .unavailable(.modelNotReady):
+                return String(localized: "create.mode.scan.model_not_ready", defaultValue: "Apple Intelligence is still setting up")
+            case .unavailable(.appleIntelligenceNotEnabled):
+                return String(localized: "create.mode.scan.apple_intelligence_not_enabled", defaultValue: "Enable Apple Intelligence in Settings > Apple Intelligence & Siri")
+            @unknown default:
+                return String(localized: "create.mode.scan.unavailable", defaultValue: "Requires iOS 26 or later with Apple Intelligence")
+            }
+        }
+        #endif
+        return String(localized: "create.mode.scan.unavailable", defaultValue: "Requires iOS 26 or later with Apple Intelligence")
+    }
+
+    private func continueFromStudioStart() {
+        switch selectedStudioStartOption {
+        case .percent:
+            enterStudio(mode: .byPercent)
+        case .weight:
+            enterStudio(mode: .byWeight)
+        case .scan:
+            guard studioScanAvailable else { return }
+            showScanOptions = true
+        }
+    }
+
+    private func enterStudio(mode: RecipeInputMode) {
+        let previousMode = inputMode ?? modeBeforeReturningToStudioStart
+        if let previousMode, previousMode != mode {
+            resetModeSpecificDraftFields()
+        }
+        modeBeforeReturningToStudioStart = nil
+        inputMode = mode
+        selectedStudioStep = .details
+        focusRecipeNameAfterDelay()
+    }
+
+    private func focusRecipeNameAfterDelay() {
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(500))
+            isRecipeNameFocused = true
+        }
+    }
+
+    private var tabletRecipeStudio: some View {
+        NavigationStack {
+            HStack(spacing: 0) {
+                studioOutline
+                    .frame(width: 220)
+
+                Divider()
+
+                studioEditor
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                Divider()
+
+                studioPreviewPane
+                    .frame(width: 400)
+            }
+            .background(Color(.systemGroupedBackground))
+            .navigationTitle(studioTitle)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    closeButton
+                        .accessibilityIdentifier("studioCloseButton")
+                }
+                ToolbarItemGroup(placement: .topBarTrailing) {
+                    if studioCanMoveBackward {
+                        Button("Previous") {
+                            studioPreviousAction()
+                        }
+                        .accessibilityIdentifier("studioPreviousButton")
+                    }
+                    Button(studioPrimaryActionTitle) {
+                        studioPrimaryAction()
+                    }
+                    .fontWeight(selectedStudioStep == .preview ? .bold : .regular)
+                    .disabled(!studioPrimaryActionEnabled)
+                    .accessibilityIdentifier("studioPrimaryActionButton")
+                }
+            }
+        }
+        .sheet(item: $conversionSheetData) { data in
+            extraIngredientConversionSheet(for: data)
+        }
+        .onChange(of: inputMode) { oldValue, newValue in
+            guard let oldValue, let newValue, oldValue != newValue else { return }
+            resetModeSpecificDraftFields()
+        }
+        .onChange(of: containsPreferment) { _, includesPreferment in
+            if !includesPreferment && selectedStudioStep == .preferment {
+                selectedStudioStep = .ingredients
+            }
+        }
+        .onChange(of: pendingValueRowID) { _, id in
+            focusedValueRowID = id
+            pendingValueRowID = nil
+        }
+        .onChange(of: pendingNameChoices.count) { _, count in
+            if count > 0 {
+                selectedStudioStep = .scanReview
+            }
+        }
+    }
+
+    private var studioTitle: String {
+        editingRecipe != nil
+            ? String(localized: "create.title.edit", defaultValue: "Edit Recipe")
+            : copyingRecipe != nil
+            ? String(localized: "create.title.copy", defaultValue: "Copy Recipe")
+            : String(localized: "create.title.new", defaultValue: "New Recipe")
+    }
+
+    private var studioOutline: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            VStack(alignment: .leading, spacing: 6) {
+                Text(studioTitle)
+                    .font(.headline)
+                Text(inputMode == .byWeight
+                     ? String(localized: "create.mode.weight.title", defaultValue: "By Weight")
+                     : String(localized: "create.mode.percent.title", defaultValue: "By Baker's Percentage"))
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+
+            VStack(spacing: 6) {
+                if !pendingNameChoices.isEmpty {
+                    studioOutlineButton(step: .scanReview, title: "Scan Review", systemImage: "checklist")
+                }
+                studioOutlineButton(step: .details, title: "Details", systemImage: "text.cursor")
+                if containsPreferment {
+                    studioOutlineButton(step: .preferment, title: "Preferment", systemImage: "timer")
+                }
+                studioOutlineButton(step: .ingredients, title: containsPreferment ? "Main Dough" : "Ingredients", systemImage: "list.bullet")
+                studioOutlineButton(step: .preview, title: "Preview & Save", systemImage: "checkmark.circle")
+            }
+
+            Spacer()
+
+            if sourcePhotoImage != nil || lastScanDiagnostics != nil || !pendingNameChoices.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Scan Review")
+                        .font(.caption)
+                        .textCase(.uppercase)
+                        .foregroundStyle(.secondary)
+                    if !pendingNameChoices.isEmpty {
+                        Text(String(format: "%d ingredient choices", pendingNameChoices.count))
+                            .font(.subheadline)
+                    }
+                    if lastScanDiagnostics != nil {
+                        Text("Diagnostics available")
+                            .font(.subheadline)
+                    }
+                    if sourcePhotoImage != nil {
+                        Text("Source photo attached")
+                            .font(.subheadline)
+                    }
+                }
+                .padding(12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 8))
+            }
+        }
+        .padding(18)
+        .background(Color(.systemBackground))
+    }
+
+    private func studioOutlineButton(step: CreateStep, title: String, systemImage: String) -> some View {
+        Button {
+            if studioStepIsEnabled(step) {
+                selectedStudioStep = step
+            }
+        } label: {
+            Label(title, systemImage: systemImage)
+                .font(.body.weight(selectedStudioStep == step ? .semibold : .regular))
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.vertical, 10)
+                .padding(.horizontal, 12)
+                .background(selectedStudioStep == step ? Color.accentColor.opacity(0.14) : Color.clear,
+                            in: RoundedRectangle(cornerRadius: 8))
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(studioStepIsEnabled(step) ? .primary : .secondary)
+        .disabled(!studioStepIsEnabled(step))
+    }
+
+    private var studioEditor: some View {
+        VStack(spacing: 0) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(studioStepTitle)
+                        .font(.title2.bold())
+                    Text(studioStepSubtitle)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+            }
+            .padding(.horizontal, 24)
+            .padding(.vertical, 18)
+            .background(Color(.systemBackground))
+
+            studioStepContent
+        }
+    }
+
+    @ViewBuilder
+    private var studioStepContent: some View {
+        switch selectedStudioStep {
+        case .scanReview:
+            scanReviewFormContent
+                .keyboardDismissible()
+        case .details:
+            detailsFormContent
+                .keyboardDismissible()
+        case .preferment:
+            prefermentFormContent
+                .keyboardDismissible()
+        case .ingredients:
+            ingredientsFormContent
+                .keyboardDismissible()
+        case .preview:
+            previewFormContent
+                .environment(\.editMode, .constant(.active))
+                .keyboardDismissible()
+        }
+    }
+
+    private var studioPreviewPane: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                Text("Preview / Source")
+                    .font(.headline)
+
+                if let image = sourcePhotoImage {
+                    Button {
+                        showSourcePhotoViewer = true
+                    } label: {
+                        VStack(alignment: .leading, spacing: 10) {
+                            Label("Imported Image", systemImage: "photo")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(.secondary)
+
+                            Image(uiImage: image)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(maxWidth: .infinity)
+                                .background(Color(.systemBackground))
+                        }
+                        .padding(10)
+                        .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 8))
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.accentColor.opacity(0.55), lineWidth: 1.5)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                }
+
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Live Recipe")
+                        .font(.headline)
+                    studioSummaryRow("Name", value: recipeName.isEmpty ? "Untitled" : recipeName)
+                    studioSummaryRow("Collection", value: effectiveCollection.isEmpty ? "Not set" : effectiveCollection)
+                    if let defaultWeight, inputMode == .byPercent {
+                        studioSummaryRow("Default Weight", value: formatGrams(defaultWeight))
+                    }
+                    studioSummaryRow("Flours", value: "\(activeFlourRows.count)")
+                    studioSummaryRow("Ingredients", value: "\(activeIngredientRows.count + extraIngredients.count)")
+                    if containsPreferment {
+                        studioSummaryRow("Preferment", value: prefermentName.isEmpty ? "Not named" : prefermentName)
+                    }
+                    studioSummaryRow("Steps", value: "\(instructions.count)")
+                }
+                .padding(14)
+                .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 8))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color(.separator), lineWidth: 0.7)
+                }
+            }
+            .padding(18)
+        }
+        .background(Color(.secondarySystemGroupedBackground))
+    }
+
+    private func studioSummaryRow(_ title: String, value: String) -> some View {
+        HStack(alignment: .firstTextBaseline) {
+            Text(title)
+                .foregroundStyle(.secondary)
+            Spacer(minLength: 10)
+            Text(value)
+                .fontWeight(.semibold)
+                .multilineTextAlignment(.trailing)
+        }
+        .font(.subheadline)
+    }
+
+    private var activeFlourRows: [FlourRow] {
+        containsPreferment ? combinedFlours.filter { !$0.name.isEmpty } : flours.filter { !$0.name.isEmpty }
+    }
+
+    private var activeIngredientRows: [IngredientRow] {
+        containsPreferment ? combinedIngredients.filter { !$0.name.isEmpty } : ingredients.filter { !$0.name.isEmpty }
+    }
+
+    private var studioCanOpenPreview: Bool {
+        detailsReady && (!containsPreferment || prefermentReady) && ingredientsReady
+    }
+
+    private var studioCanMoveBackward: Bool {
+        switch selectedStudioStep {
+        case .scanReview, .preferment, .ingredients, .preview:
+            true
+        case .details:
+            editingRecipe == nil && copyingRecipe == nil
+        }
+    }
+
+    private var studioPrimaryActionTitle: String {
+        switch selectedStudioStep {
+        case .preview:
+            editingRecipe != nil
+                ? String(localized: "create.action.save_changes", defaultValue: "Save Changes")
+                : String(localized: "create.action.save_recipe", defaultValue: "Save Recipe")
+        default:
+            "Next"
+        }
+    }
+
+    private var studioPrimaryActionEnabled: Bool {
+        switch selectedStudioStep {
+        case .scanReview:
+            scanReviewReady
+        case .details:
+            detailsReady
+        case .preferment:
+            prefermentReady
+        case .ingredients:
+            ingredientsReady
+        case .preview:
+            studioCanOpenPreview
+        }
+    }
+
+    private var studioStepTitle: String {
+        switch selectedStudioStep {
+        case .scanReview:
+            return "Review Scan"
+        case .details:
+            return "Recipe Details"
+        case .preferment:
+            return "Preferment"
+        case .ingredients:
+            return containsPreferment ? "Main Dough" : "Ingredients"
+        case .preview:
+            return "Preview & Save"
+        }
+    }
+
+    private var studioStepSubtitle: String {
+        switch selectedStudioStep {
+        case .scanReview:
+            return "Resolve anything uncertain before editing the recipe."
+        case .details:
+            return "Name the recipe, choose its collection, and set the default batch size."
+        case .preferment:
+            return "Describe the separately fermented portion before the main dough."
+        case .ingredients:
+            return containsPreferment
+                ? "Add the main dough amounts on top of the preferment."
+                : "Enter flours, ingredients, optional temperatures, and extra units."
+        case .preview:
+            return "Review the recipe, add instructions, and save it to the library."
+        }
+    }
+
+    private func studioStepIsEnabled(_ step: CreateStep) -> Bool {
+        switch step {
+        case .scanReview:
+            !pendingNameChoices.isEmpty
+        case .details:
+            true
+        case .preferment:
+            containsPreferment && detailsReady
+        case .ingredients:
+            detailsReady && (!containsPreferment || prefermentReady)
+        case .preview:
+            studioCanOpenPreview
+        }
+    }
+
+    private func studioPrimaryAction() {
+        switch selectedStudioStep {
+        case .scanReview:
+            applyNameChoices()
+            scheduleNextScanPrompt()
+            selectedStudioStep = .details
+        case .details:
+            selectedStudioStep = containsPreferment ? .preferment : .ingredients
+        case .preferment:
+            syncMainDoughFromPreferment()
+            selectedStudioStep = .ingredients
+        case .ingredients:
+            let candidates = scanExtraIngredientConversions()
+            if candidates.isEmpty {
+                selectedStudioStep = .preview
+            } else {
+                conversionSheetData = ExtraIngredientConversionSheetData(candidates: candidates)
+            }
+        case .preview:
+            saveRecipe()
+        }
+    }
+
+    private func studioPreviousAction() {
+        switch selectedStudioStep {
+        case .scanReview, .details:
+            returnToStudioStart()
+        case .preferment:
+            selectedStudioStep = .details
+        case .ingredients:
+            selectedStudioStep = containsPreferment ? .preferment : .details
+        case .preview:
+            selectedStudioStep = .ingredients
+        }
+    }
+
+    private func returnToStudioStart() {
+        guard editingRecipe == nil, copyingRecipe == nil else { return }
+        if sourcePhotoImage != nil {
+            selectedStudioStartOption = .scan
+        } else if inputMode == .byWeight {
+            selectedStudioStartOption = .weight
+        } else {
+            selectedStudioStartOption = .percent
+        }
+        modeBeforeReturningToStudioStart = inputMode
+        inputMode = nil
+        selectedStudioStep = .details
     }
 
     private var navigationStack: some View {
@@ -839,14 +1545,18 @@ struct CreateRecipeView: View {
         }
         .onChange(of: inputMode) { oldValue, newValue in
             guard let oldValue, let newValue, oldValue != newValue else { return }
-            defaultWeight = nil
-            for i in flours.indices { flours[i].value = nil }
-            for i in ingredients.indices { ingredients[i].value = nil }
-            prefermentFlourPercent = nil
-            for i in prefermentFlours.indices { prefermentFlours[i].value = nil }
-            for i in prefermentIngredientRows.indices { prefermentIngredientRows[i].value = nil }
-            detectedRecipeLanguage = nil
+            resetModeSpecificDraftFields()
         }
+    }
+
+    private func resetModeSpecificDraftFields() {
+        defaultWeight = nil
+        for i in flours.indices { flours[i].value = nil }
+        for i in ingredients.indices { ingredients[i].value = nil }
+        prefermentFlourPercent = nil
+        for i in prefermentFlours.indices { prefermentFlours[i].value = nil }
+        for i in prefermentIngredientRows.indices { prefermentIngredientRows[i].value = nil }
+        detectedRecipeLanguage = nil
     }
 
     // MARK: - Scanning overlay
@@ -902,7 +1612,7 @@ struct CreateRecipeView: View {
                     ModeCard(
                         icon: "scalemass",
                         title: String(localized: "create.mode.weight.title", defaultValue: "By Weight"),
-                        description: String(localized: "create.mode.weight.description", defaultValue: "Best for recipes without flour, or when you want to keep exact gram amounts"),
+                        description: String(localized: "create.mode.weight.description", defaultValue: "Best for entering an existing recipe as-is, recipes without flour, or exact gram amounts"),
                         accessibilityID: "byWeightModeCard"
                     ) {
                         inputMode = .byWeight
@@ -995,6 +1705,11 @@ struct CreateRecipeView: View {
             ) {
                 showScanOptions = true
             }
+            .scanSourceConfirmationDialog(
+                isPresented: $showScanOptions,
+                showPhotoPicker: $showPhotoPicker,
+                showCamera: $showCamera
+            )
         case .unavailable(.deviceNotEligible):
             ModeCard(
                 icon: "camera.viewfinder",
@@ -1018,7 +1733,7 @@ struct CreateRecipeView: View {
 
     // MARK: - Scan Review
 
-    private var scanReviewForm: some View {
+    private var scanReviewFormContent: some View {
         Form {
             Section {
                 ForEach(pendingNameChoices.indices, id: \.self) { index in
@@ -1035,6 +1750,10 @@ struct CreateRecipeView: View {
                 Text("Pick the ingredient name to use, or enter the corrected name from the source recipe.")
             }
         }
+    }
+
+    private var scanReviewForm: some View {
+        scanReviewFormContent
         .navigationTitle("Review Scan")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -1063,7 +1782,7 @@ struct CreateRecipeView: View {
 
     // MARK: - Step 1: Details
 
-    private var detailsForm: some View {
+    private var detailsFormContent: some View {
         let collections = store.collectionNames
         return Form {
             Section {
@@ -1139,6 +1858,10 @@ struct CreateRecipeView: View {
                 Text("A preferment (biga, poolish, etc.) is a portion of the dough fermented separately.")
             }
         }
+    }
+
+    private var detailsForm: some View {
+        detailsFormContent
         .onAppear {
             guard editingRecipe != nil || copyingRecipe != nil else { return }
             Task { @MainActor in
@@ -1245,7 +1968,7 @@ struct CreateRecipeView: View {
         }
     }
 
-    private var ingredientsForm: some View {
+    private var ingredientsFormContent: some View {
         let useCelsius = Settings.shared.preferredTemp() == .celsius
         let isPercent = inputMode == .byPercent
 
@@ -1449,6 +2172,10 @@ struct CreateRecipeView: View {
                 }
             }
         }
+    }
+
+    private var ingredientsForm: some View {
+        ingredientsFormContent
         .onAppear {
             guard !ingredientsFormHasFocused, let firstID = flours.first?.id else { return }
             ingredientsFormHasFocused = true
@@ -1732,7 +2459,7 @@ struct CreateRecipeView: View {
 
     // MARK: - Step 3: Preferment (optional)
 
-    private var prefermentForm: some View {
+    private var prefermentFormContent: some View {
         let isPercent = inputMode == .byPercent
         let unit = isPercent ? "%" : String(localized: "unit.grams.short", defaultValue: "g")
         return Form {
@@ -1849,6 +2576,10 @@ struct CreateRecipeView: View {
                 }
             }
         }
+    }
+
+    private var prefermentForm: some View {
+        prefermentFormContent
         .onAppear {
             guard !prefermentFormHasFocused else { return }
             prefermentFormHasFocused = true
@@ -1902,7 +2633,7 @@ struct CreateRecipeView: View {
         return "\(formatted)g"
     }
 
-    private var previewForm: some View {
+    private var previewFormContent: some View {
         let isPercent = inputMode == .byPercent
         return Form {
             Section("Details") {
@@ -2044,6 +2775,10 @@ struct CreateRecipeView: View {
                 }
             }
         }
+    }
+
+    private var previewForm: some View {
+        previewFormContent
         .navigationTitle("Preview")
         .navigationBarTitleDisplayMode(.inline)
         .environment(\.editMode, .constant(.active))
@@ -2653,6 +3388,24 @@ private extension View {
     func keyboardDismissible() -> some View {
         scrollDismissesKeyboard(.interactively)
     }
+
+    func scanSourceConfirmationDialog(
+        isPresented: Binding<Bool>,
+        showPhotoPicker: Binding<Bool>,
+        showCamera: Binding<Bool>
+    ) -> some View {
+        confirmationDialog("Choose Source", isPresented: isPresented, titleVisibility: .visible) {
+            Button("Photo Library") {
+                showPhotoPicker.wrappedValue = true
+            }
+            if UIImagePickerController.isSourceTypeAvailable(.camera) {
+                Button("Camera") {
+                    showCamera.wrappedValue = true
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        }
+    }
 }
 
 // MARK: - ModeCard
@@ -2956,6 +3709,7 @@ private struct SourcePhotoViewer: View {
             }
             .accessibilityLabel(String(localized: "action.close", defaultValue: "Close"))
         }
+        .statusBarHidden(true)
     }
 }
 
