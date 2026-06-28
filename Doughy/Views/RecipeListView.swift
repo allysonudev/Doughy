@@ -7,6 +7,7 @@ import SwiftUI
 struct RecipeListView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(RecipeStore.self) private var store
+    @Environment(CollectionAppearanceStore.self) private var appearanceStore
     @State private var showingCreate = false
     @State private var editingRecipe: RecipeWrapper?
     @State private var copyingRecipe: RecipeWrapper?
@@ -45,17 +46,21 @@ struct RecipeListView: View {
                              openScanOptionsOnAppear: openScanOptionsOnCreate,
                              initialWebsiteImportURL: initialWebsiteImportURL)
                 .environment(store)
+                .environment(appearanceStore)
         }
         .fullScreenCover(item: $editingRecipe, onDismiss: { store.refresh() }) { wrapper in
             CreateRecipeView(editingRecipe: wrapper.recipe)
                 .environment(store)
+                .environment(appearanceStore)
         }
         .fullScreenCover(item: $copyingRecipe, onDismiss: { store.refresh() }) { wrapper in
             CreateRecipeView(copyingRecipe: wrapper.recipe)
                 .environment(store)
+                .environment(appearanceStore)
         }
         .sheet(item: $sharingRecipe, onDismiss: { pendingShareAuthor = "" }) { wrapper in
             RecipeShareView(recipe: wrapper.recipe, initialAuthorName: pendingShareAuthor)
+                .environment(appearanceStore)
         }
         .sheet(item: $historyRecipe, onDismiss: { store.refresh() }) { wrapper in
             NavigationStack {
@@ -63,15 +68,28 @@ struct RecipeListView: View {
             }
             .environment(store)
         }
-        .sheet(isPresented: $showingSettings) {
+        .sheet(isPresented: Binding(
+            get: { showingSettings && horizontalSizeClass != .regular },
+            set: { if !$0 { showingSettings = false } }
+        )) {
             NavigationStack {
-                SettingsView()
+                SettingsView(showsCloseButton: true)
             }
             .environment(store)
+            .environment(appearanceStore)
+        }
+        .fullScreenCover(isPresented: Binding(
+            get: { showingSettings && horizontalSizeClass == .regular },
+            set: { if !$0 { showingSettings = false } }
+        )) {
+            SettingsView(showsCloseButton: true)
+                .environment(store)
+                .environment(appearanceStore)
         }
         .sheet(item: Binding(get: { store.pendingImport }, set: { store.pendingImport = $0 })) { payload in
             ImportRecipeView(payload: payload)
                 .environment(store)
+                .environment(appearanceStore)
         }
         .alert("Error", isPresented: Binding(
             get: { deletionError != nil },
@@ -87,8 +105,9 @@ struct RecipeListView: View {
             openPendingScanShortcutIfNeeded()
             restoreTabletSelectionIfNeeded()
         }
-        .onChange(of: store.collections.map(\.name)) { _, _ in
+        .onChange(of: store.collections.map(\.name)) { _, names in
             restoreTabletSelectionIfNeeded()
+            appearanceStore.cleanupOrphans(validNames: Set(names))
         }
         .onChange(of: store.pendingIntentImage) { _, image in
             guard let image else { return }
@@ -357,7 +376,8 @@ struct RecipeListView: View {
                             UserDefaults.standard.set(Array(collapsedCollections), forKey: "collapsedCollections")
                         }
                     } label: {
-                        HStack {
+                        HStack(spacing: 8) {
+                            CollectionAvatar(collection: collection.name, size: 22)
                             Text(DefaultLocalization.collectionName(collection.name))
                             Spacer()
                             Image(systemName: "chevron.down")
@@ -412,52 +432,110 @@ struct RecipeListView: View {
         }
         .padding(.vertical, 18)
         .frame(width: 78)
-        .background(.bar)
+        .railGlassSurface()
+    }
+
+    private func tabletCollectionButton(for collection: RecipeCollection) -> some View {
+        let isActive = activeTabletCollectionName == collection.name
+        let label = DefaultLocalization.collectionName(collection.name)
+
+        return Button {
+            showTabletLibrary(for: collection.name)
+        } label: {
+            CollectionAvatar(collection: collection.name, size: 46)
+                .overlay {
+                    Circle()
+                        .strokeBorder(Color.accentColor, lineWidth: 3)
+                        .opacity(isActive ? 1 : 0)
+                }
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(label)
+        .accessibilityHint("Show \(label) recipes")
     }
 
     private var tabletRecipeList: some View {
-        List {
-            ForEach(store.collections, id: \.name) { collection in
-                Section(collection.name) {
-                    ForEach(collection.recipes, id: \.name) { recipe in
-                        Button {
-                            select(recipe: recipe)
-                            showingTabletLibrary = false
-                        } label: {
-                            HStack {
-                                Text(recipe.name)
-                                    .foregroundStyle(.primary)
-                                Spacer()
-                                if selectedRecipe?.recipe.name == recipe.name,
-                                   selectedRecipe?.recipe.collection == recipe.collection {
-                                    Image(systemName: "checkmark")
-                                        .foregroundStyle(.tint)
+        ScrollViewReader { proxy in
+            List {
+                ForEach(store.collections, id: \.name) { collection in
+                    Section {
+                        ForEach(collection.recipes, id: \.name) { recipe in
+                            Button {
+                                select(recipe: recipe)
+                                withAnimation(.snappy) {
+                                    showingTabletLibrary = false
+                                }
+                            } label: {
+                                HStack {
+                                    Text(recipe.name)
+                                        .foregroundStyle(.primary)
+                                    Spacer()
+                                    if selectedRecipe?.recipe.name == recipe.name,
+                                       selectedRecipe?.recipe.collection == recipe.collection {
+                                        Image(systemName: "checkmark")
+                                            .foregroundStyle(.tint)
+                                    }
+                                }
+                            }
+                            .contextMenu {
+                                Button {
+                                    sharingRecipe = RecipeWrapper(recipe: recipe)
+                                } label: {
+                                    Label("Share", systemImage: "square.and.arrow.up")
+                                }
+                                Button {
+                                    copyingRecipe = RecipeWrapper(recipe: recipe)
+                                } label: {
+                                    Label("Copy", systemImage: "doc.on.doc")
+                                }
+                                Button {
+                                    editingRecipe = RecipeWrapper(recipe: recipe)
+                                } label: {
+                                    Label("Edit", systemImage: "pencil")
                                 }
                             }
                         }
-                        .contextMenu {
-                            Button {
-                                sharingRecipe = RecipeWrapper(recipe: recipe)
-                            } label: {
-                                Label("Share", systemImage: "square.and.arrow.up")
-                            }
-                            Button {
-                                copyingRecipe = RecipeWrapper(recipe: recipe)
-                            } label: {
-                                Label("Copy", systemImage: "doc.on.doc")
-                            }
-                            Button {
-                                editingRecipe = RecipeWrapper(recipe: recipe)
-                            } label: {
-                                Label("Edit", systemImage: "pencil")
-                            }
+                    } header: {
+                        HStack(spacing: 8) {
+                            CollectionAvatar(collection: collection.name, size: 22)
+                            Text(DefaultLocalization.collectionName(collection.name))
                         }
+                        .id(collection.name)
                     }
                 }
             }
+            .listStyle(.sidebar)
+            .onAppear {
+                guard let request = tabletLibraryScrollRequest else { return }
+                proxy.scrollTo(request.collectionName, anchor: .top)
+            }
+            .onChange(of: tabletLibraryScrollRequest) { _, request in
+                guard let request else { return }
+                withAnimation(.snappy) {
+                    proxy.scrollTo(request.collectionName, anchor: .top)
+                }
+            }
         }
-        .listStyle(.sidebar)
     }
+}
+
+private extension View {
+    /// The vertical navigation rail surface. Uses iOS 26 Liquid Glass when available so the
+    /// recipe list refracts through the rail as it slides underneath, falling back to the
+    /// `.bar` material on iOS 18–25.
+    @ViewBuilder
+    func railGlassSurface() -> some View {
+        if #available(iOS 26.0, *) {
+            self.glassEffect(.regular, in: .rect)
+        } else {
+            self.background(.bar)
+        }
+    }
+}
+
+private struct TabletLibraryScrollRequest: Equatable {
+    let collectionName: String
+    private let id = UUID()
 }
 
 private struct TabletRepeatButton: View {

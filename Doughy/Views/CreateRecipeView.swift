@@ -445,6 +445,7 @@ struct CreateRecipeView: View {
     let initialWebsiteImportURL: URL?
 
     @Environment(RecipeStore.self) private var store
+    @Environment(CollectionAppearanceStore.self) private var appearanceStore
     @Environment(\.dismiss) private var dismiss
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
@@ -476,6 +477,9 @@ struct CreateRecipeView: View {
     @State private var collectionName = ""
     @State private var isNewCollection = false
     @State private var newCollectionText = ""
+    @State private var collectionIconKey: String?
+    @State private var collectionColorKey: String?
+    @State private var didLoadCollectionAppearance = false
     @State private var defaultWeight: Double? = nil
     @State private var containsPreferment = false
 
@@ -666,6 +670,22 @@ struct CreateRecipeView: View {
         isNewCollection ? newCollectionText : collectionName
     }
 
+    /// Loads the appearance for the current collection once, after the form's collection
+    /// has settled (the picker auto-selects the first collection on appear).
+    private func syncCollectionAppearanceIfNeeded() {
+        guard !didLoadCollectionAppearance else { return }
+        didLoadCollectionAppearance = true
+        syncCollectionAppearance()
+    }
+
+    /// Mirrors the editor's icon/color onto the currently targeted collection's stored
+    /// appearance, so editing reflects (and won't clobber) that collection's existing look.
+    private func syncCollectionAppearance() {
+        let appearance = appearanceStore.appearance(for: effectiveCollection)
+        collectionIconKey = appearance.iconKey
+        collectionColorKey = appearance.colorKey
+    }
+
     // MARK: - Discard safeguard
 
     private var currentSnapshot: DraftSnapshot {
@@ -688,7 +708,15 @@ struct CreateRecipeView: View {
     }
 
     private var isDirty: Bool {
-        currentSnapshot != initialSnapshot
+        currentSnapshot != initialSnapshot || appearanceChanged
+    }
+
+    /// Whether the chosen collection appearance differs from what's stored, so an
+    /// appearance-only edit still trips the unsaved-changes safeguard.
+    private var appearanceChanged: Bool {
+        guard didLoadCollectionAppearance else { return false }
+        let stored = appearanceStore.appearance(for: effectiveCollection)
+        return stored.iconKey != collectionIconKey || stored.colorKey != collectionColorKey
     }
 
     /// Dismisses immediately if nothing has changed; otherwise asks the user to confirm
@@ -1829,6 +1857,24 @@ struct CreateRecipeView: View {
                         .autocorrectionDisabled()
                         .focused($isNewCollectionFocused)
                         .accessibilityIdentifier("newCollectionNameField")
+                }
+
+                CollectionAppearanceEditor(
+                    collection: effectiveCollection,
+                    iconKey: $collectionIconKey,
+                    colorKey: $collectionColorKey
+                )
+            }
+            .onAppear { syncCollectionAppearanceIfNeeded() }
+            .onChange(of: collectionName) { _, _ in
+                if !isNewCollection { syncCollectionAppearance() }
+            }
+            .onChange(of: isNewCollection) { _, isNew in
+                if isNew {
+                    collectionIconKey = nil
+                    collectionColorKey = nil
+                } else {
+                    syncCollectionAppearance()
                 }
             }
 
@@ -3209,6 +3255,10 @@ struct CreateRecipeView: View {
             } else {
                 try store.save(recipe: recipe)
             }
+            appearanceStore.set(
+                CollectionAppearance(iconKey: collectionIconKey, colorKey: collectionColorKey),
+                for: effectiveCollection.trimmingCharacters(in: .whitespaces)
+            )
             dismiss()
         } catch RecipeBuilderError.missingName {
             saveError = String(localized: "create.error.missing_name", defaultValue: "Recipe name is missing.")

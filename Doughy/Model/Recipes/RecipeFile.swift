@@ -11,6 +11,9 @@ struct RecipeFilePayload: Codable, Identifiable, Equatable {
     let version: Int
     let author: String?
     let note: String?
+    /// The shared recipe's collection appearance (icon + color), so importing into a new
+    /// collection can adopt it. Optional and omitted when absent; older files decode to nil.
+    let collectionAppearance: CollectionAppearance?
     let recipe: RecipeFileData
 }
 
@@ -19,6 +22,9 @@ struct RecipeLibraryBackup: Codable, Equatable {
     let type: String
     let exportedAt: Date
     let recipes: [RecipeFilePayload]
+    /// Appearance per collection name, so a full restore can bring icons/colors along.
+    /// Optional for backward compatibility with backups made before appearances existed.
+    let collections: [String: CollectionAppearance]?
 }
 
 struct RecipeFileData: Codable, Equatable {
@@ -100,13 +106,17 @@ enum RecipeFile {
     static let fileExtension = "doughy"
     static let uti = "org.curiousurick.doughy.recipe"
 
-    static func payload(from recipe: any RecipeProtocol, author: String?, note: String? = nil) -> RecipeFilePayload {
+    static func payload(from recipe: any RecipeProtocol,
+                        author: String?,
+                        note: String? = nil,
+                        collectionAppearance: CollectionAppearance? = nil) -> RecipeFilePayload {
         let trimmedAuthor = author?.trimmingCharacters(in: .whitespaces)
         let trimmedNote = note?.trimmingCharacters(in: .whitespaces)
         return RecipeFilePayload(
             version: 2,
             author: trimmedAuthor.flatMap { $0.isEmpty ? nil : $0 },
             note: trimmedNote.flatMap { $0.isEmpty ? nil : $0 },
+            collectionAppearance: (collectionAppearance?.isEmpty == false) ? collectionAppearance : nil,
             recipe: RecipeFileData(from: recipe)
         )
     }
@@ -156,12 +166,14 @@ enum RecipeLibraryBackupFile {
     static let type = "doughy.recipe-library"
     private static let version = 1
 
-    static func backup(from recipes: [any RecipeProtocol]) -> RecipeLibraryBackup {
+    static func backup(from recipes: [any RecipeProtocol],
+                       appearances: [String: CollectionAppearance] = [:]) -> RecipeLibraryBackup {
         RecipeLibraryBackup(
             version: version,
             type: type,
             exportedAt: Date(),
-            recipes: recipes.map { RecipeFile.payload(from: $0, author: nil) }
+            recipes: recipes.map { RecipeFile.payload(from: $0, author: nil) },
+            collections: appearances.isEmpty ? nil : appearances
         )
     }
 

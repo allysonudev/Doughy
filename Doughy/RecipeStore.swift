@@ -98,9 +98,11 @@ class RecipeStore {
         refresh()
     }
 
-    func exportLibraryBackup() throws -> URL {
+    func exportLibraryBackup(appearances: [String: CollectionAppearance] = [:]) throws -> URL {
         let recipes = collections.flatMap(\.recipes)
-        return try RecipeLibraryBackupFile.write(RecipeLibraryBackupFile.backup(from: recipes))
+        return try RecipeLibraryBackupFile.write(
+            RecipeLibraryBackupFile.backup(from: recipes, appearances: appearances)
+        )
     }
 
     func restoreLibraryBackup(_ backup: RecipeLibraryBackup) throws {

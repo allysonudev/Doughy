@@ -7,8 +7,17 @@ import SwiftUI
 struct ImportRecipeView: View {
     let payload: RecipeFilePayload
     @Environment(RecipeStore.self) private var store
+    @Environment(CollectionAppearanceStore.self) private var appearanceStore
     @State private var collectionName: String
     @State private var errorMessage: String?
+
+    /// The avatar the imported recipe's collection will end up with: the local appearance
+    /// if the collection already has one, otherwise the imported appearance.
+    private var previewAppearance: CollectionAppearance {
+        let local = appearanceStore.appearance(for: collectionName.trimmingCharacters(in: .whitespaces))
+        if !local.isEmpty { return local }
+        return payload.collectionAppearance ?? .none
+    }
 
     init(payload: RecipeFilePayload) {
         self.payload = payload
@@ -56,8 +65,13 @@ struct ImportRecipeView: View {
                 }
 
                 Section {
-                    TextField("Collection name", text: $collectionName)
-                        .autocorrectionDisabled()
+                    HStack(spacing: 10) {
+                        CollectionAvatar(collection: collectionName,
+                                         appearanceOverride: previewAppearance,
+                                         size: 32)
+                        TextField("Collection name", text: $collectionName)
+                            .autocorrectionDisabled()
+                    }
                     if !collectionPickerOptions.isEmpty {
                         Menu("Choose existing…") {
                             ForEach(collectionPickerOptions, id: \.self) { name in
@@ -99,6 +113,12 @@ struct ImportRecipeView: View {
         let recipe = RecipeFile.toRecipe(payload.recipe, collection: collection)
         do {
             try store.save(recipe: recipe)
+            // Seed the collection's appearance from the import only when it has none locally,
+            // so importing never overwrites an existing collection's look.
+            if appearanceStore.appearance(for: collection).isEmpty,
+               let imported = payload.collectionAppearance, !imported.isEmpty {
+                appearanceStore.set(imported, for: collection)
+            }
             if let author = payload.author {
                 try? store.addNote("Shared by \(author)", to: recipe)
             }
