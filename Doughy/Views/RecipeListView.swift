@@ -27,6 +27,7 @@ struct RecipeListView: View {
     @State private var showingWhatsNew = false
     @State private var selectedRecipe: RecipeWrapper?
     @State private var showingTabletLibrary = false
+    @State private var tabletLibraryScrollRequest: TabletLibraryScrollRequest?
 
     var body: some View {
         Group {
@@ -181,10 +182,12 @@ struct RecipeListView: View {
     private var tabletContent: some View {
         HStack(spacing: 0) {
             tabletRail
+                .zIndex(1)
             if showingTabletLibrary {
                 tabletRecipeList
                     .frame(width: 320)
-                    .transition(.move(edge: .leading).combined(with: .opacity))
+                    .transition(.move(edge: .leading))
+                    .zIndex(0)
             }
             Divider()
             Group {
@@ -286,6 +289,19 @@ struct RecipeListView: View {
     private func saveLastActive(recipe: any RecipeProtocol) {
         UserDefaults.standard.set(recipe.collection, forKey: TabletBakeSessionKeys.lastCollection)
         UserDefaults.standard.set(recipe.name, forKey: TabletBakeSessionKeys.lastRecipe)
+    }
+
+    private var activeTabletCollectionName: String? {
+        (selectedRecipe ?? firstRecipeWrapper)?.recipe.collection
+    }
+
+    private func showTabletLibrary(for collectionName: String? = nil) {
+        if let collectionName {
+            tabletLibraryScrollRequest = TabletLibraryScrollRequest(collectionName: collectionName)
+        }
+        withAnimation(.snappy) {
+            showingTabletLibrary = true
+        }
     }
 
     private var mainContent: some View {
@@ -417,6 +433,20 @@ struct RecipeListView: View {
             .buttonStyle(.bordered)
             .accessibilityIdentifier("addRecipeButton")
             .accessibilityLabel("Add recipe")
+
+            if !store.collections.isEmpty {
+                ScrollView(.vertical, showsIndicators: false) {
+                    VStack(spacing: 12) {
+                        ForEach(store.collections, id: \.name) { collection in
+                            tabletCollectionButton(for: collection)
+                        }
+                    }
+                    .padding(.vertical, 2)
+                }
+                .frame(maxHeight: .infinity)
+            } else {
+                Spacer()
+            }
 
             Spacer()
 
@@ -614,6 +644,10 @@ struct RecipeWrapper: Identifiable, Hashable {
 private enum TabletBakeSessionMode: String, CaseIterable {
     case recipe = "Recipe"
     case adjust = "Adjust"
+
+    var sortIndex: Int {
+        TabletBakeSessionMode.allCases.firstIndex(of: self) ?? 0
+    }
 }
 
 private enum TabletBakeSessionKeys {
@@ -638,6 +672,7 @@ private struct TabletBakeSessionView: View {
 
     @Environment(RecipeStore.self) private var store
     @State private var mode: TabletBakeSessionMode = .recipe
+    @State private var modeTransitionEdge: Edge = .bottom
     @State private var quantity = 1
     @State private var singleBatchSize: Double
     @State private var ingredientPercents: [Int: Double] = [:]
@@ -679,6 +714,24 @@ private struct TabletBakeSessionView: View {
         singleBatchSize * Double(max(quantity, 1))
     }
 
+    private var modeBinding: Binding<TabletBakeSessionMode> {
+        Binding {
+            mode
+        } set: { newMode in
+            if newMode != mode {
+                modeTransitionEdge = newMode.sortIndex > mode.sortIndex ? .bottom : .top
+            }
+            mode = newMode
+        }
+    }
+
+    private var modeTransition: AnyTransition {
+        .asymmetric(
+            insertion: .opacity.combined(with: .offset(y: modeTransitionEdge == .bottom ? 28 : -28)),
+            removal: .opacity
+        )
+    }
+
     private var prefermentRecipe: CalculatedPrefermentRecipe? {
         calculatedRecipe as? CalculatedPrefermentRecipe
     }
@@ -711,12 +764,22 @@ private struct TabletBakeSessionView: View {
         VStack(spacing: 0) {
             header
             Divider()
-            switch mode {
-            case .recipe:
-                recipeFocus
-            case .adjust:
-                adjustFocus
+            ZStack {
+                Group {
+                    switch mode {
+                    case .recipe:
+                        recipeFocus
+                    case .adjust:
+                        adjustFocus
+                    }
+                }
+                .id(mode)
+                .transition(modeTransition)
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color(.systemBackground))
+            .clipped()
+            .animation(.easeInOut(duration: 0.2), value: mode)
         }
         .background(Color(.systemBackground))
         .onAppear {
@@ -748,7 +811,7 @@ private struct TabletBakeSessionView: View {
             }
             Spacer()
             tabletToolbarButtons
-            Picker("Mode", selection: $mode) {
+            Picker("Mode", selection: modeBinding) {
                 ForEach(TabletBakeSessionMode.allCases, id: \.self) { mode in
                     Text(mode.rawValue).tag(mode)
                 }

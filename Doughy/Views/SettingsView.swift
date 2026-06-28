@@ -98,51 +98,126 @@ struct SettingsView: View {
         return "\(version) (\(build))"
     }()
 
+    private var selectedPaneBinding: Binding<SettingsPane?> {
+        Binding {
+            selectedPane
+        } set: { newPane in
+            guard let newPane else {
+                selectedPane = nil
+                return
+            }
+            if let selectedPane, selectedPane != newPane {
+                paneTransitionEdge = newPane.sortIndex > selectedPane.sortIndex ? .bottom : .top
+            }
+            selectedPane = newPane
+        }
+    }
+
+    private var paneTransition: AnyTransition {
+        .asymmetric(
+            insertion: .opacity.combined(with: .offset(y: paneTransitionEdge == .bottom ? 28 : -28)),
+            removal: .opacity
+        )
+    }
+
     // Extracted from `body` so the type-checker isn't inferring the whole Form chain
     // (Pickers + onChange closures + four alerts) as one expression, which times out.
     @ViewBuilder
     private var preferencesSection: some View {
         Section {
-            Picker("Temperature Unit", selection: $selectedTemp) {
-                Text("Fahrenheit").tag(Temperature.Measurement.fahrenheit)
-                Text("Celsius").tag(Temperature.Measurement.celsius)
-            }
-            .onChange(of: selectedTemp) { old, new in
-                if old != new {
-                    Settings.shared.setPreferredTemp(measurement: new)
-                    do {
-                        try Settings.shared.updateRecipeTemps(original: old, target: new)
-                        store.refresh()
-                    } catch {
-                        tempUpdateError = String(localized: "settings.error.convert_temperatures", defaultValue: "Could not convert recipe temperatures.")
-                        selectedTemp = old
-                    }
-                }
-            }
+            temperatureUnitPicker
+            volumeUnitsPicker
+            languagePicker
+        }
+    }
 
-            Picker("Volume Units", selection: $selectedVolumeSystem) {
-                Text("Metric").tag(VolumeSystem.metric)
-                Text("Imperial").tag(VolumeSystem.imperial)
-            }
-            .onChange(of: selectedVolumeSystem) { _, new in
-                Settings.shared.setPreferredVolumeSystem(new)
-            }
-
-            Picker("Language", selection: $selectedLanguage) {
-                Text("System Default").tag("")
-                ForEach(AppLanguage.all) { lang in
-                    Text(lang.nativeName).tag(lang.code)
+    private var temperatureUnitPicker: some View {
+        Picker("Temperature Unit", selection: $selectedTemp) {
+            Text("Fahrenheit").tag(Temperature.Measurement.fahrenheit)
+            Text("Celsius").tag(Temperature.Measurement.celsius)
+        }
+        .onChange(of: selectedTemp) { old, new in
+            if old != new {
+                Settings.shared.setPreferredTemp(measurement: new)
+                do {
+                    try Settings.shared.updateRecipeTemps(original: old, target: new)
+                    store.refresh()
+                } catch {
+                    tempUpdateError = String(localized: "settings.error.convert_temperatures", defaultValue: "Could not convert recipe temperatures.")
+                    selectedTemp = old
                 }
-            }
-            .onChange(of: selectedLanguage) { _, new in
-                Settings.shared.setPreferredLanguageCode(new.isEmpty ? nil : new)
-                showRestartAlert = true
             }
         }
     }
 
+    private var volumeUnitsPicker: some View {
+        Picker("Volume Units", selection: $selectedVolumeSystem) {
+            Text("Metric").tag(VolumeSystem.metric)
+            Text("Imperial").tag(VolumeSystem.imperial)
+        }
+        .onChange(of: selectedVolumeSystem) { _, new in
+            Settings.shared.setPreferredVolumeSystem(new)
+        }
+    }
+
+    private var languagePicker: some View {
+        Picker("Language", selection: $selectedLanguage) {
+            Text("System Default").tag("")
+            ForEach(AppLanguage.all) { lang in
+                Text(lang.nativeName).tag(lang.code)
+            }
+        }
+        .onChange(of: selectedLanguage) { _, new in
+            Settings.shared.setPreferredLanguageCode(new.isEmpty ? nil : new)
+            showRestartAlert = true
+        }
+    }
+
+    private var tabletPreferencesContent: some View {
+        ScrollView {
+            VStack(spacing: 0) {
+                tabletPreferenceRow("Temperature Unit") {
+                    temperatureUnitPicker
+                        .labelsHidden()
+                }
+                Divider()
+                tabletPreferenceRow("Volume Units") {
+                    volumeUnitsPicker
+                        .labelsHidden()
+                }
+                Divider()
+                tabletPreferenceRow("Language") {
+                    languagePicker
+                        .labelsHidden()
+                }
+            }
+            .padding(.horizontal, 20)
+            .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 8))
+            .padding(.horizontal, 32)
+            .padding(.top, 4)
+            .padding(.bottom, 32)
+        }
+        .scrollContentBackground(.hidden)
+    }
+
+    private func tabletPreferenceRow<Control: View>(
+        _ title: String,
+        @ViewBuilder control: () -> Control
+    ) -> some View {
+        HStack(spacing: 24) {
+            Text(title)
+                .foregroundStyle(.primary)
+                .frame(width: 220, alignment: .leading)
+            Spacer(minLength: 24)
+            control()
+                .pickerStyle(.menu)
+                .frame(maxWidth: 280, alignment: .trailing)
+        }
+        .frame(minHeight: 54)
+    }
+
     @ViewBuilder
-    private var librarySection: some View {
+    private func librarySection(showHeader: Bool = true) -> some View {
         Section {
             NavigationLink {
                 RecentlyDeletedRecipesView()
@@ -169,14 +244,16 @@ struct SettingsView: View {
                 Text("Restore Recipe Library")
             }
         } header: {
-            Text("Library")
+            if showHeader {
+                Text("Library")
+            }
         } footer: {
             Text(String(localized: "settings.backup.footer", defaultValue: "Backups include every recipe. Restoring a backup replaces your current recipe library."))
         }
     }
 
     @ViewBuilder
-    private var aboutSection: some View {
+    private func aboutSection(showHeader: Bool = true) -> some View {
         Section {
             Link("Source Code on GitHub",
                  destination: URL(string: "https://github.com/georgie-codes/Doughy")!)
@@ -193,14 +270,17 @@ struct SettingsView: View {
             Link("Send Feedback",
                  destination: URL(string: "mailto:doughyapp@icloud.com")!)
         } header: {
-            Text("About")
+            if showHeader {
+                Text("About")
+            }
         } footer: {
             Text(appVersion)
                 .frame(maxWidth: .infinity, alignment: .center)
         }
     }
 
-    var body: some View {
+    @ViewBuilder
+    private var compactSettingsForm: some View {
         Form {
             preferencesSection
 
@@ -210,11 +290,107 @@ struct SettingsView: View {
                 }
                 .accessibilityIdentifier("ingredientConversionsLink")
             }
-            librarySection
+            librarySection()
 
-            aboutSection
+            aboutSection()
         }
         .navigationTitle("Settings")
+    }
+
+    private var tabletSettings: some View {
+        NavigationSplitView {
+            List(selection: selectedPaneBinding) {
+                Section {
+                    ForEach(SettingsPane.allCases, id: \.self) { pane in
+                        NavigationLink(value: pane) {
+                            Label(pane.title, systemImage: pane.systemImage)
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Settings")
+            .navigationSplitViewColumnWidth(min: 240, ideal: 280, max: 320)
+            .toolbar {
+                if showsCloseButton {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button("Close", systemImage: "xmark") {
+                            dismiss()
+                        }
+                    }
+                }
+            }
+        } detail: {
+            NavigationStack {
+                ZStack {
+                    Color(.systemGroupedBackground)
+                        .ignoresSafeArea()
+
+                    tabletDetail(for: selectedPane ?? .preferences)
+                        .id(selectedPane ?? .preferences)
+                        .transition(paneTransition)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .clipped()
+                .animation(.easeInOut(duration: 0.2), value: selectedPane)
+                .toolbarBackground(Color(.systemGroupedBackground), for: .navigationBar)
+                .toolbarBackground(.visible, for: .navigationBar)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func tabletDetail(for pane: SettingsPane) -> some View {
+        switch pane {
+        case .preferences:
+            tabletPane(for: pane) {
+                tabletPreferencesContent
+            }
+        case .conversions:
+            tabletPane(for: pane) {
+                IngredientConversionsView()
+                    .navigationTitle("")
+            }
+        case .library:
+            tabletPane(for: pane) {
+                Form {
+                    librarySection(showHeader: false)
+                }
+            }
+        case .about:
+            tabletPane(for: pane) {
+                Form {
+                    aboutSection(showHeader: false)
+                }
+            }
+        }
+    }
+
+    private func tabletPane<Content: View>(
+        for pane: SettingsPane,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(pane.title)
+                .font(.largeTitle.bold())
+            .padding(.horizontal, 32)
+            .padding(.top, 18)
+            .padding(.bottom, 12)
+
+            content()
+        }
+        .background(Color(.systemGroupedBackground))
+        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+
+    var body: some View {
+        Group {
+            if horizontalSizeClass == .regular {
+                tabletSettings
+            } else {
+                compactSettingsForm
+            }
+        }
         .alert("Error", isPresented: Binding(
             get: { tempUpdateError != nil },
             set: { if !$0 { tempUpdateError = nil } }
