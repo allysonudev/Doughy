@@ -805,9 +805,16 @@ private struct TabletBakeSessionView: View {
 
     private var header: some View {
         HStack(spacing: 16) {
-            VStack(alignment: .leading, spacing: 4) {
+            CollectionAvatar(collection: recipe.collection, size: 52)
+            VStack(alignment: .leading, spacing: 2) {
                 Text(recipe.name)
                     .font(.largeTitle.bold())
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+                Text(DefaultLocalization.collectionName(recipe.collection))
+                    .font(.title3)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
             }
             Spacer()
             tabletToolbarButtons
