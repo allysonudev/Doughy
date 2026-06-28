@@ -13,6 +13,7 @@ struct RecipeListView: View {
     @State private var pendingShareAuthor: String = ""
     @State private var deletionError: String?
     @State private var intentScanImage: UIImage? = nil
+    @State private var initialWebsiteImportURL: URL? = nil
     @State private var openScanOptionsOnCreate = false
     @State private var path: [RecipeWrapper] = []
     @State private var collapsedCollections: Set<String> = {
@@ -49,10 +50,12 @@ struct RecipeListView: View {
         .sheet(isPresented: $showingCreate, onDismiss: {
             store.refresh()
             intentScanImage = nil
+            initialWebsiteImportURL = nil
             openScanOptionsOnCreate = false
         }) {
             CreateRecipeView(initialScanImage: intentScanImage,
-                             openScanOptionsOnAppear: openScanOptionsOnCreate)
+                             openScanOptionsOnAppear: openScanOptionsOnCreate,
+                             initialWebsiteImportURL: initialWebsiteImportURL)
                 .environment(store)
         }
         .sheet(item: $editingRecipe, onDismiss: { store.refresh() }) { wrapper in
@@ -80,6 +83,7 @@ struct RecipeListView: View {
         }
         .onAppear {
             checkOnboarding()
+            openPendingWebsiteImportIfNeeded()
             openPendingScanShortcutIfNeeded()
         }
         .onChange(of: store.pendingIntentImage) { _, image in
@@ -92,6 +96,10 @@ struct RecipeListView: View {
         .onChange(of: store.pendingScanShortcut) { _, pending in
             guard pending else { return }
             openPendingScanShortcutIfNeeded()
+        }
+        .onChange(of: store.pendingWebsiteImport) { _, pending in
+            guard pending != nil else { return }
+            openPendingWebsiteImportIfNeeded()
         }
         .onChange(of: store.pendingShareIntent) { (_: PendingShareRequest?, pending: PendingShareRequest?) in
             guard let pending else { return }
@@ -150,7 +158,17 @@ struct RecipeListView: View {
         guard store.pendingScanShortcut else { return }
         store.pendingScanShortcut = false
         intentScanImage = nil
+        initialWebsiteImportURL = nil
         openScanOptionsOnCreate = true
+        showingCreate = true
+    }
+
+    private func openPendingWebsiteImportIfNeeded() {
+        guard let pending = store.pendingWebsiteImport else { return }
+        store.pendingWebsiteImport = nil
+        intentScanImage = nil
+        openScanOptionsOnCreate = false
+        initialWebsiteImportURL = pending.url
         showingCreate = true
     }
 

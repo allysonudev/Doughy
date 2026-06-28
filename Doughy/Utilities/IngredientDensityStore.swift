@@ -244,6 +244,7 @@ enum IngredientCategory: String, CaseIterable, Identifiable {
 
     // Fats and oils
     case butter
+    case margarine
     case oliveOil
     case vegetableOil
     case coconutOil
@@ -289,7 +290,7 @@ enum IngredientCategory: String, CaseIterable, Identifiable {
             return .flours
         case .granulatedSugar, .brownSugar, .powderedSugar, .honey, .mapleSyrup, .molasses, .nonDiastaticMalt:
             return .sweeteners
-        case .butter, .oliveOil, .vegetableOil, .coconutOil, .shortening:
+        case .butter, .margarine, .oliveOil, .vegetableOil, .coconutOil, .shortening:
             return .fatsAndOils
         case .milk, .buttermilk, .yogurt, .cream, .sourCream:
             return .dairy
@@ -329,6 +330,7 @@ enum IngredientCategory: String, CaseIterable, Identifiable {
         case .nonDiastaticMalt: return "Non-Diastatic Malt"
 
         case .butter: return "Butter"
+        case .margarine: return "Margarine"
         case .oliveOil: return "Olive Oil"
         case .vegetableOil: return "Vegetable Oil"
         case .coconutOil: return "Coconut Oil"
@@ -389,6 +391,7 @@ enum IngredientCategory: String, CaseIterable, Identifiable {
         case .nonDiastaticMalt: return String(localized: "density.ingredient.non_diastatic_malt", defaultValue: "Non-Diastatic Malt")
 
         case .butter: return String(localized: "density.ingredient.butter", defaultValue: "Butter")
+        case .margarine: return String(localized: "density.ingredient.margarine", defaultValue: "Margarine")
         case .oliveOil: return String(localized: "density.ingredient.olive_oil", defaultValue: "Olive Oil")
         case .vegetableOil: return String(localized: "density.ingredient.vegetable_oil", defaultValue: "Vegetable Oil")
         case .coconutOil: return String(localized: "density.ingredient.coconut_oil", defaultValue: "Coconut Oil")
@@ -453,6 +456,7 @@ enum IngredientCategory: String, CaseIterable, Identifiable {
         case .nonDiastaticMalt: return 128 // malt powder ~128g/cup
 
         case .butter: return 227
+        case .margarine: return 227
         case .oliveOil: return 216
         case .vegetableOil: return 218
         case .coconutOil: return 218

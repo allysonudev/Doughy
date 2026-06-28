@@ -39,6 +39,7 @@
 "density.ingredient.brown_sugar" = "흑설탕";
 "density.ingredient.buckwheat_flour" = "메밀가루";
 "density.ingredient.butter" = "버터";
+"density.ingredient.margarine" = "마가린";
 "density.ingredient.buttermilk" = "버터밀크";
 "density.ingredient.cake_flour" = "박력 밀가루";
 "density.ingredient.chocolate_chips" = "초콜릿 칩";
@@ -151,7 +152,7 @@
 "create.title.main_dough" = "본 반죽";
 "create.title.new" = "새 레시피";
 "create.unknown_ingredient.grams_per_unit" = "%@ 당 그램";
-"create.unknown_ingredient.message" = "\"%@\" (%@)에 대한 그램 환산값이 없습니다. %@ 한 단위의 그램 수를 알고 있다면 입력하여 지금 사용하고 향후 스캔에 기억해 두세요.";
+"create.unknown_ingredient.message" = "\"%@\" (%@)에 대한 그램 환산값이 없습니다. %@ 한 단위의 그램 수를 알고 있다면 입력하여 지금 사용하고 향후 레시피에 기억해 두세요.";
 "create.unknown_ingredient.unit_fallback" = "단위";
 "import.error.duplicate_recipe" = "\"%@\"이라는 이름의 레시피가 이미 존재합니다. 가져오기 전에 이름을 변경하거나 공유한 사람에게 이름을 바꿔달라고 요청하세요.";
 "history.error.delete_entry" = "이 기록 항목을 삭제할 수 없습니다.";
@@ -423,3 +424,21 @@
 "create.instructions.move_step.prompt" = "단계 번호 입력 (1–%d)";
 "create.instructions.move_step.placeholder" = "단계 번호";
 "create.instructions.move_step.action" = "이동";
+
+/* Website import */
+"create.mode.website_import.title" = "링크에서 가져오기";
+"create.mode.website_import.description" = "레시피 URL을 붙여넣고 Doughy가 찾은 구조화된 레시피 데이터를 검토하세요";
+"website_import.title" = "링크에서 가져오기";
+"website_import.section.url" = "레시피 링크";
+"website_import.footer" = "Doughy는 구조화된 레시피 정보를 게시하는 사이트에서 레시피 데이터를 가져옵니다.";
+"website_import.progress" = "레시피 가져오는 중…";
+"website_import.action.import" = "가져오기";
+"website_import.error.title" = "가져오기 실패";
+"website_import.error.invalid_url" = "유효한 레시피 URL을 입력하세요.";
+"website_import.error.request_failed" = "해당 페이지를 불러올 수 없습니다. URL을 확인하고 다시 시도하세요.";
+"website_import.error.no_recipe_data" = "해당 페이지에는 아직 Doughy가 가져올 수 있는 구조화된 레시피 데이터가 없습니다.";
+"website_import.error.missing_ingredients" = "Doughy가 해당 페이지에서 레시피를 찾았지만 재료 목록이 포함되어 있지 않았습니다.";
+"website_import.default_recipe_name" = "가져온 레시피";
+"share_extension.opening" = "Doughy 여는 중…";
+"share_extension.no_url" = "가져올 레시피 URL을 찾을 수 없습니다.";
+"share_extension.open_failed" = "Doughy가 가져오기 흐름을 열 수 없습니다. Doughy를 열고 링크에서 가져오기를 사용하세요.";

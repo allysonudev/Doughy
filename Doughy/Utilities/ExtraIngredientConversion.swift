@@ -17,6 +17,22 @@ struct ExtraIngredientConversionSuggestion {
 /// conversions so a weight-conscious baker can fold them into the dough's total weight.
 enum ExtraIngredientConversion {
 
+    /// Count-based extras like eggs, leaves, or zest should not be treated as
+    /// volume-to-weight conversion candidates.
+    static func isCountBasedUnit(_ unit: String) -> Bool {
+        unit == "count" || unit == "egg"
+    }
+
+    /// The unknown-conversion prompt is for volume units, not count-based extras.
+    static func canLearnGramConversion(for unit: String) -> Bool {
+        !isCountBasedUnit(unit)
+    }
+
+    /// The optional convert-to-weight sheet should also skip count-based extras.
+    static func canSuggestWeightConversion(for unit: String) -> Bool {
+        !isCountBasedUnit(unit)
+    }
+
     /// Returns a suggested gram conversion for `name`/`amount`/`unit`, or `nil` if no
     /// known conversion applies.
     static func suggest(name: String, amount: Double, unit: String) -> ExtraIngredientConversionSuggestion? {
@@ -163,6 +179,7 @@ enum ExtraIngredientConversion {
             (.honey, ["honey"]),
             (.mapleSyrup, ["maple syrup"]),
             (.molasses, ["molasses"]),
+            (.margarine, ["margarine"]),
             (.butter, ["butter"]),
             (.oliveOil, ["olive oil"]),
             (.vegetableOil, ["vegetable oil", "canola oil"]),

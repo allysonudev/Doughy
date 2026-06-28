@@ -45,6 +45,7 @@
 "density.ingredient.brown_sugar" = "Brunt socker";
 "density.ingredient.buckwheat_flour" = "Bovete mjöl";
 "density.ingredient.butter" = "Smör";
+"density.ingredient.margarine" = "Margarin";
 "density.ingredient.buttermilk" = "Kärnmjölk";
 "density.ingredient.cake_flour" = "Kak mjöl";
 "density.ingredient.chocolate_chips" = "Chokladbitar";
@@ -160,7 +161,7 @@
 "create.title.main_dough" = "Huvuddeg";
 "create.title.new" = "Nytt recept";
 "create.unknown_ingredient.grams_per_unit" = "Gram per %@";
-"create.unknown_ingredient.message" = "Vi har ingen gramomvandling för \"%@\" (%@). Om du vet hur många gram det finns i en %@ av den här ingrediensen, ange det för att använda det nu och spara det för framtida skanningar.";
+"create.unknown_ingredient.message" = "Vi har ingen gramomvandling för \"%@\" (%@). Om du vet hur många gram det finns i en %@ av den här ingrediensen, ange det för att använda det nu och spara det för framtida recept.";
 "create.unknown_ingredient.unit_fallback" = "Enhet";
 "import.error.duplicate_recipe" = "Ett recept med namnet \"%@\" finns redan. Byt namn på det före import eller be avsändaren att byta namn på sitt recept.";
 "history.error.delete_entry" = "Det gick inte att ta bort den här historikposten.";
@@ -432,3 +433,21 @@
 "create.instructions.move_step.prompt" = "Ange ett stegnummer (1–%d)";
 "create.instructions.move_step.placeholder" = "Stegnummer";
 "create.instructions.move_step.action" = "Flytta";
+
+/* Website import */
+"create.mode.website_import.title" = "Importera från länk";
+"create.mode.website_import.description" = "Klistra in en recept-URL och granska de strukturerade receptdata som Doughy hittar";
+"website_import.title" = "Importera från länk";
+"website_import.section.url" = "Receptlänk";
+"website_import.footer" = "Doughy importerar receptdata från webbplatser som publicerar strukturerade receptdetaljer.";
+"website_import.progress" = "Importerar recept…";
+"website_import.action.import" = "Importera";
+"website_import.error.title" = "Import misslyckades";
+"website_import.error.invalid_url" = "Ange en giltig recept-URL.";
+"website_import.error.request_failed" = "Det gick inte att läsa in sidan. Kontrollera URL:en och försök igen.";
+"website_import.error.no_recipe_data" = "Den sidan innehåller ännu inte strukturerade receptdata som Doughy kan importera.";
+"website_import.error.missing_ingredients" = "Doughy hittade ett recept på sidan, men den innehöll ingen ingredienslista.";
+"website_import.default_recipe_name" = "Importerat recept";
+"share_extension.opening" = "Öppnar Doughy…";
+"share_extension.no_url" = "Doughy hittade ingen recept-URL att importera.";
+"share_extension.open_failed" = "Doughy kunde inte öppna importflödet. Öppna Doughy och använd Importera från länk.";

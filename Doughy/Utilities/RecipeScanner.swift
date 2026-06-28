@@ -121,6 +121,7 @@ enum ParsedIngredientCategory: String, Sendable {
 
     // Fats and oils
     case butter
+    case margarine
     case oliveOil
     case vegetableOil
     case coconutOil
@@ -191,7 +192,7 @@ struct ParsedIngredient: Sendable {
         wholeWheatFlour, "Diamond Crystal kosher salt" -> diamondCrystalKosherSalt, "Morton \
         kosher salt" -> mortonKosherSalt, plain "kosher salt" -> mortonKosherSalt, \
         "EVOO" -> oliveOil, \
-        "00 flour" or "pizza flour" -> breadFlour, margarine -> butter, "confectioners' \
+        "00 flour" or "pizza flour" -> breadFlour, margarine -> margarine, "confectioners' \
         sugar" or "icing sugar" -> powderedSugar, "caster sugar" or "superfine sugar" -> \
         granulatedSugar, "demerara sugar", "turbinado sugar", or "raw sugar" -> brownSugar, \
         cocoa or cocoa powder -> cocoaPowder, chocolate chips/chunks/disks/fèves -> \
@@ -522,8 +523,8 @@ struct RecipeScanner {
             return .mortonKosherSalt
         }
         // The model occasionally assigns a density-based category to a plain
-        // "egg"/"eggs" ingredient, which would make the resolver treat it like a
-        // volume-based ingredient instead of preserving it as a count.
+        // "egg"/"eggs" ingredient. Treat it as eggs so the resolver uses the
+        // configured default egg size instead of a density-based volume weight.
         if lowerName.range(of: #"\beggs?\b"#, options: .regularExpression) != nil {
             return .eggs
         }
@@ -597,11 +598,24 @@ struct RecipeScanner {
             return resolved(weightGrams: ingredient.weightGrams)
         }
 
-        // Egg counts are useful, but they shouldn't silently become baker's
-        // percentages unless the recipe gives an actual gram weight. Keep them as
-        // count-based extras so the import flow can offer its existing egg-to-grams
-        // conversion prompt.
-        if ingredient.volumeUnit == .egg || ingredient.volumeUnit == .count || (category == .eggs && !ingredient.hasExplicitWeightGrams) {
+        // Egg counts are a supported unit, not an unknown extra. Use the parsed size
+        // when present, or the user's default egg size for plain "egg"/"eggs".
+        let shouldResolveAsEggCount = ingredient.volumeAmount > 0
+            && !ingredient.hasExplicitWeightGrams
+            && (ingredient.volumeUnit == .egg || category == .eggs)
+        if shouldResolveAsEggCount {
+            return resolved(
+                weightGrams: gramsForVolume(amount: ingredient.volumeAmount,
+                                            unit: .egg,
+                                            category: .eggs,
+                                            eggSize: ingredient.eggSize,
+                                            eggPart: ingredient.eggPart)
+            )
+        }
+
+        // Non-egg counts are useful context, but they shouldn't silently become
+        // baker's percentages unless the recipe gives an actual gram weight.
+        if ingredient.volumeUnit == .count {
             return resolved(weightGrams: 0,
                             isExtra: true,
                             extraAmount: ingredient.volumeAmount,
@@ -1209,7 +1223,8 @@ struct RecipeScanner {
         if lower.contains("powdered sugar") || lower.contains("confectioners") || lower.contains("icing sugar") { return .powderedSugar }
         if lower.contains("sugar") { return .granulatedSugar }
         if lower.contains("honey") { return .honey }
-        if lower.contains("butter") || lower.contains("margarine") { return .butter }
+        if lower.contains("margarine") { return .margarine }
+        if lower.contains("butter") { return .butter }
         if lower.contains("olive oil") { return .oliveOil }
         if lower.contains("vegetable oil") || lower.contains("neutral oil") { return .vegetableOil }
         if lower.contains("milk") { return .milk }

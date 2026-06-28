@@ -39,6 +39,7 @@
 "density.ingredient.brown_sugar" = "Açúcar mascavo";
 "density.ingredient.buckwheat_flour" = "Farinha de trigo sarraceno";
 "density.ingredient.butter" = "Manteiga";
+"density.ingredient.margarine" = "Margarina";
 "density.ingredient.buttermilk" = "Leitelho";
 "density.ingredient.cake_flour" = "Farinha para bolo";
 "density.ingredient.chocolate_chips" = "Gotas de chocolate";
@@ -151,7 +152,7 @@
 "create.title.main_dough" = "Massa principal";
 "create.title.new" = "Nova receita";
 "create.unknown_ingredient.grams_per_unit" = "Gramas por %@";
-"create.unknown_ingredient.message" = "Não temos uma conversão em gramas para \"%@\" (%@). Se você sabe quantas gramas há em um %@, informe para usar agora e lembrar em digitalizações futuras.";
+"create.unknown_ingredient.message" = "Não temos uma conversão em gramas para \"%@\" (%@). Se você sabe quantas gramas há em um %@, informe para usar agora e lembrar em receitas futuras.";
 "create.unknown_ingredient.unit_fallback" = "unidade";
 "import.error.duplicate_recipe" = "Já existe uma receita chamada \"%@\". Renomeie-a antes de importar, ou peça ao remetente que renomeie a dele.";
 "history.error.delete_entry" = "Não foi possível excluir esta entrada do histórico.";
@@ -423,3 +424,21 @@
 "create.instructions.move_step.prompt" = "Digite um número de etapa (1–%d)";
 "create.instructions.move_step.placeholder" = "Número da etapa";
 "create.instructions.move_step.action" = "Mover";
+
+/* Website import */
+"create.mode.website_import.title" = "Importar de link";
+"create.mode.website_import.description" = "Cole a URL de uma receita e revise os dados estruturados que o Doughy encontrar";
+"website_import.title" = "Importar de link";
+"website_import.section.url" = "Link da receita";
+"website_import.footer" = "O Doughy importa dados de receitas de sites que publicam detalhes estruturados.";
+"website_import.progress" = "Importando receita…";
+"website_import.action.import" = "Importar";
+"website_import.error.title" = "Importação falhou";
+"website_import.error.invalid_url" = "Insira uma URL de receita válida.";
+"website_import.error.request_failed" = "Não foi possível carregar essa página. Verifique a URL e tente novamente.";
+"website_import.error.no_recipe_data" = "Essa página ainda não inclui dados estruturados de receita que o Doughy possa importar.";
+"website_import.error.missing_ingredients" = "O Doughy encontrou uma receita nessa página, mas ela não incluía uma lista de ingredientes.";
+"website_import.default_recipe_name" = "Receita importada";
+"share_extension.opening" = "Abrindo o Doughy…";
+"share_extension.no_url" = "O Doughy não encontrou uma URL de receita para importar.";
+"share_extension.open_failed" = "O Doughy não conseguiu abrir o fluxo de importação. Abra o Doughy e use Importar de link.";

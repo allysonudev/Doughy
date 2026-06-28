@@ -54,9 +54,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         self.window = window
         window.makeKeyAndVisible()
 
-        // Handle a .doughy file that launched the app cold.
+        // Handle a .doughy file or website import link that launched the app cold.
         if let url = connectionOptions.urlContexts.first?.url {
-            handleIncomingFile(url: url)
+            handleIncomingURL(url)
         }
 
         registerScanShortcutIfSupported()
@@ -68,7 +68,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
         guard let url = URLContexts.first?.url else { return }
-        handleIncomingFile(url: url)
+        handleIncomingURL(url)
     }
 
     // Registers the "Scan a Recipe" home-screen quick action only on devices where
@@ -91,10 +91,21 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         #endif
     }
 
-    private func handleIncomingFile(url: URL) {
+    private func handleIncomingURL(_ url: URL) {
+        if handleIncomingFile(url: url) {
+            return
+        }
+
+        guard let request = WebsiteRecipeImportRequest(incomingURL: url) else { return }
+        store?.pendingWebsiteImport = request
+    }
+
+    @discardableResult
+    private func handleIncomingFile(url: URL) -> Bool {
         guard url.pathExtension.lowercased() == RecipeFile.fileExtension,
-              let payload = RecipeFile.load(from: url) else { return }
+              let payload = RecipeFile.load(from: url) else { return false }
         store?.pendingImport = payload
+        return true
     }
 
     func windowScene(_ windowScene: UIWindowScene,

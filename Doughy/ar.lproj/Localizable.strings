@@ -39,6 +39,7 @@
 "density.ingredient.brown_sugar" = "سكر بني";
 "density.ingredient.buckwheat_flour" = "دقيق الحنطة السوداء";
 "density.ingredient.butter" = "زبدة";
+"density.ingredient.margarine" = "مارغرين";
 "density.ingredient.buttermilk" = "لبن رائب";
 "density.ingredient.cake_flour" = "دقيق الكعك";
 "density.ingredient.chocolate_chips" = "رقائق الشوكولاتة";
@@ -153,7 +154,7 @@
 "create.title.main_dough" = "العجين الرئيسي";
 "create.title.new" = "وصفة جديدة";
 "create.unknown_ingredient.grams_per_unit" = "غرامات لكل %@";
-"create.unknown_ingredient.message" = "لا يتوفر لدينا تحويل غرامات لـ \"%1$@\" (%2$@). إن كنت تعرف عدد الغرامات في %3$@ واحدة، أدخله لاستخدامه الآن وتذكّره في عمليات المسح المستقبلية.";
+"create.unknown_ingredient.message" = "لا يتوفر لدينا تحويل غرامات لـ \"%1$@\" (%2$@). إن كنت تعرف عدد الغرامات في %3$@ واحدة، أدخله لاستخدامه الآن وتذكّره في الوصفات المستقبلية.";
 "create.unknown_ingredient.unit_fallback" = "وحدة";
 "import.error.duplicate_recipe" = "توجد وصفة باسم \"%@\" بالفعل. أعد تسميتها قبل الاستيراد، أو اطلب من المُرسِل إعادة تسميتها.";
 "history.error.delete_entry" = "تعذّر حذف هذا الإدخال في السجل.";
@@ -424,3 +425,21 @@
 "create.instructions.move_step.prompt" = "أدخل رقم الخطوة (1–%d)";
 "create.instructions.move_step.placeholder" = "رقم الخطوة";
 "create.instructions.move_step.action" = "نقل";
+
+/* Website import */
+"create.mode.website_import.title" = "استيراد من رابط";
+"create.mode.website_import.description" = "الصق رابط وصفة وراجع بيانات الوصفة المنظمة التي يجدها Doughy";
+"website_import.title" = "استيراد من رابط";
+"website_import.section.url" = "رابط الوصفة";
+"website_import.footer" = "يستورد Doughy بيانات الوصفات من المواقع التي تنشر تفاصيل وصفات منظمة.";
+"website_import.progress" = "جارٍ استيراد الوصفة…";
+"website_import.action.import" = "استيراد";
+"website_import.error.title" = "فشل الاستيراد";
+"website_import.error.invalid_url" = "أدخل رابط وصفة صالحاً.";
+"website_import.error.request_failed" = "تعذّر تحميل تلك الصفحة. تحقق من الرابط وحاول مرة أخرى.";
+"website_import.error.no_recipe_data" = "لا تتضمن تلك الصفحة بعد بيانات وصفة منظمة يمكن لـ Doughy استيرادها.";
+"website_import.error.missing_ingredients" = "وجد Doughy وصفة في تلك الصفحة، لكنها لم تتضمن قائمة مكونات.";
+"website_import.default_recipe_name" = "وصفة مستوردة";
+"share_extension.opening" = "جارٍ فتح Doughy…";
+"share_extension.no_url" = "لم يجد Doughy رابط وصفة لاستيراده.";
+"share_extension.open_failed" = "تعذّر على Doughy فتح مسار الاستيراد. افتح Doughy واستخدم الاستيراد من رابط.";

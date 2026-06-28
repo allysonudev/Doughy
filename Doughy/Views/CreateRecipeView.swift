@@ -281,8 +281,8 @@ private struct ExtraIngredientConversionSheetData: Identifiable {
     var candidates: [ExtraIngredientConversionCandidate]
 }
 
-/// A scanned ingredient with no gram conversion, awaiting the user's input on whether
-/// they know a gram conversion for it.
+/// A scanned/imported ingredient with no gram conversion, awaiting the user's input on
+/// whether they know a gram conversion for it.
 private struct PendingConversion: Identifiable {
     var id = UUID()
     var name: String
@@ -406,6 +406,7 @@ struct CreateRecipeView: View {
     let copyingRecipe: (any RecipeProtocol)?
     let initialScanImage: UIImage?
     let openScanOptionsOnAppear: Bool
+    let initialWebsiteImportURL: URL?
 
     @Environment(RecipeStore.self) private var store
     @Environment(\.dismiss) private var dismiss
@@ -417,6 +418,8 @@ struct CreateRecipeView: View {
     @State private var showScanOptions = false
     @State private var showPhotoPicker = false
     @State private var showCamera = false
+    @State private var showWebsiteImportSheet = false
+    @State private var websiteImportSheetInitialURL: URL?
     @State private var selectedPhotoItem: PhotosPickerItem?
     @State private var isScanning = false
     @State private var scanError: String?
@@ -426,6 +429,7 @@ struct CreateRecipeView: View {
     @State private var sourcePhotoImage: UIImage?
     @State private var sourcePhotoCorner: SourcePhotoCorner = .bottomLeading
     @State private var showSourcePhotoViewer = false
+    @State private var didOpenInitialWebsiteImport = false
 
     // Details
     @State private var recipeName = ""
@@ -492,11 +496,13 @@ struct CreateRecipeView: View {
     init(editingRecipe: (any RecipeProtocol)? = nil,
          copyingRecipe: (any RecipeProtocol)? = nil,
          initialScanImage: UIImage? = nil,
-         openScanOptionsOnAppear: Bool = false) {
+         openScanOptionsOnAppear: Bool = false,
+         initialWebsiteImportURL: URL? = nil) {
         self.editingRecipe = editingRecipe
         self.copyingRecipe = copyingRecipe
         self.initialScanImage = initialScanImage
         self.openScanOptionsOnAppear = openScanOptionsOnAppear
+        self.initialWebsiteImportURL = initialWebsiteImportURL
         guard let recipe = editingRecipe ?? copyingRecipe else {
             _initialSnapshot = State(initialValue: DraftSnapshot())
             return
@@ -676,6 +682,7 @@ struct CreateRecipeView: View {
                 }
             }
             .task {
+                openInitialWebsiteImportIfNeeded()
                 openInitialScanOptionsIfNeeded()
                 guard let image = initialScanImage else { return }
                 #if canImport(FoundationModels)
@@ -693,6 +700,16 @@ struct CreateRecipeView: View {
                         Task { await processImage(image) }
                     }
                     #endif
+                }
+            }
+            .sheet(isPresented: $showWebsiteImportSheet) {
+                WebsiteRecipeImportView(initialURL: websiteImportSheetInitialURL) {
+                    showWebsiteImportSheet = false
+                    websiteImportSheetInitialURL = nil
+                } onImport: { draft in
+                    showWebsiteImportSheet = false
+                    websiteImportSheetInitialURL = nil
+                    applyWebsiteDraft(draft)
                 }
             }
             .alert("Save Error", isPresented: Binding(
@@ -762,6 +779,13 @@ struct CreateRecipeView: View {
             showScanOptions = true
         }
         #endif
+    }
+
+    private func openInitialWebsiteImportIfNeeded() {
+        guard let url = initialWebsiteImportURL, !didOpenInitialWebsiteImport else { return }
+        didOpenInitialWebsiteImport = true
+        websiteImportSheetInitialURL = url
+        showWebsiteImportSheet = true
     }
 
     @ViewBuilder
@@ -887,6 +911,15 @@ struct CreateRecipeView: View {
                             try? await Task.sleep(for: .milliseconds(500))
                             isRecipeNameFocused = true
                         }
+                    }
+
+                    ModeCard(
+                        icon: "link",
+                        title: String(localized: "create.mode.website_import.title", defaultValue: "Import from Link"),
+                        description: String(localized: "create.mode.website_import.description", defaultValue: "Paste a recipe URL and review the structured recipe data Doughy finds")
+                    ) {
+                        websiteImportSheetInitialURL = nil
+                        showWebsiteImportSheet = true
                     }
 
                     scanCard
@@ -1450,11 +1483,15 @@ struct CreateRecipeView: View {
 
     // MARK: - Convert additional ingredients to weight
 
-    /// Scans `extraIngredients` for ones that match a known gram conversion (eggs,
-    /// ounces, or volume ingredients with a recognized `IngredientCategory`), so the
-    /// user can choose to fold them into the weight-based ingredients.
+    /// Scans `extraIngredients` for ones that match a known gram conversion (ounces
+    /// or volume ingredients with a recognized `IngredientCategory`), so the user can
+    /// choose to fold them into the weight-based ingredients. Count-based extras stay
+    /// in their original unit.
     private func scanExtraIngredientConversions() -> [ExtraIngredientConversionCandidate] {
         extraIngredients.enumerated().compactMap { index, extra in
+            guard ExtraIngredientConversion.canSuggestWeightConversion(for: extra.unit) else {
+                return nil
+            }
             guard let suggestion = ExtraIngredientConversion.suggest(name: extra.name, amount: extra.amount, unit: extra.unit) else {
                 return nil
             }
@@ -2024,6 +2061,71 @@ struct CreateRecipeView: View {
         .keyboardDismissible()
     }
 
+    // MARK: - Website import processing
+
+    private func applyWebsiteDraft(_ draft: WebsiteRecipeDraft) {
+        recipeName = draft.name
+        inputMode = .byWeight
+        defaultWeight = nil
+        detectedRecipeLanguage = nil
+        containsPreferment = false
+        prefermentName = ""
+        prefermentFlourPercent = nil
+        prefermentFlours = [FlourRow()]
+        prefermentIngredientRows = [IngredientRow()]
+        pendingNameChoices = []
+        pendingConversions = []
+        activeConversion = nil
+        conversionSheetData = nil
+        lastScanDiagnostics = nil
+        sourcePhotoImage = nil
+
+        let weightedIngredients = draft.resolvedIngredients
+            .filter { !$0.isExtra && $0.weightGrams > 0 }
+        let totalFlourWeight = weightedIngredients
+            .filter(\.isFlour)
+            .reduce(0) { $0 + $1.weightGrams }
+
+        let importedFlours = weightedIngredients
+            .filter(\.isFlour)
+            .map { FlourRow(name: $0.name, value: $0.weightGrams) }
+        flours = importedFlours.isEmpty ? [FlourRow()] : importedFlours
+
+        var importedIngredients = weightedIngredients
+            .filter { !$0.isFlour }
+            .map { IngredientRow(name: $0.name, value: $0.weightGrams) }
+
+        let resolvedLines = Set(draft.resolvedIngredients.map(\.originalLine))
+        let unresolvedRows = draft.ingredientLines
+            .filter { !resolvedLines.contains($0) }
+            .map { IngredientRow(name: $0, value: nil) }
+        importedIngredients.append(contentsOf: unresolvedRows)
+        ingredients = importedIngredients.isEmpty ? [IngredientRow()] : importedIngredients
+
+        lastTotalFlourWeight = totalFlourWeight
+        lastTotalPrefFlourWeight = 0
+        extraIngredients = []
+        pendingConversions = []
+        for extra in draft.resolvedIngredients where extra.isExtra && extra.extraAmount > 0 {
+            if !ExtraIngredientConversion.canLearnGramConversion(for: extra.extraUnit)
+                || IngredientConversionStore.shared.isAlwaysExtra(name: extra.name, unit: extra.extraUnit) {
+                extraIngredients.append(ExtraIngredientRow(name: extra.name,
+                                                           amount: extra.extraAmount,
+                                                           unit: extra.extraUnit,
+                                                           isPreferment: false))
+            } else {
+                pendingConversions.append(PendingConversion(name: extra.name,
+                                                            amount: extra.extraAmount,
+                                                            unit: extra.extraUnit,
+                                                            isPreferment: false))
+            }
+        }
+
+        instructions = draft.instructions.map { InstructionRow(text: $0) }
+        navPath = [.details]
+        scheduleNextScanPrompt(after: 0.4)
+    }
+
     // MARK: - AI scan processing
 
     #if canImport(FoundationModels)
@@ -2170,20 +2272,23 @@ struct CreateRecipeView: View {
 
         logScanAlternatives(in: parsed.ingredients, queuedPromptCount: pendingNameChoices.count)
 
-        // Extra ingredients with no reliable gram conversion: queue a prompt for each so
+        // Extra ingredients with no reliable volume conversion: queue a prompt for each so
         // the user can teach us the conversion (used now and remembered for next time)
-        // or leave it in its original unit.
+        // or leave it in its original unit. Count-based extras are not learnable volume
+        // conversions, so they stay as extras without prompting.
         lastTotalFlourWeight = totalFlourWeight
         lastTotalPrefFlourWeight = totalPrefFlourWeight
         extraIngredients = []
         pendingConversions = []
         for extra in extras {
-            if IngredientConversionStore.shared.isAlwaysExtra(name: extra.name, unit: extra.extraUnit.rawValue) {
+            let unit = extra.extraUnit.rawValue
+            if !ExtraIngredientConversion.canLearnGramConversion(for: unit)
+                || IngredientConversionStore.shared.isAlwaysExtra(name: extra.name, unit: unit) {
                 extraIngredients.append(ExtraIngredientRow(name: extra.name, amount: extra.extraAmount,
-                                                             unit: extra.extraUnit.rawValue, isPreferment: extra.isPreferment))
+                                                             unit: unit, isPreferment: extra.isPreferment))
             } else {
                 pendingConversions.append(PendingConversion(name: extra.name, amount: extra.extraAmount,
-                                                              unit: extra.extraUnit.rawValue, isPreferment: extra.isPreferment))
+                                                              unit: unit, isPreferment: extra.isPreferment))
             }
         }
 
@@ -2320,30 +2425,11 @@ struct CreateRecipeView: View {
             IngredientConversionStore.shared.save(name: pending.name, unit: pending.unit, gramsPerUnit: perUnit)
             let totalGrams = pending.amount * perUnit
 
-            if pending.isPreferment {
-                guard lastTotalPrefFlourWeight > 0 else {
-                    extraIngredients.append(ExtraIngredientRow(name: pending.name, amount: pending.amount,
-                                                                 unit: pending.unit, isPreferment: pending.isPreferment))
-                    return
-                }
-                let percent = totalGrams / lastTotalPrefFlourWeight * 100
-                if prefermentIngredientRows.count == 1, prefermentIngredientRows[0].name.trimmingCharacters(in: .whitespaces).isEmpty {
-                    prefermentIngredientRows[0] = IngredientRow(name: pending.name, value: percent)
-                } else {
-                    prefermentIngredientRows.append(IngredientRow(name: pending.name, value: percent))
-                }
+            if let value = convertedValue(grams: totalGrams, isPreferment: pending.isPreferment) {
+                addConvertedIngredient(name: pending.name, value: value, isPreferment: pending.isPreferment)
             } else {
-                guard lastTotalFlourWeight > 0 else {
-                    extraIngredients.append(ExtraIngredientRow(name: pending.name, amount: pending.amount,
-                                                                 unit: pending.unit, isPreferment: pending.isPreferment))
-                    return
-                }
-                let percent = totalGrams / lastTotalFlourWeight * 100
-                if ingredients.count == 1, ingredients[0].name.trimmingCharacters(in: .whitespaces).isEmpty {
-                    ingredients[0] = IngredientRow(name: pending.name, value: percent)
-                } else {
-                    ingredients.append(IngredientRow(name: pending.name, value: percent))
-                }
+                extraIngredients.append(ExtraIngredientRow(name: pending.name, amount: pending.amount,
+                                                             unit: pending.unit, isPreferment: pending.isPreferment))
             }
         } else {
             IngredientConversionStore.shared.markAsExtra(name: pending.name, unit: pending.unit)

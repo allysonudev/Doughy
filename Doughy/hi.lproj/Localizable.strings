@@ -39,6 +39,7 @@
 "density.ingredient.brown_sugar" = "ब्राउन शुगर";
 "density.ingredient.buckwheat_flour" = "कुट्टू का आटा";
 "density.ingredient.butter" = "मक्खन";
+"density.ingredient.margarine" = "मार्जरीन";
 "density.ingredient.buttermilk" = "छाछ";
 "density.ingredient.cake_flour" = "केक फ़्लोर";
 "density.ingredient.chocolate_chips" = "चॉकलेट चिप्स";
@@ -153,7 +154,7 @@
 "create.title.main_dough" = "मुख्य डो";
 "create.title.new" = "नई रेसिपी";
 "create.unknown_ingredient.grams_per_unit" = "प्रति %@ ग्राम";
-"create.unknown_ingredient.message" = "हमारे पास \"%@\" (%@) के लिए ग्राम रूपांतरण नहीं है। यदि आप जानते हैं कि एक %@ में कितने ग्राम होते हैं, तो इसे अभी उपयोग करने और भविष्य के स्कैन के लिए याद रखने हेतु दर्ज करें।";
+"create.unknown_ingredient.message" = "हमारे पास \"%@\" (%@) के लिए ग्राम रूपांतरण नहीं है। यदि आप जानते हैं कि एक %@ में कितने ग्राम होते हैं, तो इसे अभी उपयोग करने और भविष्य की रेसिपी के लिए याद रखने हेतु दर्ज करें।";
 "create.unknown_ingredient.unit_fallback" = "इकाई";
 "import.error.duplicate_recipe" = "\"%@\" नाम की रेसिपी पहले से मौजूद है। आयात करने से पहले इसका नाम बदलें, या भेजने वाले से उनका नाम बदलने को कहें।";
 "history.error.delete_entry" = "यह इतिहास प्रविष्टि हटाई नहीं जा सकी।";
@@ -423,3 +424,21 @@
 "create.instructions.move_step.prompt" = "चरण संख्या दर्ज करें (1–%d)";
 "create.instructions.move_step.placeholder" = "चरण संख्या";
 "create.instructions.move_step.action" = "ले जाएं";
+
+/* Website import */
+"create.mode.website_import.title" = "लिंक से आयात करें";
+"create.mode.website_import.description" = "रेसिपी URL पेस्ट करें और Doughy द्वारा मिले संरचित रेसिपी डेटा की समीक्षा करें";
+"website_import.title" = "लिंक से आयात करें";
+"website_import.section.url" = "रेसिपी लिंक";
+"website_import.footer" = "Doughy उन साइटों से रेसिपी डेटा आयात करता है जो संरचित रेसिपी विवरण प्रकाशित करती हैं।";
+"website_import.progress" = "रेसिपी आयात हो रही है…";
+"website_import.action.import" = "आयात करें";
+"website_import.error.title" = "आयात विफल";
+"website_import.error.invalid_url" = "एक मान्य रेसिपी URL दर्ज करें।";
+"website_import.error.request_failed" = "वह पेज लोड नहीं किया जा सका। URL जाँचें और फिर से प्रयास करें।";
+"website_import.error.no_recipe_data" = "उस पेज में अभी ऐसा संरचित रेसिपी डेटा नहीं है जिसे Doughy आयात कर सके।";
+"website_import.error.missing_ingredients" = "Doughy को उस पेज पर रेसिपी मिली, लेकिन उसमें सामग्री सूची शामिल नहीं थी।";
+"website_import.default_recipe_name" = "आयातित रेसिपी";
+"share_extension.opening" = "Doughy खुल रहा है…";
+"share_extension.no_url" = "Doughy को आयात करने के लिए कोई रेसिपी URL नहीं मिला।";
+"share_extension.open_failed" = "Doughy आयात प्रवाह नहीं खोल सका। Doughy खोलें और लिंक से आयात करें का उपयोग करें।";

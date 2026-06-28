@@ -39,6 +39,7 @@
 "density.ingredient.brown_sugar" = "Brown Sugar";
 "density.ingredient.buckwheat_flour" = "Buckwheat Flour";
 "density.ingredient.butter" = "Butter";
+"density.ingredient.margarine" = "Margarine";
 "density.ingredient.buttermilk" = "Buttermilk";
 "density.ingredient.cake_flour" = "Cake Flour";
 "density.ingredient.chocolate_chips" = "Chocolate Chips";
@@ -153,7 +154,7 @@
 "create.title.main_dough" = "Main Dough";
 "create.title.new" = "New Recipe";
 "create.unknown_ingredient.grams_per_unit" = "Grams per %@";
-"create.unknown_ingredient.message" = "We don't have a gram conversion for \"%@\" (%@). If you know how many grams are in one %@, enter it to use it now and remember it for future scans.";
+"create.unknown_ingredient.message" = "We don't have a gram conversion for \"%@\" (%@). If you know how many grams are in one %@, enter it to use it now and remember it for future recipes.";
 "create.unknown_ingredient.unit_fallback" = "unit";
 "import.error.duplicate_recipe" = "A recipe named \"%@\" already exists. Rename it before importing, or ask the sender to rename theirs.";
 "history.error.delete_entry" = "Could not delete this history entry.";
@@ -402,3 +403,21 @@
 "create.instructions.move_step.prompt" = "Enter a step number (1–%d)";
 "create.instructions.move_step.placeholder" = "Step number";
 "create.instructions.move_step.action" = "Move";
+
+/* Website import */
+"create.mode.website_import.title" = "Import from Link";
+"create.mode.website_import.description" = "Paste a recipe URL and review the structured recipe data Doughy finds";
+"website_import.title" = "Import from Link";
+"website_import.section.url" = "Recipe Link";
+"website_import.footer" = "Doughy imports recipe data from sites that publish structured recipe details.";
+"website_import.progress" = "Importing recipe…";
+"website_import.action.import" = "Import";
+"website_import.error.title" = "Import Failed";
+"website_import.error.invalid_url" = "Enter a valid recipe URL.";
+"website_import.error.request_failed" = "Could not load that page. Check the URL and try again.";
+"website_import.error.no_recipe_data" = "That page doesn't include structured recipe data that Doughy can import yet.";
+"website_import.error.missing_ingredients" = "Doughy found a recipe on that page, but it did not include an ingredient list.";
+"website_import.default_recipe_name" = "Imported Recipe";
+"share_extension.opening" = "Opening Doughy…";
+"share_extension.no_url" = "Doughy couldn’t find a recipe URL to import.";
+"share_extension.open_failed" = "Doughy couldn’t open the import flow. Try opening Doughy and using Import from Link.";

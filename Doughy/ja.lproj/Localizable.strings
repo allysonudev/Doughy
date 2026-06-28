@@ -45,6 +45,7 @@
 "density.ingredient.brown_sugar" = "ブラウンシュガー";
 "density.ingredient.buckwheat_flour" = "そば粉";
 "density.ingredient.butter" = "バター";
+"density.ingredient.margarine" = "マーガリン";
 "density.ingredient.buttermilk" = "バターミルク";
 "density.ingredient.cake_flour" = "薄力粉（ケーキ用）";
 "density.ingredient.chocolate_chips" = "チョコレートチップ";
@@ -160,7 +161,7 @@
 "create.title.main_dough" = "メイン生地";
 "create.title.new" = "新しいレシピ";
 "create.unknown_ingredient.grams_per_unit" = "%@ あたりのグラム数";
-"create.unknown_ingredient.message" = "「%@」（%@）のグラム換算値がありません。1 %@ あたりのグラム数がわかれば入力することで、今後のスキャンにも記憶されます。";
+"create.unknown_ingredient.message" = "「%@」（%@）のグラム換算値がありません。1 %@ あたりのグラム数がわかれば入力することで、今後のレシピにも記憶されます。";
 "create.unknown_ingredient.unit_fallback" = "単位";
 "import.error.duplicate_recipe" = "「%@」という名前のレシピがすでに存在します。インポートする前に名前を変更するか、送信者に名前を変えるよう依頼してください。";
 "history.error.delete_entry" = "この履歴エントリを削除できませんでした。";
@@ -432,3 +433,21 @@
 "create.instructions.move_step.prompt" = "ステップ番号を入力（1–%d）";
 "create.instructions.move_step.placeholder" = "ステップ番号";
 "create.instructions.move_step.action" = "移動";
+
+/* Website import */
+"create.mode.website_import.title" = "リンクから読み込む";
+"create.mode.website_import.description" = "レシピのURLを貼り付け、Doughyが見つけた構造化レシピデータを確認します";
+"website_import.title" = "リンクから読み込む";
+"website_import.section.url" = "レシピリンク";
+"website_import.footer" = "Doughyは、構造化されたレシピ情報を公開しているサイトからレシピデータを読み込みます。";
+"website_import.progress" = "レシピを読み込み中…";
+"website_import.action.import" = "読み込む";
+"website_import.error.title" = "インポート失敗";
+"website_import.error.invalid_url" = "有効なレシピURLを入力してください。";
+"website_import.error.request_failed" = "そのページを読み込めませんでした。URLを確認してもう一度お試しください。";
+"website_import.error.no_recipe_data" = "そのページには、Doughyがまだ読み込める構造化レシピデータが含まれていません。";
+"website_import.error.missing_ingredients" = "Doughyはそのページでレシピを見つけましたが、材料リストが含まれていませんでした。";
+"website_import.default_recipe_name" = "読み込んだレシピ";
+"share_extension.opening" = "Doughyを開いています…";
+"share_extension.no_url" = "インポートするレシピURLが見つかりませんでした。";
+"share_extension.open_failed" = "インポート画面を開けませんでした。Doughyを開いて「リンクから読み込む」を使用してください。";

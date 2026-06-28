@@ -41,6 +41,7 @@
 "density.ingredient.brown_sugar" = "Púðursykur";
 "density.ingredient.buckwheat_flour" = "Bókhveiti-mjöl";
 "density.ingredient.butter" = "Smjör";
+"density.ingredient.margarine" = "Smjörlíki";
 "density.ingredient.buttermilk" = "Súrmjólk";
 "density.ingredient.cake_flour" = "Kökumjöl";
 "density.ingredient.chocolate_chips" = "Súkkulaðiflísar";
@@ -153,7 +154,7 @@
 "create.title.main_dough" = "Aðaldeig";
 "create.title.new" = "Ný uppskrift";
 "create.unknown_ingredient.grams_per_unit" = "Grömm á %@";
-"create.unknown_ingredient.message" = "Við höfum ekki grammabreyti fyrir \"%@\" (%@). Ef þú veist hversu mörg grömm eru í einum %@, sláðu það inn til að nota það núna og muna það við framtíðar skanninga.";
+"create.unknown_ingredient.message" = "Við höfum ekki grammabreyti fyrir \"%@\" (%@). Ef þú veist hversu mörg grömm eru í einum %@, sláðu það inn til að nota það núna og muna það fyrir uppskriftir í framtíðinni.";
 "create.unknown_ingredient.unit_fallback" = "eining";
 "import.error.duplicate_recipe" = "Uppskrift að nafni \"%@\" er þegar til. Endurnefndu hana áður en þú flytur hana inn, eða biddu sendanda um að endurnefna sína.";
 "history.error.delete_entry" = "Tókst ekki að eyða þessari sögulegri færslu.";
@@ -425,3 +426,21 @@
 "create.instructions.move_step.prompt" = "Sláðu inn skrefanúmer (1–%d)";
 "create.instructions.move_step.placeholder" = "Skrefanúmer";
 "create.instructions.move_step.action" = "Færa";
+
+/* Website import */
+"create.mode.website_import.title" = "Flytja inn úr tengli";
+"create.mode.website_import.description" = "Límdu inn uppskriftarslóð og farðu yfir skipulögð uppskriftargögn sem Doughy finnur";
+"website_import.title" = "Flytja inn úr tengli";
+"website_import.section.url" = "Uppskriftartengill";
+"website_import.footer" = "Doughy flytur inn uppskriftargögn af síðum sem birta skipulagðar uppskriftarupplýsingar.";
+"website_import.progress" = "Flyt inn uppskrift…";
+"website_import.action.import" = "Flytja inn";
+"website_import.error.title" = "Innflutningur mistókst";
+"website_import.error.invalid_url" = "Sláðu inn gilda uppskriftarslóð.";
+"website_import.error.request_failed" = "Tókst ekki að hlaða þessari síðu. Athugaðu slóðina og reyndu aftur.";
+"website_import.error.no_recipe_data" = "Þessi síða inniheldur ekki enn skipulögð uppskriftargögn sem Doughy getur flutt inn.";
+"website_import.error.missing_ingredients" = "Doughy fann uppskrift á þessari síðu, en hún innihélt ekki hráefnalista.";
+"website_import.default_recipe_name" = "Innflutt uppskrift";
+"share_extension.opening" = "Opna Doughy…";
+"share_extension.no_url" = "Doughy fann enga uppskriftarslóð til að flytja inn.";
+"share_extension.open_failed" = "Doughy gat ekki opnað innflutningsferlið. Opnaðu Doughy og notaðu Flytja inn úr tengli.";

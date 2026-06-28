@@ -25,6 +25,7 @@ class RecipeStore {
     private(set) var collections: [RecipeCollection] = []
     private(set) var deletedRecipes: [DeletedRecipe] = []
     var pendingImport: RecipeFilePayload? = nil
+    var pendingWebsiteImport: WebsiteRecipeImportRequest? = nil
     var pendingIntentImage: UIImage? = nil
     var pendingShareIntent: PendingShareRequest? = nil
     var pendingOpenIntent: PendingOpenRecipeRequest? = nil

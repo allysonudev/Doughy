@@ -44,8 +44,7 @@ final class RecipeScannerTests: XCTestCase {
             Flour: 545g all-purpose flour (100%, exact).
             Dough: whole milk ~243g by default (240ml milk with the default US-cup \
             basis), water 60g (60ml), granulated \
-            sugar 50g, active dry yeast 7g, butter 42g, kosher salt 7g, egg as an \
-            extra count (no weight given).
+            sugar 50g, active dry yeast 7g, butter 42g, kosher salt 7g, large egg 50g.
             To assemble: granulated sugar 265g, ground cinnamon 6g (explicit grams win \
             over the teaspoon amount), butter 113g.
             Brown sugar drizzle: butter 113g, light brown sugar 150g (5oz).
@@ -59,14 +58,14 @@ final class RecipeScannerTests: XCTestCase {
             Flour: 480g all-purpose flour (4 cups @120g/cup) (100%, estimated).
             Dough: active dry yeast 7g (1 package), water \
             ~236.6g (1 cup), sugar 99g (1/2 cup), margarine/butter ~170g (3/4 cup, mapped \
-            to butter), eggs as extra counts, salt 6g (1 tsp), vegetable oil ~13.6g (1 tbsp).
+            to margarine), large eggs 100g, salt 6g (1 tsp), vegetable oil ~13.6g (1 tbsp).
             Filling: dark brown sugar ~106.5g (1/2 cup), butter ~57g (1/4 cup); ground \
             cinnamon (2 tbsp), grated orange zest (1 tbsp), golden raisins (1/2 cup), and \
             chopped walnuts (1/2 cup) all have only volume amounts in low-confidence \
             categories with no learned conversion, so expect each flagged "extra" in its \
             original unit.
             Glaze: water ~59.1g (1/4 cup), confectioners' sugar 226g (2 cups, mapped to \
-            powderedSugar); orange zest and egg white are extra counts.
+            powderedSugar); orange zest is an extra count, and the large egg white is ~33g.
             """,
         "partial_recipe": """
             Flour: 450g all-purpose flour (100%, exact). This crop shows the frosting, \
@@ -123,8 +122,8 @@ final class RecipeScannerTests: XCTestCase {
             Flour: 500g strong white flour (100%, exact).
             Butter 80g, caster sugar 80g (mapped to granulatedSugar, exact grams given), \
             baking powder ~20g (5 tsp @192g/cup), milk ~253.6g (250ml, mapped via milk \
-            density); 2 free-range eggs and the egg+salt glaze are counts with no \
-            quantity, ~0g. Serving items (butter, jam, clotted cream) have no quantities, \
+            density); 2 free-range eggs use the default egg size (~100g when large), and \
+            the egg+salt glaze has no quantity, ~0g. Serving items (butter, jam, clotted cream) have no quantities, \
             ~0g / not parsed.
             """,
         "nyt_chocolate_chip_cookies": """
@@ -133,7 +132,7 @@ final class RecipeScannerTests: XCTestCase {
             Baking soda ~5.7g (1 1/4 tsp @220g/cup), baking powder ~6g (1 1/2 tsp \
             @192g/cup), coarse sea salt ~9g (1 1/2 tsp @288g/cup), unsalted butter ~284g \
             (1 1/4 cups @227g/cup), light brown sugar ~284g (10oz, exact), granulated \
-            sugar ~227g (8oz, exact); 2 large eggs as extra counts.
+            sugar ~227g (8oz, exact); 2 large eggs 100g.
             Vanilla extract (2 tsp, no gram) is a low-confidence "other" ingredient with a \
             teaspoon amount, so expect it flagged "extra" 2 teaspoons.
             Bittersweet chocolate disks/fèves ~567g (1 1/4 pounds).
@@ -142,7 +141,7 @@ final class RecipeScannerTests: XCTestCase {
             Flour: 325g all-purpose flour (100%, exact — "2 1/2 cups/325 grams").
             Salted butter 255g (1 cup + 2 tbsp/255g), granulated sugar 100g (1/2 cup/100g), \
             light brown sugar 55g (1/4 cup/55g), chocolate 170g (6oz/170g — explicit grams \
-            win); 1 large egg as an extra count.
+            win); 1 large egg 50g.
             Vanilla extract (1 tsp, no gram) is a low-confidence "other" ingredient with a \
             teaspoon amount, so expect it flagged "extra" 1 teaspoon.
             Demerara sugar for rolling and flaky sea salt for sprinkling have no \
@@ -151,7 +150,7 @@ final class RecipeScannerTests: XCTestCase {
         "brownies_cocoa": """
             Flour: 1/4 cup all-purpose flour = 30g (100% — note this is unusually low, \
             so every other ingredient's percentage will look very large relative to it).
-            Butter 1/2 cup (1 stick) ≈ 113.5g, sugar 1 cup = 200g; 2 eggs as extra counts.
+            Butter 1/2 cup (1 stick) ≈ 113.5g, sugar 1 cup = 200g; 2 eggs use the default egg size.
             Cocoa (1/2 cup), chopped walnuts/pecans (1 cup), and vanilla (1 teaspoon) are \
             all low-confidence categories with only a volume amount and no learned \
             conversion, so expect each flagged "extra" (0.5 cup, 1 cup, 1 teaspoon \
@@ -162,7 +161,7 @@ final class RecipeScannerTests: XCTestCase {
             ingredients' percentages will look very large).
             Butter ~113.5g (8 tbsp @227g/cup), unsweetened chocolate ~113.4g (4oz, exact \
             ounce conversion regardless of category), sugar 250g (1 1/4 cups @200g/cup), \
-            salt ~1.5g (1/4 tsp); 2 eggs as extra counts.
+            salt ~1.5g (1/4 tsp); 2 eggs use the default egg size.
             Vanilla extract (1 tsp) and walnuts/pecans (2/3 cup) are low-confidence \
             categories with only a volume amount and no learned conversion, so expect each \
             flagged "extra" (1 teaspoon and 0.667 cup respectively).
@@ -296,6 +295,18 @@ final class RecipeScannerTests: XCTestCase {
         XCTAssertEqual(suggestion?.grams ?? 0, 4 * UnitConversion.gramsPerOunce, accuracy: 0.001)
     }
 
+    func testUnknownConversionPromptSkipsCountUnits() {
+        XCTAssertFalse(ExtraIngredientConversion.canLearnGramConversion(for: "count"))
+        XCTAssertFalse(ExtraIngredientConversion.canLearnGramConversion(for: "egg"))
+        XCTAssertTrue(ExtraIngredientConversion.canLearnGramConversion(for: "cup"))
+        XCTAssertTrue(ExtraIngredientConversion.canLearnGramConversion(for: "tablespoon"))
+
+        XCTAssertFalse(ExtraIngredientConversion.canSuggestWeightConversion(for: "count"))
+        XCTAssertFalse(ExtraIngredientConversion.canSuggestWeightConversion(for: "egg"))
+        XCTAssertTrue(ExtraIngredientConversion.canSuggestWeightConversion(for: "ounce"))
+        XCTAssertTrue(ExtraIngredientConversion.canSuggestWeightConversion(for: "cup"))
+    }
+
     func testResolverUsesLocalDensityWhenModelInventsGramWeight() throws {
         guard #available(iOS 26, *) else {
             throw XCTSkip("RecipeScanner requires iOS 26.")
@@ -403,7 +414,7 @@ final class RecipeScannerTests: XCTestCase {
         #endif
     }
 
-    func testResolverDoesNotConvertEggCountsToGrams() throws {
+    func testResolverConvertsEggCountsToGrams() throws {
         guard #available(iOS 26, *) else {
             throw XCTSkip("RecipeScanner requires iOS 26.")
         }
@@ -422,16 +433,14 @@ final class RecipeScannerTests: XCTestCase {
 
         let resolved = RecipeScanner.resolve(ingredient)
 
-        XCTAssertEqual(resolved.weightGrams, 0, accuracy: 0.001)
-        XCTAssertTrue(resolved.isExtra)
-        XCTAssertEqual(resolved.extraAmount, 2, accuracy: 0.001)
-        XCTAssertEqual(resolved.extraUnit, .count)
+        XCTAssertFalse(resolved.isExtra)
+        XCTAssertEqual(resolved.weightGrams, 2 * IngredientDensityStore.shared.gramsPerEgg(for: .large), accuracy: 0.001)
         #else
         throw XCTSkip("FoundationModels is not available in this build.")
         #endif
     }
 
-    func testResolverTreatsNonGramEggMassAsCountExtra() throws {
+    func testResolverUsesEggCategoryWhenModelReportsWrongUnit() throws {
         guard #available(iOS 26, *) else {
             throw XCTSkip("RecipeScanner requires iOS 26.")
         }
@@ -450,20 +459,19 @@ final class RecipeScannerTests: XCTestCase {
 
         let resolved = RecipeScanner.resolve(ingredient)
 
-        XCTAssertEqual(resolved.weightGrams, 0, accuracy: 0.001)
-        XCTAssertTrue(resolved.isExtra)
-        XCTAssertEqual(resolved.extraAmount, 2, accuracy: 0.001)
-        XCTAssertEqual(resolved.extraUnit, .count)
+        XCTAssertFalse(resolved.isExtra)
+        XCTAssertEqual(resolved.weightGrams, 2 * IngredientDensityStore.shared.gramsPerEgg(for: .large), accuracy: 0.001)
         #else
         throw XCTSkip("FoundationModels is not available in this build.")
         #endif
     }
 
-    func testResolverNormalizesPlainEggNamesToCountExtras() throws {
+    func testResolverNormalizesPlainEggNamesToDefaultSizedEggWeights() throws {
         guard #available(iOS 26, *) else {
             throw XCTSkip("RecipeScanner requires iOS 26.")
         }
         #if canImport(FoundationModels)
+        let expectedWeight = 2 * IngredientDensityStore.shared.gramsPerEgg(for: IngredientDensityStore.shared.defaultEggSize())
         for name in ["egg", "eggs"] {
             let ingredient = ParsedIngredient(hasExplicitWeightGrams: false,
                                               name: name,
@@ -479,10 +487,8 @@ final class RecipeScannerTests: XCTestCase {
 
             let resolved = RecipeScanner.resolve(ingredient)
 
-            XCTAssertEqual(resolved.weightGrams, 0, accuracy: 0.001, "Expected \(name) to stay count-based")
-            XCTAssertTrue(resolved.isExtra, "Expected \(name) to remain an extra ingredient")
-            XCTAssertEqual(resolved.extraAmount, 2, accuracy: 0.001)
-            XCTAssertEqual(resolved.extraUnit, .count)
+            XCTAssertFalse(resolved.isExtra, "Expected \(name) to become an automatic egg weight")
+            XCTAssertEqual(resolved.weightGrams, expectedWeight, accuracy: 0.001)
         }
         #else
         throw XCTSkip("FoundationModels is not available in this build.")
@@ -687,7 +693,7 @@ final class RecipeScannerTests: XCTestCase {
         XCTAssertTrue(resolved.contains { $0.name == "Active Dry Yeast" && $0.weightGrams == 7 })
         XCTAssertTrue(resolved.contains { $0.name == "Unsalted Butter" && $0.weightGrams == 42 })
         XCTAssertTrue(resolved.contains { $0.name == "Diamond Crystal Kosher Salt" && $0.weightGrams == 7 })
-        XCTAssertTrue(resolved.contains { $0.name == "Large Egg" && $0.isExtra && $0.extraAmount == 1 && $0.extraUnit == .count })
+        XCTAssertTrue(resolved.contains { $0.name == "Large Egg" && !$0.isExtra && $0.weightGrams == IngredientDensityStore.shared.gramsPerEgg(for: .large) })
         XCTAssertTrue(resolved.contains { $0.name == "Ground Cinnamon" && !$0.isExtra && $0.weightGrams == 6 })
         XCTAssertTrue(resolved.contains { $0.name == "Light Brown Sugar" && $0.weightGrams == 150 })
         #else
@@ -810,7 +816,7 @@ final class RecipeScannerTests: XCTestCase {
         let resolved = parsed.ingredients.map(RecipeScanner.resolve)
 
         XCTAssertTrue(resolved.contains { $0.name == "Granulated Sugar" && abs($0.weightGrams - 226.796) < 0.001 })
-        XCTAssertTrue(resolved.contains { $0.name == "Large Eggs" && $0.isExtra && $0.extraAmount == 2 && $0.extraUnit == .count })
+        XCTAssertTrue(resolved.contains { $0.name == "Large Eggs" && !$0.isExtra && $0.weightGrams == 2 * IngredientDensityStore.shared.gramsPerEgg(for: .large) })
         XCTAssertTrue(resolved.contains { $0.name == "Bread Flour" && abs($0.weightGrams - 240.97075) < 0.001 })
         XCTAssertTrue(resolved.contains { $0.name == "Natural Vanilla Extract" && $0.isExtra && $0.extraAmount == 2 })
         #else
@@ -928,11 +934,11 @@ final class RecipeScannerTests: XCTestCase {
         XCTAssertTrue(resolved.contains { $0.name == "Water" && abs($0.weightGrams - 236.588) < 0.001 })
         XCTAssertTrue(resolved.contains { $0.name == "Sugar" && abs($0.weightGrams - 99) < 0.001 })
         XCTAssertTrue(resolved.contains { $0.name == "All-Purpose Flour" && $0.weightGrams == 480 })
-        XCTAssertTrue(resolved.contains { $0.name == "Large Eggs" && $0.isExtra && $0.extraAmount == 2 && $0.extraUnit == .count })
+        XCTAssertTrue(resolved.contains { $0.name == "Large Eggs" && !$0.isExtra && $0.weightGrams == 2 * IngredientDensityStore.shared.gramsPerEgg(for: .large) })
         XCTAssertTrue(resolved.contains { $0.name == "Ground Cinnamon" && $0.isExtra && $0.extraAmount == 2 && $0.extraUnit == .tablespoon })
         XCTAssertTrue(resolved.contains { $0.name == "Confectioners' Sugar" && $0.weightGrams == 226 })
         XCTAssertTrue(resolved.contains { $0.name == "Orange Zest" && $0.isExtra && $0.extraAmount == 1 && $0.extraUnit == .count })
-        XCTAssertTrue(resolved.contains { $0.name == "Large Egg White" && $0.isExtra && $0.extraAmount == 1 && $0.extraUnit == .count })
+        XCTAssertTrue(resolved.contains { $0.name == "Large Egg White" && !$0.isExtra && $0.weightGrams == IngredientDensityStore.shared.gramsPerEgg(for: .large, part: .white) })
         #else
         throw XCTSkip("FoundationModels is not available in this build.")
         #endif
@@ -1021,7 +1027,7 @@ final class RecipeScannerTests: XCTestCase {
         let parsed = RecipeScanner.parseIngredientsLocally(from: text)
         let resolved = parsed.ingredients.map(RecipeScanner.resolve)
 
-        XCTAssertTrue(resolved.contains { $0.name == "Eggs" && $0.isExtra && $0.extraAmount == 2 && $0.extraUnit == .count })
+        XCTAssertTrue(resolved.contains { $0.name == "Eggs" && !$0.isExtra && $0.weightGrams == 2 * IngredientDensityStore.shared.gramsPerEgg(for: IngredientDensityStore.shared.defaultEggSize()) })
         #else
         throw XCTSkip("FoundationModels is not available in this build.")
         #endif

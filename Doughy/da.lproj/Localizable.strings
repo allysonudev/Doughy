@@ -45,6 +45,7 @@
 "density.ingredient.brown_sugar" = "Brun farin";
 "density.ingredient.buckwheat_flour" = "Boghvedemel";
 "density.ingredient.butter" = "Smør";
+"density.ingredient.margarine" = "Margarine";
 "density.ingredient.buttermilk" = "Kærnemælk";
 "density.ingredient.cake_flour" = "Kagemel";
 "density.ingredient.chocolate_chips" = "Chokoladestykker";
@@ -161,7 +162,7 @@
 "create.title.main_dough" = "Hoveddej";
 "create.title.new" = "Ny opskrift";
 "create.unknown_ingredient.grams_per_unit" = "Gram pr. %@";
-"create.unknown_ingredient.message" = "Vi har ingen gramomregning for \"%@\" (%@). Hvis du ved, hvor mange gram der er i én %@ af denne ingrediens, kan du indtaste det for at bruge det nu og gemme det til fremtidige scans.";
+"create.unknown_ingredient.message" = "Vi har ingen gramomregning for \"%@\" (%@). Hvis du ved, hvor mange gram der er i én %@ af denne ingrediens, kan du indtaste det for at bruge det nu og gemme det til fremtidige opskrifter.";
 "create.unknown_ingredient.unit_fallback" = "Enhed";
 "import.error.duplicate_recipe" = "En opskrift ved navn \"%@\" findes allerede. Omdøb den før import, eller bed afsenderen om at omdøbe sin opskrift.";
 "history.error.delete_entry" = "Denne historikpost kunne ikke slettes.";
@@ -432,3 +433,21 @@
 "create.instructions.move_step.prompt" = "Angiv et trinnummer (1–%d)";
 "create.instructions.move_step.placeholder" = "Trinnummer";
 "create.instructions.move_step.action" = "Flyt";
+
+/* Website import */
+"create.mode.website_import.title" = "Importér fra link";
+"create.mode.website_import.description" = "Indsæt en opskrifts-URL, og gennemgå de strukturerede opskriftsdata, som Doughy finder";
+"website_import.title" = "Importér fra link";
+"website_import.section.url" = "Opskriftslink";
+"website_import.footer" = "Doughy importerer opskriftsdata fra websteder, der udgiver strukturerede opskriftsdetaljer.";
+"website_import.progress" = "Importerer opskrift…";
+"website_import.action.import" = "Importér";
+"website_import.error.title" = "Import mislykkedes";
+"website_import.error.invalid_url" = "Indtast en gyldig opskrifts-URL.";
+"website_import.error.request_failed" = "Siden kunne ikke indlæses. Tjek URL'en, og prøv igen.";
+"website_import.error.no_recipe_data" = "Denne side indeholder endnu ikke strukturerede opskriftsdata, som Doughy kan importere.";
+"website_import.error.missing_ingredients" = "Doughy fandt en opskrift på siden, men den indeholdt ikke en ingrediensliste.";
+"website_import.default_recipe_name" = "Importeret opskrift";
+"share_extension.opening" = "Åbner Doughy…";
+"share_extension.no_url" = "Doughy fandt ikke en opskrifts-URL at importere.";
+"share_extension.open_failed" = "Doughy kunne ikke åbne importflowet. Åbn Doughy, og brug Importér fra link.";
