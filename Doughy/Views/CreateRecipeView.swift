@@ -23,6 +23,7 @@ private enum RecipeInputMode {
 private enum StudioStartOption: CaseIterable {
     case percent
     case weight
+    case websiteImport
     case scan
 
     var title: String {
@@ -31,6 +32,8 @@ private enum StudioStartOption: CaseIterable {
             return String(localized: "create.mode.percent.title", defaultValue: "By Baker's Percentage")
         case .weight:
             return String(localized: "create.mode.weight.title", defaultValue: "By Weight")
+        case .websiteImport:
+            return String(localized: "create.mode.website_import.title", defaultValue: "Import from Link")
         case .scan:
             return String(localized: "create.mode.scan.title", defaultValue: "Scan a Recipe")
         }
@@ -42,6 +45,8 @@ private enum StudioStartOption: CaseIterable {
             return String(localized: "create.mode.percent.description", defaultValue: "Best for flour-based doughs where ingredients scale from total flour")
         case .weight:
             return String(localized: "create.mode.weight.description", defaultValue: "Best for entering an existing recipe as-is, recipes without flour, or exact gram amounts")
+        case .websiteImport:
+            return String(localized: "create.mode.website_import.description", defaultValue: "Paste a recipe URL and review the structured recipe data Doughy finds")
         case .scan:
             return String(localized: "create.mode.scan.description", defaultValue: "Use Apple Intelligence to read a recipe from a photo or screenshot, entirely on-device and offline")
         }
@@ -51,6 +56,7 @@ private enum StudioStartOption: CaseIterable {
         switch self {
         case .percent: return "percent"
         case .weight: return "scalemass"
+        case .websiteImport: return "link"
         case .scan: return "camera.viewfinder"
         }
     }
@@ -1126,6 +1132,9 @@ struct CreateRecipeView: View {
             enterStudio(mode: .byPercent)
         case .weight:
             enterStudio(mode: .byWeight)
+        case .websiteImport:
+            websiteImportSheetInitialURL = nil
+            showWebsiteImportSheet = true
         case .scan:
             guard studioScanAvailable else { return }
             showScanOptions = true
