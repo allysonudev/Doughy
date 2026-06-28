@@ -451,7 +451,10 @@ private extension RecipeWebsiteImporter {
         let units = excludingEggs
             ? #"(?:g|grams?|kg|kilograms?|ml|milliliters?|dl|deciliters?|decilitres?|l|liters?|litres?|cups?|c\.|tablespoons?|tbsp\.?|teaspoons?|tsp\.?|ounces?|oz\.?|pounds?|lbs?\.?)"#
             : #"(?:g|grams?|kg|kilograms?|ml|milliliters?|dl|deciliters?|decilitres?|l|liters?|litres?|cups?|c\.|tablespoons?|tbsp\.?|teaspoons?|tsp\.?|ounces?|oz\.?|pounds?|lbs?\.?|eggs?|egg\s+whites?|egg\s+yolks?)"#
-        return #"\b"# + amount + #"(?:\s*(?:to|[-–—])\s*"# + amount + #")?\s*-?\s*"# + units + #"\b"#
+        // Leading guard is a negative look-behind (not \b): a line can start with a Unicode
+        // vulgar fraction (¼, ½, …) which isn't a word character, so \b never matches before it
+        // and the unit would be left stuck in the ingredient name (e.g. "Teaspoon Cream Of Tartar").
+        return #"(?<![0-9A-Za-z])"# + amount + #"(?:\s*(?:to|[-–—])\s*"# + amount + #")?\s*-?\s*"# + units + #"\b"#
     }
 
     static func firstMeasurement(in text: String, units: Set<ImportUnit>) -> Measurement? {

@@ -133,4 +133,33 @@ final class RecipeWebsiteImporterTests: XCTestCase {
 
         XCTAssertEqual(request.url.absoluteString, "https://example.com/recipe")
     }
+
+    // A line starting with a Unicode vulgar fraction must still strip the unit from the name
+    // (regression: "¼ teaspoon cream of tartar" had been parsed as "Teaspoon Cream Of Tartar").
+    func testVulgarFractionDoesNotLeaveUnitInIngredientName() throws {
+        let html = """
+        <html><head>
+        <script type="application/ld+json">
+        {
+          "@context": "https://schema.org",
+          "@type": "Recipe",
+          "name": "Macarons",
+          "recipeIngredient": [
+            "¼ teaspoon cream of tartar",
+            "½ cup granulated sugar"
+          ],
+          "recipeInstructions": [ { "@type": "HowToStep", "text": "Whip." } ]
+        }
+        </script>
+        </head></html>
+        """
+        let draft = try RecipeWebsiteImporter.parse(html: html, sourceURL: sourceURL)
+        let names = draft.resolvedIngredients.map(\.name)
+        XCTAssertTrue(names.contains("Cream Of Tartar"), "names: \(names)")
+        XCTAssertTrue(names.contains("Granulated Sugar"), "names: \(names)")
+        XCTAssertFalse(
+            names.contains { $0.localizedCaseInsensitiveContains("teaspoon") || $0.localizedCaseInsensitiveContains("cup") },
+            "unit leaked into a name: \(names)"
+        )
+    }
 }
