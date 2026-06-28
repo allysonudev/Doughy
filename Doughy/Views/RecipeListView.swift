@@ -421,6 +421,7 @@ struct RecipeListView: View {
                     .frame(width: 46, height: 46)
             }
             .buttonStyle(.bordered)
+            .tabletIconButtonChrome()
             .accessibilityLabel("Recipe library")
 
             Button {
@@ -431,6 +432,7 @@ struct RecipeListView: View {
                     .frame(width: 46, height: 46)
             }
             .buttonStyle(.bordered)
+            .tabletIconButtonChrome()
             .accessibilityIdentifier("addRecipeButton")
             .accessibilityLabel("Add recipe")
 
@@ -458,6 +460,7 @@ struct RecipeListView: View {
                     .frame(width: 46, height: 46)
             }
             .buttonStyle(.bordered)
+            .tabletIconButtonChrome()
             .accessibilityLabel("Settings")
         }
         .padding(.vertical, 18)
@@ -504,6 +507,18 @@ struct RecipeListView: View {
                                        selectedRecipe?.recipe.collection == recipe.collection {
                                         Image(systemName: "checkmark")
                                             .foregroundStyle(.tint)
+                                    }
+                                }
+                            }
+                            .swipeActions(edge: .trailing) {
+                                Button("Delete", role: .destructive) {
+                                    do {
+                                        try store.delete(recipe: recipe)
+                                    } catch {
+                                        deletionError = String(
+                                            format: String(localized: "recipe_list.delete_failed", defaultValue: "Could not delete \"%@\"."),
+                                            recipe.name
+                                        )
                                     }
                                 }
                             }
@@ -561,6 +576,10 @@ private extension View {
             self.background(.bar)
         }
     }
+
+    func tabletIconButtonChrome() -> some View {
+        self.buttonBorderShape(.circle)
+    }
 }
 
 private struct TabletLibraryScrollRequest: Equatable {
@@ -604,8 +623,9 @@ private struct TabletRepeatButton: View {
     private var button: some View {
         Button(action: action) {
             Image(systemName: systemImage)
-                .frame(width: 44, height: 36)
+                .frame(width: 44, height: 44)
         }
+        .tabletIconButtonChrome()
     }
 
     private func startRepeating() {
@@ -804,30 +824,36 @@ private struct TabletBakeSessionView: View {
     }
 
     private var header: some View {
-        HStack(spacing: 16) {
-            CollectionAvatar(collection: recipe.collection, size: 52)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(recipe.name)
-                    .font(.largeTitle.bold())
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-                Text(DefaultLocalization.collectionName(recipe.collection))
-                    .font(.title3)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-            }
-            Spacer()
-            tabletToolbarButtons
-            Picker("Mode", selection: modeBinding) {
-                ForEach(TabletBakeSessionMode.allCases, id: \.self) { mode in
-                    Text(mode.rawValue).tag(mode)
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(spacing: 16) {
+                CollectionAvatar(collection: recipe.collection, size: 52)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(recipe.name)
+                        .font(.largeTitle.bold())
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                    Text(DefaultLocalization.collectionName(recipe.collection))
+                        .font(.title3)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
                 }
+                Spacer()
+                tabletToolbarButtons
             }
-            .pickerStyle(.segmented)
-            .frame(width: 240)
+            modePicker
         }
         .padding(.horizontal, 28)
         .padding(.vertical, 18)
+    }
+
+    private var modePicker: some View {
+        Picker("Mode", selection: modeBinding) {
+            ForEach(TabletBakeSessionMode.allCases, id: \.self) { mode in
+                Text(mode.rawValue).tag(mode)
+            }
+        }
+        .pickerStyle(.segmented)
+        .frame(width: 240)
     }
 
     private var tabletToolbarButtons: some View {
@@ -846,6 +872,7 @@ private struct TabletBakeSessionView: View {
                 .frame(width: 34, height: 34)
         }
         .buttonStyle(.bordered)
+        .tabletIconButtonChrome()
         .accessibilityLabel(label)
     }
 
@@ -937,7 +964,7 @@ private struct TabletBakeSessionView: View {
         .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 8))
         .overlay {
             RoundedRectangle(cornerRadius: 8)
-                .stroke(Color(.separator), lineWidth: 0.7)
+                .stroke(Color(.separator), lineWidth: 1)
         }
     }
 
@@ -1113,18 +1140,20 @@ private struct TabletBakeSessionView: View {
                     quantity = max(1, quantity - 1)
                 } label: {
                     Image(systemName: "minus")
-                        .frame(width: 44, height: 36)
+                        .frame(width: 44, height: 44)
                 }
                 .buttonStyle(.bordered)
+                .tabletIconButtonChrome()
                 .disabled(quantity <= 1)
 
                 Button {
                     quantity = min(99, quantity + 1)
                 } label: {
                     Image(systemName: "plus")
-                        .frame(width: 44, height: 36)
+                        .frame(width: 44, height: 44)
                 }
                 .buttonStyle(.borderedProminent)
+                .tabletIconButtonChrome()
             }
         }
         .padding(20)
