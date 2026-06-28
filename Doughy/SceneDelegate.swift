@@ -19,6 +19,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     var window: UIWindow?
     private var store: RecipeStore?
+    private var appearanceStore: CollectionAppearanceStore?
     private var intentScanObserver: NSObjectProtocol?
     private var intentShareObserver: NSObjectProtocol?
     private var intentOpenObserver: NSObjectProtocol?
@@ -31,6 +32,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         let isNewInstall = Settings.isFirstInstall()
         let store = RecipeStore(isNewInstall: isNewInstall)
         self.store = store
+        let appearanceStore = CollectionAppearanceStore()
+        self.appearanceStore = appearanceStore
         intentScanObserver = NotificationCenter.default.addObserver(
             forName: .doughyScanFromIntent, object: nil, queue: .main
         ) { [weak store] notification in
@@ -46,7 +49,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         ) { [weak store] notification in
             store?.pendingOpenIntent = notification.object as? PendingOpenRecipeRequest
         }
-        let rootView = RecipeListView().environment(store)
+        let rootView = RecipeListView()
+            .environment(store)
+            .environment(appearanceStore)
         let hostingController = UIHostingController(rootView: rootView)
 
         let window = UIWindow(windowScene: windowScene)

@@ -21,7 +21,11 @@ class CoreDataGateway: NSObject {
     // Tries CloudKit first; falls back to a plain local store if CloudKit isn't
     // configured (no entitlements, simulator, etc.).
     private static func makeContainer() -> NSPersistentContainer {
-        if ProcessInfo.processInfo.arguments.contains("-UITesting") {
+        // UI tests pass -UITesting; unit tests set XCTestConfigurationFilePath. Both run
+        // against an in-memory store so they never depend on CloudKit/iCloud, which traps
+        // during mirroring setup on a simulator with no signed-in account.
+        let isUnitTesting = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+        if isUnitTesting || ProcessInfo.processInfo.arguments.contains("-UITesting") {
             return makeInMemoryContainer()
         }
 

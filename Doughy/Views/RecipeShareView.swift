@@ -8,6 +8,7 @@ import UIKit
 struct RecipeShareView: View {
     let recipe: any RecipeProtocol
     @Environment(\.dismiss) private var dismiss
+    @Environment(CollectionAppearanceStore.self) private var appearanceStore
     @State private var authorName: String
     @State private var shareNote: String = ""
     @State private var errorMessage: String?
@@ -40,7 +41,12 @@ struct RecipeShareView: View {
 
                 Section("Recipe") {
                     LabeledContent("Name", value: recipe.name)
-                    LabeledContent("Collection", value: DefaultLocalization.collectionName(recipe.collection))
+                    LabeledContent("Collection") {
+                        HStack(spacing: 8) {
+                            CollectionAvatar(collection: recipe.collection, size: 22)
+                            Text(DefaultLocalization.collectionName(recipe.collection))
+                        }
+                    }
                     LabeledContent("Ingredients", value: "\(recipe.ingredients.count)")
                     if let pr = recipe as? PrefermentRecipe {
                         LabeledContent("Preferment", value: pr.preferment.name)
@@ -74,10 +80,12 @@ struct RecipeShareView: View {
     private func share() {
         let trimmed = authorName.trimmingCharacters(in: .whitespaces)
         let trimmedNote = shareNote.trimmingCharacters(in: .whitespaces)
+        let appearance = appearanceStore.appearance(for: recipe.collection)
         let payload = RecipeFile.payload(
             from: recipe,
             author: trimmed.isEmpty ? nil : trimmed,
-            note: trimmedNote.isEmpty ? nil : trimmedNote
+            note: trimmedNote.isEmpty ? nil : trimmedNote,
+            collectionAppearance: appearance.isEmpty ? nil : appearance
         )
         guard let url = try? RecipeFile.write(payload) else {
             errorMessage = String(localized: "share.error.prepare_file", defaultValue: "Could not prepare the recipe file.")

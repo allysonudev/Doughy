@@ -29,16 +29,64 @@ private struct AppLanguage: Identifiable {
     ]
 }
 
+private enum SettingsPane: Hashable, CaseIterable {
+    case preferences
+    case conversions
+    case library
+    case about
+
+    var title: String {
+        switch self {
+        case .preferences:
+            return String(localized: "settings.preferences.title", defaultValue: "Preferences")
+        case .conversions:
+            return String(localized: "conversions.title", defaultValue: "Ingredient Conversions")
+        case .library:
+            return String(localized: "settings.library.title", defaultValue: "Library")
+        case .about:
+            return String(localized: "settings.about.title", defaultValue: "About")
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .preferences:
+            return "slider.horizontal.3"
+        case .conversions:
+            return "scalemass"
+        case .library:
+            return "books.vertical"
+        case .about:
+            return "info.circle"
+        }
+    }
+
+    var sortIndex: Int {
+        SettingsPane.allCases.firstIndex(of: self) ?? 0
+    }
+}
+
 struct SettingsView: View {
     @Environment(RecipeStore.self) private var store
+    @Environment(CollectionAppearanceStore.self) private var appearanceStore
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var selectedTemp: Temperature.Measurement = Settings.shared.preferredTemp()
     @State private var selectedVolumeSystem: VolumeSystem = Settings.shared.preferredVolumeSystem()
     @State private var selectedLanguage: String = Settings.shared.preferredLanguageCode() ?? ""
+    @State private var selectedPane: SettingsPane? = .preferences
+    @State private var paneTransitionEdge: Edge = .bottom
     @State private var tempUpdateError: String?
     @State private var backupRestoreMessage: String?
     @State private var pendingRestoreBackup: RecipeLibraryBackup?
     @State private var showingRestoreImporter = false
     @State private var showRestartAlert = false
+
+    let showsCloseButton: Bool
+
+    init(showsCloseButton: Bool = false) {
+        self.showsCloseButton = showsCloseButton
+    }
 
     private var isUSRegion: Bool {
         Locale.current.region?.identifier == "US"
@@ -213,7 +261,7 @@ struct SettingsView: View {
 
     private func backupLibrary() {
         do {
-            let url = try store.exportLibraryBackup()
+            let url = try store.exportLibraryBackup(appearances: appearanceStore.allAppearances())
             presentShareSheet(url: url)
         } catch {
             backupRestoreMessage = "Could not prepare the backup file."
@@ -237,6 +285,12 @@ struct SettingsView: View {
         pendingRestoreBackup = nil
         do {
             try store.restoreLibraryBackup(backup)
+            // Bring back collection appearances from the backup, without overwriting any the
+            // user has set locally since.
+            for (name, appearance) in backup.collections ?? [:]
+            where appearanceStore.appearance(for: name).isEmpty {
+                appearanceStore.set(appearance, for: name)
+            }
             backupRestoreMessage = "Recipe library restored."
         } catch {
             backupRestoreMessage = error.localizedDescription

@@ -7,6 +7,7 @@ import SwiftUI
 struct CalculatorView: View {
     let recipe: any RecipeProtocol
     @Environment(RecipeStore.self) private var store
+    @Environment(CollectionAppearanceStore.self) private var appearanceStore
 
     @State private var doughCount: Int?
     @State private var singleDoughWeight: Double?
@@ -206,13 +207,16 @@ struct CalculatorView: View {
         .sheet(isPresented: $showingCopy, onDismiss: { store.refresh() }) {
             CreateRecipeView(copyingRecipe: currentRecipe)
                 .environment(store)
+                .environment(appearanceStore)
         }
         .sheet(isPresented: $showingEdit, onDismiss: { store.refresh() }) {
             CreateRecipeView(editingRecipe: currentRecipe)
                 .environment(store)
+                .environment(appearanceStore)
         }
         .sheet(item: $sharingRecipe) { wrapper in
             RecipeShareView(recipe: wrapper.recipe)
+                .environment(appearanceStore)
         }
         .alert("Calculation Error", isPresented: Binding(
             get: { calculationError != nil },
