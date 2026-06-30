@@ -6,35 +6,69 @@ import SwiftUI
 
 struct CalculatorView: View {
     let recipe: any RecipeProtocol
-    @Environment(RecipeStore.self) private var store
-    @Environment(CollectionAppearanceStore.self) private var appearanceStore
+    @Environment(RecipeStore.self) var store
+    @Environment(CollectionAppearanceStore.self) var appearanceStore
+    @Environment(\.colorScheme) var colorScheme
 
-    @State private var doughCount: Int?
-    @State private var singleDoughWeight: Double?
-    @State private var adjustIngredients = false
-    @State private var adjustTemps = false
-    @State private var adjustPreferment = false
-    @State private var ingredientPercents: [Int: Double] = [:]
-    @State private var extraIngredientAmounts: [Int: Double] = [:]
-    @State private var ingredientTemps: [Int: Double] = [:]
-    @State private var prefermentIngredientPercents: [Int: Double] = [:]
-    @State private var ingredientWeights: [Int: Double] = [:]
-    @State private var prefermentIngredientWeights: [Int: Double] = [:]
-    @State private var prefermentTotalPercent: Double?
-    @State private var calculatedResult: CalculatedWrapper?
-    @State private var calculationError: String?
-    @State private var showingEdit = false
-    @State private var showingCopy = false
-    @State private var sharingRecipe: RecipeWrapper?
-    @State private var sharedBy: String? = nil
-    @State private var sharedNote: String? = nil
-    @State private var noteExpanded: Bool = true
+    @State var mode: RecipeSessionMode = .recipe
+    @State var doughCount: Int?
+    @State var singleDoughWeight: Double?
+    @State var ingredientPercents: [Int: Double] = [:]
+    @State var extraIngredientAmounts: [Int: Double] = [:]
+    @State var ingredientTemps: [Int: Double] = [:]
+    @State var prefermentIngredientPercents: [Int: Double] = [:]
+    @State var ingredientWeights: [Int: Double] = [:]
+    @State var prefermentIngredientWeights: [Int: Double] = [:]
+    @State var prefermentTotalPercent: Double?
+    @State var calculatedRecipe: (any CalculatedRecipeProtocol)?
+    @State var calculationError: String?
+    @State var actionError: String?
+    @State var showingEdit = false
+    @State var showingCopy = false
+    @State var showingHistory = false
+    @State var sharingRecipe: RecipeWrapper?
+    @State var sharedBy: String? = nil
+    @State var sharedNote: String? = nil
+    @State var noteExpanded: Bool = true
+    @State var tweakText: String = ""
+    @State var noteText: String = ""
+    @State var lastSavedNoteText: String?
+    @State var showingSetAsDefaultConfirmation = false
 
-    private var noteExpandedKey: String { "sharedNoteExpanded_\(recipe.name)" }
+    /// Ingredients sit at the top of the Recipe-mode scroll. Once the bottom-most ingredient row
+    /// scrolls off the top, a floating bar fades in; tapping it expands the ingredient list above
+    /// that bar. `ingredientsVisible` is driven by that row's `onAppear`/`onDisappear` — the only
+    /// scroll signal `List`/`Form` reliably delivers to its rows (preferences and
+    /// `onScrollVisibilityChange` never fire for List rows).
+    @State var ingredientsExpanded = false
+    @State var ingredientsDragOffset: CGFloat = 0
+    @State var ingredientsVisible = true
 
-    private let calculator = Calculator.shared
-    private let settings = Settings.shared
-    private let weightFormatter = WeightFormatter.shared
+    var ingredientsOffscreen: Bool { !ingredientsVisible }
+    var ingredientsPeekBarHeight: CGFloat { 52 }
+    var ingredientsPanelExpandedHeight: CGFloat { 360 }
+    var ingredientsPanelHeight: CGFloat {
+        guard ingredientsExpanded else { return 0 }
+        if ingredientsDragOffset >= 0 {
+            return max(0, ingredientsPanelExpandedHeight - ingredientsDragOffset)
+        } else {
+            return ingredientsPanelExpandedHeight - ingredientsDragOffset
+        }
+    }
+
+    var noteExpandedKey: String { "sharedNoteExpanded_\(recipe.name)" }
+
+    let calculator = Calculator.shared
+    let settings = Settings.shared
+    let weightFormatter = WeightFormatter.shared
+    let percentFormatter = PercentFormatter.shared
+    let tempFormatter = TemperatureFormatter.shared
+    let densityStore = IngredientDensityStore.shared
+    let conversionStore = IngredientConversionStore.shared
+
+    /// Currently selected display unit per ingredient, keyed "preferment:<name>" / "dough:<name>".
+    /// Absent entries default to "grams"; tapping a convertible weight cycles through its units.
+    @State var ingredientDisplayUnits: [String: String] = [:]
 
     /// The recipe as currently stored, looked up from `store.collections` so
     /// edits made elsewhere (e.g. "Set as Default", or the recipe editor) are
@@ -42,167 +76,129 @@ struct CalculatorView: View {
     /// navigation time is a snapshot and doesn't update on its own. Falls
     /// back to that snapshot if the recipe can no longer be found (e.g. it
     /// was just deleted).
-    private var currentRecipe: any RecipeProtocol {
+    var currentRecipe: any RecipeProtocol {
         store.collections
             .first { $0.name == recipe.collection }?
             .recipes.first { $0.name == recipe.name } ?? recipe
     }
 
-    private var prefermentRecipe: PrefermentRecipe? { currentRecipe as? PrefermentRecipe }
-    private var hasTemps: Bool { currentRecipe.containsVariableTemps() }
-    private var isWeightRecipe: Bool { currentRecipe.measurementMode == .weight }
-    private var effectiveWeight: Double { singleDoughWeight ?? currentRecipe.defaultWeight }
-    private var effectiveDoughCount: Int { doughCount ?? 1 }
-    private var totalWeight: Double { effectiveWeight * Double(effectiveDoughCount) }
+    var prefermentRecipe: PrefermentRecipe? { currentRecipe as? PrefermentRecipe }
+    var preferment: Preferment? { prefermentRecipe?.preferment }
+    var hasTemps: Bool { currentRecipe.containsVariableTemps() }
+    var isWeightRecipe: Bool { currentRecipe.measurementMode == .weight }
+    var effectiveWeight: Double { singleDoughWeight ?? currentRecipe.defaultWeight }
+    var effectiveDoughCount: Int { max(doughCount ?? 1, 1) }
+    var totalWeight: Double { effectiveWeight * Double(effectiveDoughCount) }
+    var hasAdditionalIngredients: Bool {
+        currentRecipe.ingredients.contains { $0.extraAmount != nil }
+    }
+
+    var calculatedPrefermentRecipe: CalculatedPrefermentRecipe? {
+        calculatedRecipe as? CalculatedPrefermentRecipe
+    }
+
+    var extraIngredients: [CalculatedIngredient] {
+        calculatedRecipe?.ingredients.filter { $0.extraAmount != nil } ?? []
+    }
+
+    var doughIngredients: [CalculatedIngredient] {
+        calculatedRecipe?.ingredients.filter { $0.extraAmount == nil } ?? []
+    }
+
+    var overrideDiff: String? {
+        RecipeDiff.summarize(from: RecipeSnapshot(from: currentRecipe), to: currentOverrides().applied(to: currentRecipe))
+    }
+
+    var combinedNoteText: String {
+        let tweaks = tweakText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let notes = noteText.trimmingCharacters(in: .whitespacesAndNewlines)
+        return [tweaks, notes].filter { !$0.isEmpty }.joined(separator: "\n")
+    }
 
     var body: some View {
-        Form {
-            // MARK: - Shared by
-            if let author = sharedBy {
-                Section {
-                    if let note = sharedNote {
-                        DisclosureGroup(
-                            isExpanded: Binding(
-                                get: { noteExpanded },
-                                set: {
-                                    noteExpanded = $0
-                                    UserDefaults.standard.set($0, forKey: noteExpandedKey)
-                                }
-                            )
-                        ) {
-                            Text(note)
-                                .font(.callout)
-                                .foregroundStyle(.secondary)
-                        } label: {
-                            HStack(spacing: 8) {
-                                Image(systemName: "person.circle")
-                                    .foregroundStyle(.secondary)
-                                    .accessibilityHidden(true)
-                                Text("Shared by \(author)")
-                                    .foregroundStyle(.secondary)
+        VStack(spacing: 0) {
+            modePicker
+                .padding(.horizontal)
+                .padding(.vertical, 10)
+                .background {
+                    Color.clear
+                        .liquidGlassSurface(
+                            in: Rectangle(),
+                            tint: calculatorChromeTint
+                        )
+                }
+            Divider()
+            content
+                .overlay(alignment: .bottom) {
+                    if mode == .recipe && calculatedRecipe != nil && ingredientsOffscreen {
+                        ZStack(alignment: .bottom) {
+                            if ingredientsExpanded {
+                                Color.black.opacity(0.001)
+                                    .contentShape(Rectangle())
+                                    .onTapGesture {
+                                        collapseIngredientsPeek()
+                                    }
+                                    .simultaneousGesture(
+                                        DragGesture(minimumDistance: 8)
+                                            .onChanged { _ in
+                                                collapseIngredientsPeek()
+                                            }
+                                    )
+                                    .transition(.opacity)
                             }
+                            ingredientsPeekOverlay
+                                .transition(.move(edge: .bottom).combined(with: .opacity))
                         }
-                    } else {
-                        HStack(spacing: 8) {
-                            Image(systemName: "person.circle")
-                                .foregroundStyle(.secondary)
-                                .accessibilityHidden(true)
-                            Text("Shared by \(author)")
-                                .foregroundStyle(.secondary)
-                        }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
                     }
                 }
-            }
-
-            // MARK: - Amounts
-            Section("Batch") {
-                HStack {
-                    Text("Number of Doughs")
-                    Spacer()
-                    TextField("1", value: $doughCount, format: .number)
-                        .multilineTextAlignment(.trailing)
-                        .keyboardType(.numberPad)
-                        .frame(width: 80)
-                        .accessibilityIdentifier("doughCountField")
-                }
-                HStack {
-                    Text("Single Dough Weight")
-                    Spacer()
-                    TextField("\(Int(currentRecipe.defaultWeight))",
-                              value: $singleDoughWeight,
-                              format: .number)
-                        .multilineTextAlignment(.trailing)
-                        .keyboardType(.decimalPad)
-                        .frame(width: 100)
-                        .accessibilityIdentifier("singleDoughWeightField")
-                    Text(String(localized: "unit.grams.short", defaultValue: "g")).foregroundStyle(.secondary)
-                }
-            }
-
-            // MARK: - Preferment toggle + adjustments
-            if let preferment = prefermentRecipe?.preferment {
-                Section {
-                    Toggle(isWeightRecipe ? "Adjust Preferment Weights" : "Adjust Preferment Percentages", isOn: $adjustPreferment)
-                }
-                if adjustPreferment {
-                    prefermentAdjustSection(preferment: preferment)
-                }
-            }
-
-            // MARK: - Ingredient toggle + adjustments
-            Section {
-                Toggle(isWeightRecipe ? "Adjust Ingredient Weights" : "Adjust Dough Ingredients", isOn: $adjustIngredients)
-                    .accessibilityIdentifier("adjustIngredientsToggle")
-            }
-            if adjustIngredients {
-                ingredientAdjustSection
-            }
-
-            // MARK: - Temp toggle + adjustments
-            if hasTemps {
-                Section {
-                    Toggle("Adjust Ingredient Temperatures", isOn: $adjustTemps)
-                }
-                if adjustTemps {
-                    temperatureAdjustSection
-                }
-            }
-
-            // MARK: - Calculate
-            Section {
-                Button {
-                    calculate()
-                } label: {
-                    HStack {
-                        Spacer()
-                        Text("How much do I need?")
-                            .bold()
-                        Spacer()
-                    }
-                }
-                .accessibilityIdentifier("calculateButton")
-            }
+                .animation(.easeInOut(duration: 0.2), value: ingredientsOffscreen)
+        }
+        .background(alignment: .top) {
+            calculatorNavigationBackdrop
         }
         .navigationTitle(currentRecipe.name)
-        // The numeric weight/percent fields use decimalPad, which has no return key;
-        // let a downward scroll dismiss the keyboard (matches CreateRecipeView).
-        .scrollDismissesKeyboard(.interactively)
-        .navigationDestination(item: $calculatedResult) { wrapper in
-            CalculatedRecipeView(calculatedRecipe: wrapper.recipe, recipe: currentRecipe, overrides: wrapper.overrides)
-        }
+        .navigationBarTitleDisplayMode(.inline)
+        .calculatorNavigationGlass()
         .toolbar {
-            ToolbarItemGroup(placement: .topBarTrailing) {
-                Button {
-                    sharingRecipe = RecipeWrapper(recipe: currentRecipe)
-                } label: {
-                    Image(systemName: "square.and.arrow.up")
-                }
-                .accessibilityLabel("Share")
-                .accessibilityIdentifier("calculatorShareButton")
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
+                    Button {
+                        sharingRecipe = RecipeWrapper(recipe: currentRecipe)
+                    } label: {
+                        Label("Share", systemImage: "square.and.arrow.up")
+                    }
+                    .accessibilityIdentifier("calculatorShareButton")
 
-                NavigationLink {
-                    RecipeHistoryView(recipe: currentRecipe)
-                } label: {
-                    Image(systemName: "clock.arrow.circlepath")
-                }
-                .accessibilityLabel("History")
-                .accessibilityIdentifier("historyButton")
+                    Button {
+                        showingHistory = true
+                    } label: {
+                        Label("History", systemImage: "clock.arrow.circlepath")
+                    }
+                    .accessibilityIdentifier("historyButton")
 
-                Button {
-                    showingCopy = true
+                    Button {
+                        showingCopy = true
+                    } label: {
+                        Label("Copy", systemImage: "plus.square.on.square")
+                    }
+                    .accessibilityIdentifier("calculatorCopyButton")
+
+                    Button {
+                        showingEdit = true
+                    } label: {
+                        Label("Edit", systemImage: "pencil")
+                    }
+                    .accessibilityIdentifier("calculatorEditButton")
                 } label: {
-                    Image(systemName: "plus.square.on.square")
+                    Image(systemName: "ellipsis.circle")
                 }
-                .accessibilityLabel("Copy")
-                .accessibilityIdentifier("calculatorCopyButton")
-                Button {
-                    showingEdit = true
-                } label: {
-                    Image(systemName: "pencil")
-                }
-                .accessibilityLabel("Edit")
-                .accessibilityIdentifier("calculatorEditButton")
+                .accessibilityLabel("Recipe Actions")
+                .accessibilityIdentifier("calculatorActionsMenu")
             }
+        }
+        .navigationDestination(isPresented: $showingHistory) {
+            RecipeHistoryView(recipe: currentRecipe)
         }
         .sheet(isPresented: $showingCopy, onDismiss: { store.refresh() }) {
             CreateRecipeView(copyingRecipe: currentRecipe)
@@ -218,346 +214,131 @@ struct CalculatorView: View {
             RecipeShareView(recipe: wrapper.recipe)
                 .environment(appearanceStore)
         }
-        .alert("Calculation Error", isPresented: Binding(
-            get: { calculationError != nil },
-            set: { if !$0 { calculationError = nil } }
+        .alert("Something Went Wrong", isPresented: Binding(
+            get: { actionError != nil },
+            set: { if !$0 { actionError = nil } }
         )) {
-            Button("OK", role: .cancel) {}
+            Button("OK", role: .cancel) { }
         } message: {
-            Text(calculationError ?? "")
+            Text(actionError ?? "")
         }
         .onAppear {
             store.recordOpened(recipe: currentRecipe)
-            let entries = store.historyEntries(for: currentRecipe)
-            sharedBy = entries
-                .first { $0.kind == .note && $0.text.hasPrefix("Shared by ") }
-                .map { String($0.text.dropFirst("Shared by ".count)) }
-            sharedNote = entries
-                .first { $0.kind == .note && $0.text.hasPrefix("Share note: ") }
-                .map { String($0.text.dropFirst("Share note: ".count)) }
-            if let saved = UserDefaults.standard.object(forKey: noteExpandedKey) as? Bool {
-                noteExpanded = saved
+            loadSharedNote()
+            calculate()
+            tweakText = overrideDiff ?? ""
+        }
+        .onChange(of: doughCount) { _, _ in calculate() }
+        .onChange(of: singleDoughWeight) { _, _ in calculateAndRefreshTweakText() }
+        .onChange(of: ingredientPercents) { _, _ in calculateAndRefreshTweakText() }
+        .onChange(of: extraIngredientAmounts) { _, _ in calculateAndRefreshTweakText() }
+        .onChange(of: ingredientTemps) { _, _ in calculateAndRefreshTweakText() }
+        .onChange(of: prefermentIngredientPercents) { _, _ in calculateAndRefreshTweakText() }
+        .onChange(of: ingredientWeights) { _, _ in calculateAndRefreshTweakText() }
+        .onChange(of: prefermentIngredientWeights) { _, _ in calculateAndRefreshTweakText() }
+        .onChange(of: prefermentTotalPercent) { _, _ in calculateAndRefreshTweakText() }
+        .onChange(of: ingredientsOffscreen) { _, offscreen in
+            if !offscreen {
+                ingredientsExpanded = false
+            }
+        }
+        .onChange(of: mode) { _, newMode in
+            if newMode != .recipe {
+                ingredientsExpanded = false
             }
         }
     }
 
-    // MARK: - Ingredient adjustment section
-
-    @ViewBuilder
-    private var ingredientAdjustSection: some View {
-        Section("Ingredients") {
-            ForEach(Array(currentRecipe.ingredients.enumerated()), id: \.offset) { index, ingredient in
-                if ingredient.extraAmount != nil {
-                    // Handled in additionalIngredientsSection.
-                } else if isWeightRecipe {
-                    HStack {
-                        Text(ingredient.name)
-                        Spacer()
-                        HStack(spacing: 4) {
-                            TextField(
-                                String(format: "%.4g", ingredient.defaultWeight ?? 0),
-                                value: Binding(
-                                    get: { ingredientWeights[index] },
-                                    set: { ingredientWeights[index] = $0 }
-                                ),
-                                format: .number
-                            )
-                            .multilineTextAlignment(.trailing)
-                            .keyboardType(.decimalPad)
-                            .frame(width: 70)
-                            .accessibilityIdentifier("ingredientWeightField_\(index)")
-                            Text(String(localized: "unit.grams.short", defaultValue: "g")).foregroundStyle(.secondary)
-                        }
-                        .environment(\.layoutDirection, .leftToRight)
-                    }
-                } else if ingredient.isFlour {
-                    HStack {
-                        Text(ingredient.name)
-                        Spacer()
-                        HStack(spacing: 4) {
-                            Text(PercentFormatter.shared.formatNumber(percent: ingredient.defaultPercentage))
-                                .frame(width: 70, alignment: .trailing)
-                                .foregroundStyle(.secondary)
-                            Text(PercentFormatter.shared.percentSymbol)
-                                .foregroundStyle(.secondary)
-                        }
-                        .environment(\.layoutDirection, .leftToRight)
-                    }
-                } else {
-                    HStack {
-                        Text(ingredient.name)
-                        Spacer()
-                        HStack(spacing: 4) {
-                            TextField(
-                                String(format: "%.4g", ingredient.defaultPercentage),
-                                value: Binding(
-                                    get: { ingredientPercents[index] },
-                                    set: { ingredientPercents[index] = $0 }
-                                ),
-                                format: .number
-                            )
-                            .multilineTextAlignment(.trailing)
-                            .keyboardType(.decimalPad)
-                            .frame(width: 70)
-                            .accessibilityIdentifier("ingredientPercentField_\(index)")
-                            Text("%").foregroundStyle(.secondary)
-                        }
-                        .environment(\.layoutDirection, .leftToRight)
-                    }
-                }
-            }
+    var modePicker: some View {
+        HStack(spacing: 0) {
+            modeButton("Recipe", mode: .recipe, accessibilityIdentifier: "recipeModeButton")
+            modeButton("Adjust", mode: .adjust, accessibilityIdentifier: "adjustModeButton")
         }
-
-        if hasAdditionalIngredients {
-            additionalIngredientsSection
+        .padding(4)
+        .frame(minHeight: 40)
+        .background {
+            Color.clear
+                .liquidGlassSurface(
+                    in: RoundedRectangle(cornerRadius: 14, style: .continuous),
+                    tint: calculatorChromeTint,
+                    interactive: true
+                )
         }
+        .overlay {
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .strokeBorder(Color.white.opacity(colorScheme == .dark ? 0.12 : 0.28), lineWidth: 0.7)
+        }
+        .accessibilityIdentifier("recipeSessionModePicker")
     }
 
-    private var hasAdditionalIngredients: Bool {
-        currentRecipe.ingredients.contains { $0.extraAmount != nil }
-    }
-
-    private var additionalIngredientsSection: some View {
-        Section {
-            ForEach(Array(currentRecipe.ingredients.enumerated()), id: \.offset) { index, ingredient in
-                if let amount = ingredient.extraAmount, let unit = ingredient.extraUnit {
-                    HStack {
-                        Text(ingredient.name)
-                            .lineLimit(1)
-                            .layoutPriority(1)
-                        Spacer()
-                        TextField(
-                            String(format: "%.4g", amount),
-                            value: Binding(
-                                get: { extraIngredientAmounts[index] },
-                                set: { extraIngredientAmounts[index] = $0 }
-                            ),
-                            format: .number
-                        )
-                        .multilineTextAlignment(.trailing)
-                        .keyboardType(.decimalPad)
-                        .frame(width: 50)
-                        .accessibilityIdentifier("extraIngredientAmountField_\(index)")
-                        Text(VolumeUnitFormatter.label(unit: unit, amount: extraIngredientAmounts[index] ?? amount))
-                            .foregroundStyle(.secondary)
-                    }
-                }
+    func modeButton(_ title: String, mode targetMode: RecipeSessionMode, accessibilityIdentifier: String) -> some View {
+        let isSelected = mode == targetMode
+        return Button {
+            withAnimation(.snappy(duration: 0.2)) {
+                mode = targetMode
             }
-        } header: {
-            Text("Additional Ingredients")
-        } footer: {
-            Text("These ingredients aren't included in baker's percentages. Adjust the amount if you'd like to scale it for this batch.")
+        } label: {
+            Text(title)
+                .font(.subheadline.weight(isSelected ? .semibold : .medium))
+                .foregroundStyle(isSelected ? Color.primary : Color.secondary)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 7)
+                .contentShape(Rectangle())
         }
-    }
-
-    // MARK: - Temperature adjustment section
-
-    private var temperatureAdjustSection: some View {
-        Section("Temperatures") {
-            ForEach(Array(currentRecipe.ingredients.enumerated()), id: \.offset) { index, ingredient in
-                if let temp = ingredient.temperature {
-                    HStack {
-                        Text(ingredient.name)
-                        Spacer()
-                        TextField(
-                            String(format: "%.4g", temp.value),
-                            value: Binding(
-                                get: { ingredientTemps[index] },
-                                set: { ingredientTemps[index] = $0 }
-                            ),
-                            format: .number
-                        )
-                        .multilineTextAlignment(.trailing)
-                        .keyboardType(.decimalPad)
-                        .frame(width: 70)
-                        Text(settings.preferredTemp().localizedSymbol).foregroundStyle(.secondary)
-                    }
-                }
-            }
-            if let preferment = prefermentRecipe?.preferment {
-                ForEach(Array(preferment.ingredients.enumerated()), id: \.offset) { index, ingredient in
-                    if let temp = ingredient.temperature {
-                        HStack {
-                            Text("\(preferment.name) – \(ingredient.name)")
-                            Spacer()
-                            TextField(
-                                String(format: "%.4g", temp.value),
-                                value: Binding(
-                                    get: { ingredientTemps[1000 + index] },
-                                    set: { ingredientTemps[1000 + index] = $0 }
-                                ),
-                                format: .number
-                            )
-                            .multilineTextAlignment(.trailing)
-                            .keyboardType(.decimalPad)
-                            .frame(width: 70)
-                            Text(settings.preferredTemp().localizedSymbol).foregroundStyle(.secondary)
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    // MARK: - Preferment adjustment section
-
-    @ViewBuilder
-    private func prefermentAdjustSection(preferment: Preferment) -> some View {
-        Section(String(format: String(localized: "calculator.preferment.section_title", defaultValue: "Preferment: %@"), preferment.name)) {
-            HStack {
-                Text("Flour of Total")
-                Spacer()
-                HStack(spacing: 4) {
-                    TextField(
-                        String(format: "%.4g", preferment.flourPercentage),
-                        value: $prefermentTotalPercent,
-                        format: .number
+        .buttonStyle(.plain)
+        .background {
+            if isSelected {
+                Color.clear
+                    .liquidGlassSurface(
+                        in: RoundedRectangle(cornerRadius: 10, style: .continuous),
+                        tint: Color(.systemBackground).opacity(colorScheme == .dark ? 0.42 : 0.64),
+                        interactive: true
                     )
-                    .multilineTextAlignment(.trailing)
-                    .keyboardType(.decimalPad)
-                    .frame(width: 70)
-                    Text("%").foregroundStyle(.secondary)
-                }
-                .environment(\.layoutDirection, .leftToRight)
             }
-            ForEach(Array(preferment.ingredients.enumerated()), id: \.offset) { index, ingredient in
-                if isWeightRecipe {
-                    HStack {
-                        Text(ingredient.name)
-                        Spacer()
-                        HStack(spacing: 4) {
-                            TextField(
-                                String(format: "%.4g", ingredient.defaultWeight ?? 0),
-                                value: Binding(
-                                    get: { prefermentIngredientWeights[index] },
-                                    set: { prefermentIngredientWeights[index] = $0 }
-                                ),
-                                format: .number
-                            )
-                            .multilineTextAlignment(.trailing)
-                            .keyboardType(.decimalPad)
-                            .frame(width: 70)
-                            Text(String(localized: "unit.grams.short", defaultValue: "g")).foregroundStyle(.secondary)
-                        }
-                        .environment(\.layoutDirection, .leftToRight)
-                    }
-                } else if ingredient.isFlour {
-                    HStack {
-                        Text(ingredient.name)
-                        Spacer()
-                        HStack(spacing: 4) {
-                            Text(PercentFormatter.shared.formatNumber(percent: ingredient.defaultPercentage))
-                                .frame(width: 70, alignment: .trailing)
-                                .foregroundStyle(.secondary)
-                            Text(PercentFormatter.shared.percentSymbol)
-                                .foregroundStyle(.secondary)
-                        }
-                        .environment(\.layoutDirection, .leftToRight)
-                    }
-                } else {
-                    HStack {
-                        Text(ingredient.name)
-                        Spacer()
-                        HStack(spacing: 4) {
-                            TextField(
-                                String(format: "%.4g", ingredient.defaultPercentage),
-                                value: Binding(
-                                    get: { prefermentIngredientPercents[index] },
-                                    set: { prefermentIngredientPercents[index] = $0 }
-                                ),
-                                format: .number
-                            )
-                            .multilineTextAlignment(.trailing)
-                            .keyboardType(.decimalPad)
-                            .frame(width: 70)
-                            Text("%").foregroundStyle(.secondary)
-                        }
-                        .environment(\.layoutDirection, .leftToRight)
-                    }
-                }
-            }
+        }
+        .accessibilityIdentifier(accessibilityIdentifier)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+
+    var calculatorAccentColor: Color {
+        let appearance = appearanceStore.appearance(for: currentRecipe.collection)
+        return CollectionColorCatalog.color(for: appearance.colorKey)
+            ?? CollectionColorCatalog.derivedColor(for: currentRecipe.collection, dark: colorScheme == .dark)
+    }
+
+    var calculatorChromeTint: Color {
+        calculatorAccentColor.opacity(colorScheme == .dark ? 0.20 : 0.12)
+    }
+
+    var calculatorNavigationBackdrop: some View {
+        calculatorAccentColor
+            .opacity(colorScheme == .dark ? 0.20 : 0.13)
+            .frame(height: 160)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .ignoresSafeArea(edges: .top)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+    }
+
+    @ViewBuilder
+    var content: some View {
+        ZStack {
+            recipeContent
+                .opacity(mode == .recipe ? 1 : 0)
+                .allowsHitTesting(mode == .recipe)
+                .accessibilityHidden(mode != .recipe)
+
+            adjustContent
+                .opacity(mode == .adjust ? 1 : 0)
+                .allowsHitTesting(mode == .adjust)
+                .accessibilityHidden(mode != .adjust)
         }
     }
 
-    // MARK: - Calculation
 
-    private func calculate() {
-        let weight = effectiveWeight * Double(effectiveDoughCount)
-        let ingredients = buildMeasuredIngredients()
-        let preferment = buildMeasuredPreferment()
-
-        do {
-            let calculated = try calculator.calculate(
-                ingredients: ingredients,
-                preferment: preferment,
-                recipe: currentRecipe,
-                totalWeight: weight
-            )
-            calculatedResult = CalculatedWrapper(recipe: calculated, overrides: currentOverrides())
-        } catch CalculationError.finalDoughNegativeValue(let name, let value) {
-            calculationError = String(
-                format: String(localized: "calculator.error.final_dough_negative", defaultValue: "Calculated final dough %@ weight is %@. Please adjust input."),
-                name,
-                weightFormatter.format(weight: value)
-            )
-        } catch CalculationError.prefermentNegativeValue(let name, let value) {
-            calculationError = String(
-                format: String(localized: "calculator.error.preferment_negative", defaultValue: "Calculated preferment %@ weight is %@. Please adjust input."),
-                name,
-                weightFormatter.format(weight: value)
-            )
-        } catch {
-            calculationError = String(localized: "calculator.error.unexpected", defaultValue: "An unexpected calculation error occurred.")
-        }
-    }
-
-    private func currentOverrides() -> CalculatorOverrides {
-        CalculatorOverrides(
-            ingredientPercents: ingredientPercents,
-            ingredientWeights: ingredientWeights,
-            ingredientTemps: ingredientTemps,
-            prefermentIngredientPercents: prefermentIngredientPercents,
-            prefermentIngredientWeights: prefermentIngredientWeights,
-            prefermentTotalPercent: prefermentTotalPercent,
-            singleDoughWeight: singleDoughWeight,
-            extraIngredientAmounts: extraIngredientAmounts,
-            temperatureMeasurement: settings.preferredTemp()
-        )
-    }
-
-    private func buildMeasuredIngredients() -> [MeasuredIngredient] {
-        currentRecipe.ingredients.enumerated().map { index, ingredient in
-            let percent = ingredientPercents[index] ?? ingredient.defaultPercentage
-            var temp = ingredient.temperature
-            if let rawTemp = ingredientTemps[index] {
-                temp = Temperature(value: rawTemp, measurement: settings.preferredTemp())
-            }
-            return MeasuredIngredient(ingredient: ingredient, percent: percent, temperature: temp, weight: ingredientWeights[index] ?? ingredient.defaultWeight, extraAmountOverride: extraIngredientAmounts[index])
-        }
-    }
-
-    private func buildMeasuredPreferment() -> MeasuredPreferment? {
-        guard let preferment = prefermentRecipe?.preferment else { return nil }
-        let fermentPercent = prefermentTotalPercent ?? preferment.flourPercentage
-        let fermentIngredients = preferment.ingredients.enumerated().map { index, ingredient in
-            let percent = prefermentIngredientPercents[index] ?? ingredient.defaultPercentage
-            var temp = ingredient.temperature
-            if let rawTemp = ingredientTemps[1000 + index] {
-                temp = Temperature(value: rawTemp, measurement: settings.preferredTemp())
-            }
-            return MeasuredIngredient(ingredient: ingredient, percent: percent, temperature: temp, weight: prefermentIngredientWeights[index] ?? ingredient.defaultWeight)
-        }
-        return MeasuredPreferment(ingredients: fermentIngredients, name: preferment.name, flourPercentage: fermentPercent)
-    }
 }
 
-// Wraps CalculatedRecipeProtocol (plus the overrides used to produce it) for
-// use as a NavigationStack value.
-private struct CalculatedWrapper: Identifiable, Hashable {
-    let id = UUID()
-    let recipe: any CalculatedRecipeProtocol
-    let overrides: CalculatorOverrides
-
-    static func == (lhs: CalculatedWrapper, rhs: CalculatedWrapper) -> Bool { lhs.id == rhs.id }
-    func hash(into hasher: inout Hasher) { hasher.combine(id) }
+enum RecipeSessionMode: String, CaseIterable {
+    case recipe = "Recipe"
+    case adjust = "Adjust"
 }

@@ -130,44 +130,73 @@ extension XCUIApplication {
 
     // MARK: - Calculator
 
+    func showRecipeMode() {
+        let button = buttons["recipeModeButton"]
+        if button.waitForExistence(timeout: 2) {
+            button.tap()
+        } else {
+            buttons["Recipe"].tap()
+        }
+    }
+
+    func showAdjustMode() {
+        let button = buttons["adjustModeButton"]
+        if button.waitForExistence(timeout: 2) {
+            button.tap()
+        } else {
+            buttons["Adjust"].tap()
+        }
+    }
+
     func setDoughCount(_ count: String) {
+        showAdjustMode()
         let field = textFields["doughCountField"]
         XCTAssertTrue(field.waitForExistence(timeout: 5), "Dough count field not found")
         field.replaceNumericValue(count, app: self)
     }
 
     func setSingleDoughWeight(_ weight: String) {
+        showAdjustMode()
         let field = textFields["singleDoughWeightField"]
         XCTAssertTrue(field.waitForExistence(timeout: 5), "Single dough weight field not found")
         field.replaceNumericValue(weight, app: self)
     }
 
-    /// Toggles "Adjust Dough Ingredients" to reveal per-ingredient percent fields.
+    /// Enters the Adjust tab. Ingredient controls are now always visible there.
     func toggleAdjustIngredients() {
-        let toggle = switches["adjustIngredientsToggle"]
-        XCTAssertTrue(toggle.waitForExistence(timeout: 5), "Adjust Dough Ingredients toggle not found")
-        scrollToElement(toggle)
-        toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        showAdjustMode()
     }
 
     /// Sets the override percentage for the ingredient at `index` (its position
     /// in the recipe's ingredient list). Only non-flour ingredients have an
     /// editable percent field.
     func setIngredientPercent(at index: Int, value: String) {
+        showAdjustMode()
         let field = textFields["ingredientPercentField_\(index)"]
         XCTAssertTrue(field.waitForExistence(timeout: 5), "Ingredient percent field \(index) not found")
+        scrollToElement(field)
         field.replaceNumericValue(value, app: self)
     }
 
     func tapCalculate() {
-        let button = buttons["calculateButton"]
-        XCTAssertTrue(button.waitForExistence(timeout: 5), "Calculate button not found")
-        scrollToElement(button)
-        button.tap()
+        showRecipeMode()
+    }
+
+    /// Ingredients live in a collapsible "peek" sheet on the results screen; the rows aren't in the
+    /// accessibility tree until it's raised. Expands it (idempotently) before reading any ingredient
+    /// data. Safe to call repeatedly — it no-ops once the sheet is already open.
+    func expandIngredients() {
+        // If a dough/ingredient value is already present, the sheet is open.
+        if staticTexts["doughTotalWeight"].exists { return }
+        let bar = buttons["ingredientsPeekBar"]
+        guard bar.waitForExistence(timeout: 5) else { return }
+        bar.tap()
+        _ = staticTexts["doughTotalWeight"].waitForExistence(timeout: 5)
     }
 
     /// Asserts the calculated dough's total weight on the results screen.
     func assertDoughTotalWeight(_ weight: String, _ message: String = "") {
+        expandIngredients()
         let weightText = staticTexts["doughTotalWeight"]
         XCTAssertTrue(weightText.waitForExistence(timeout: 5), "Dough total weight not found. \(message)")
         XCTAssertEqual(weightText.label, weight, "Dough total weight mismatch. \(message)")
@@ -175,6 +204,7 @@ extension XCUIApplication {
 
     /// Asserts a calculated ingredient's weight and percentage on the results screen.
     func assertCalculatedIngredient(name: String, weight: String, percent: String, _ message: String = "") {
+        expandIngredients()
         let weightText = staticTexts["ingredientWeight_\(name)"]
         XCTAssertTrue(weightText.waitForExistence(timeout: 5), "Calculated weight for \(name) not found. \(message)")
         XCTAssertEqual(weightText.label, weight, "Calculated weight for \(name) mismatch. \(message)")
@@ -198,6 +228,7 @@ extension XCUIApplication {
         percentAccuracy: Double,
         _ message: String = ""
     ) {
+        expandIngredients()
         let weightText = staticTexts["ingredientWeight_\(name)"]
         XCTAssertTrue(weightText.waitForExistence(timeout: 5), "Calculated weight for \(name) not found. \(message)")
         let actualWeight = weightText.label.parsedNumericValue
@@ -429,9 +460,14 @@ extension XCUIApplication {
 
     // MARK: - History
 
-    /// Taps the toolbar button to open a recipe's history from the calculator screen.
+    /// Opens recipe history from the calculator screen, using the actions menu when needed.
     func openHistory() {
         let button = buttons["historyButton"]
+        if !button.waitForExistence(timeout: 2) {
+            let menu = buttons["calculatorActionsMenu"]
+            XCTAssertTrue(menu.waitForExistence(timeout: 5), "Recipe actions menu not found")
+            menu.tap()
+        }
         XCTAssertTrue(button.waitForExistence(timeout: 5), "History button not found")
         button.tap()
     }

@@ -329,7 +329,7 @@
 "onboarding_scan_title" = "레시피 만들기 또는 스캔";
 "onboarding_scan_body" = "레시피를 백분율이나 무게로 입력하거나, Apple Intelligence를 사용하여 레시피를 촬영하거나 스크린샷을 스캔하여 몇 초 만에 레시피를 만들 수 있습니다. iPhone 15 이상 필요.";
 "onboarding_private_title" = "완전 무료. 완전 프라이빗.";
-"onboarding_private_body" = "Doughy는 당신의 돈이나 정보를 가져가는 데 관심이 없습니다. Doughy는 사용 내역을 추적하지 않으며 인터넷을 사용하지 않습니다.";
+"onboarding_private_body" = "Doughy는 사용자의 돈이나 정보를 가져가는 데 관심이 없습니다. Doughy는 사용 기록을 추적하지 않으며 인터넷에 어떠한 것도 업로드하지 않습니다.";
 "onboarding_share_title" = "공유 및 백업";
 "onboarding_share_body" = "레시피를 내보내고 개인 메모와 함께 다른 Doughy 사용자에게 보내세요. 언제든지 전체 라이브러리를 파일로 백업하고 복원할 수 있습니다.";
 "onboarding_get_started" = "시작하기";

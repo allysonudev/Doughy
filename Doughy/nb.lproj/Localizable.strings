@@ -338,7 +338,7 @@
 "onboarding_scan_title" = "Lag eller skann oppskrifter";
 "onboarding_scan_body" = "Skriv inn en oppskrift etter prosent eller vekt – eller bruk Apple Intelligence på enheten til å fotografere en oppskrift eller skanne et skjermbilde og lage oppskriften din på sekunder. Krever iPhone 15 eller nyere.";
 "onboarding_private_title" = "Helt gratis. Helt privat.";
-"onboarding_private_body" = "Doughy er ikke interessert i pengene eller informasjonen din. Doughy sporer ikke bruken din og bruker ikke internett.";
+"onboarding_private_body" = "Doughy er ikke interessert i å ta pengene dine eller informasjonen din. Doughy sporer ikke bruken din og laster ikke opp noe til internett.";
 "onboarding_share_title" = "Del og sikkerhetskopier";
 "onboarding_share_body" = "Eksporter oppskrifter og send dem til andre Doughy-brukere med en personlig note. Sikkerhetskopier og gjenopprett hele biblioteket ditt til en fil når som helst.";
 "onboarding_get_started" = "Kom i gang";

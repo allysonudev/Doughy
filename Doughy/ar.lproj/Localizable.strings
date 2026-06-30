@@ -330,7 +330,7 @@
 "onboarding_scan_title" = "إنشاء أو مسح الوصفات";
 "onboarding_scan_body" = "أدخل وصفة بالنسبة المئوية أو بالوزن — أو استخدم نماذج Apple Intelligence على الجهاز لتصوير وصفة أو مسح لقطة شاشة وإنشاء وصفتك في ثوانٍ. يتطلب iPhone 15 أو أحدث.";
 "onboarding_private_title" = "مجاني تماماً. خاص تماماً.";
-"onboarding_private_body" = "Doughy لا تسعى إلى أموالك ولا بياناتك. Doughy لا تتتبع استخدامك ولا تتصل بالإنترنت.";
+"onboarding_private_body" = "لا يهتم Doughy بأخذ أموالك أو معلوماتك. لا يتتبع Doughy استخدامك ولا يرفع أي شيء إلى الإنترنت.";
 "onboarding_share_title" = "مشاركة ونسخ احتياطي";
 "onboarding_share_body" = "صدّر الوصفات وأرسلها لمستخدمي Doughy الآخرين مع ملاحظة شخصية. انسخ مكتبتك كاملةً احتياطياً واستعدها في أي وقت.";
 "onboarding_get_started" = "ابدأ الآن";

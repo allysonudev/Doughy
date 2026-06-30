@@ -95,8 +95,9 @@ final class ScreenshotUITests: XCTestCase {
         capture("01_RecipeList")
 
         openNeapolitanPizza()
-        XCTAssertTrue(app.buttons["calculateButton"].waitForExistence(timeout: 15),
-                      "Calculator screen did not appear")
+        XCTAssertTrue(app.buttons["recipeModeButton"].waitForExistence(timeout: 15),
+                      "Recipe session screen did not appear")
+        app.showAdjustMode()
         capture("02_Calculator")
 
         app.tapCalculate()

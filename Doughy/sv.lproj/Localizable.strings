@@ -338,7 +338,7 @@
 "onboarding_scan_title" = "Skapa eller skanna recept";
 "onboarding_scan_body" = "Skriv in ett recept efter procent eller vikt – eller använd Apple Intelligence på enheten för att fotografera ett recept eller skanna en skärmbild och skapa ditt recept på några sekunder. Kräver iPhone 15 eller senare.";
 "onboarding_private_title" = "Helt gratis. Helt privat.";
-"onboarding_private_body" = "Doughy är inte intresserat av att ta dina pengar eller din information. Doughy spårar inte din användning och använder inte internet.";
+"onboarding_private_body" = "Doughy är inte intresserad av att ta dina pengar eller din information. Doughy spårar inte din användning och laddar inte upp något till internet.";
 "onboarding_share_title" = "Dela och säkerhetskopiera";
 "onboarding_share_body" = "Exportera recept och skicka dem till andra Doughy-användare med en personlig notis. Säkerhetskopiera och återställ hela ditt bibliotek till en fil när som helst.";
 "onboarding_get_started" = "Kom igång";

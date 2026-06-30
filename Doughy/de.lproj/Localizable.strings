@@ -338,7 +338,7 @@
 "onboarding_scan_title" = "Rezepte erstellen oder scannen";
 "onboarding_scan_body" = "Gib ein Rezept nach Prozentsatz oder Gewicht ein – oder nutze Apple Intelligence, um ein Rezept zu fotografieren oder einen Screenshot zu scannen und dein Rezept in Sekunden zu erstellen. Erfordert iPhone 15 oder neuer.";
 "onboarding_private_title" = "Völlig kostenlos. Völlig privat.";
-"onboarding_private_body" = "Doughy ist nicht daran interessiert, dein Geld oder deine Daten zu nehmen. Doughy verfolgt deine Nutzung nicht und verwendet kein Internet.";
+"onboarding_private_body" = "Doughy hat kein Interesse daran, dein Geld oder deine Daten zu nehmen. Doughy verfolgt deine Nutzung nicht und lädt nichts ins Internet hoch.";
 "onboarding_share_title" = "Teilen & Sichern";
 "onboarding_share_body" = "Exportiere Rezepte und sende sie mit einer persönlichen Notiz an andere Doughy-Nutzer. Sichere und stelle deine gesamte Bibliothek jederzeit in einer Datei wieder her.";
 "onboarding_get_started" = "Loslegen";

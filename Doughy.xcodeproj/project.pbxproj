@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		19204EE25AA44A11A93E218C /* ShareRecipeIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FC8E5E7394041E7BD9439F7 /* ShareRecipeIntent.swift */; };
 		3F8B769F2FE2F10F00A465ED /* RecipeExportImportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F8B769E2FE2F10A00A465ED /* RecipeExportImportTests.swift */; };
-		3FD1800DB04184845AC60A3F /* CalculatedRecipeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B31864D344883DD71A807B7C /* CalculatedRecipeView.swift */; };
 		52F643D8FAF8D0B6CE698A80 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A2C94469EA44599F0F17B73 /* OnboardingView.swift */; };
 		63F59D0551A094E311BCA551 /* CollectionAvatar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F99454EBC63FB7409C87ABA /* CollectionAvatar.swift */; };
 		6BC3C9EA312E5BF9A63D6BE3 /* WhatsNewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 614E010B5C07043996E736E3 /* WhatsNewView.swift */; };
@@ -18,12 +17,24 @@
 		73D001FFB0DEE3BBDB2BFEF3 /* RecipeStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39CC5426652CEF6C8DF863BB /* RecipeStore.swift */; };
 		7CBFB6781E03ED549986FA0B /* CollectionAppearanceEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F312F1D82B577F4D6CF1FEE6 /* CollectionAppearanceEditor.swift */; };
 		7D5BAD3319FBC2BBE8A0812A /* CalculatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC478C29AFD50FC6F4F02412 /* CalculatorView.swift */; };
+		9DECB03C488A841D7BAB17F5 /* CalculatorView+RecipeMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EE641052F9FD1BD3A7D55BE /* CalculatorView+RecipeMode.swift */; };
+		23C9E937D08EB2C980FDB6CE /* CalculatorView+IngredientsPeek.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20DE4D9F33003FFCD6D49C0A /* CalculatorView+IngredientsPeek.swift */; };
+		D40000A0D2EA2F1BAD6B071A /* CalculatorView+UnitCycling.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D8F3BAEC736E69814655DC9 /* CalculatorView+UnitCycling.swift */; };
+		4E34E55BB18624B1D458DB94 /* CalculatorView+AdjustMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED9EA2418249092005FF991D /* CalculatorView+AdjustMode.swift */; };
+		99974BDC2B77149E06B0CDAA /* CalculatorView+Actions.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEFFFCE84F7253690F6E34A5 /* CalculatorView+Actions.swift */; };
 		800188A5A86C911BEFB67224 /* CollectionAppearanceStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EC77E8318EF1CFA6870B8A8 /* CollectionAppearanceStore.swift */; };
 		AA0000000000000000000006 /* UITestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000002 /* UITestSupport.swift */; };
 		AA0000000000000000000007 /* RecipeCreationUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000003 /* RecipeCreationUITests.swift */; };
 		AA0000000000000000000008 /* RecipeEditUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000004 /* RecipeEditUITests.swift */; };
 		AA0000000000000000000014 /* RecipeDataIntegrityUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000013 /* RecipeDataIntegrityUITests.swift */; };
 		AA0000000000000000000016 /* RecipeCalculatorUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000015 /* RecipeCalculatorUITests.swift */; };
+		AB1000000000000000000002 /* RecipeWebsiteImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB1000000000000000000001 /* RecipeWebsiteImporter.swift */; };
+		AB1000000000000000000004 /* WebsiteRecipeImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB1000000000000000000003 /* WebsiteRecipeImportView.swift */; };
+		AB1000000000000000000006 /* RecipeWebsiteImporterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB1000000000000000000005 /* RecipeWebsiteImporterTests.swift */; };
+		AB1000000000000000000008 /* RecipeWebsiteImporterLiveCorpusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB1000000000000000000007 /* RecipeWebsiteImporterLiveCorpusTests.swift */; };
+		AB2000000000000000000001 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB2000000000000000000011 /* ShareViewController.swift */; };
+		AB2000000000000000000002 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = F0A1B2C3D4E5F60718293A4B /* Localizable.strings */; };
+		AB2000000000000000000003 /* Doughy Share Extension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = AB2000000000000000000013 /* Doughy Share Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		B9C877616BE2E2A95E6E4ECF /* CollectionAppearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0D27627EC2B6667EE22997D /* CollectionAppearance.swift */; };
 		BB06F1732425F5F0001A03AD /* ObjectFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB06F1722425F5F0001A03AD /* ObjectFactory.swift */; };
 		BB06F1752425F681001A03AD /* CoreDataGateway.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB06F1742425F681001A03AD /* CoreDataGateway.swift */; };
@@ -71,6 +82,8 @@
 		CA1000000000000000000003 /* RecipeSnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA1000000000000000000004 /* RecipeSnapshotTests.swift */; };
 		CA2000000000000000000001 /* SettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA2000000000000000000002 /* SettingsTests.swift */; };
 		CC1234567890ABCDEF000001 /* RecipeScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC1234567890ABCDEF000002 /* RecipeScanner.swift */; };
+		F5A129C79DE04E909FE7D50F /* RecipeScannerTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB8F0349E42D42B6AC12C824 /* RecipeScannerTypes.swift */; };
+		8516001B0B91437091FFFB99 /* RecipeScanner+LLMParsing.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD72AC578E7E42AE98982D3F /* RecipeScanner+LLMParsing.swift */; };
 		CC1234567890ABCDEF000003 /* IngredientConversionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC1234567890ABCDEF000004 /* IngredientConversionStore.swift */; };
 		CC1234567890ABCDEF000005 /* VolumeUnitFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC1234567890ABCDEF000006 /* VolumeUnitFormatter.swift */; };
 		D30B3F4115768363C0D2AA1C /* CollectionAppearanceCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CAF34DDF2C99075B8A49A02 /* CollectionAppearanceCatalog.swift */; };
@@ -88,16 +101,17 @@
 		DD000000000000000000001B /* CoreDataSortedAccessors.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD000000000000000000001A /* CoreDataSortedAccessors.swift */; };
 		DD0000000000000000000020 /* CoreDataMigrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000000000000000000019 /* CoreDataMigrationTests.swift */; };
 		DD0000000000000000000022 /* ExtraIngredientConversion.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000000000000000000023 /* ExtraIngredientConversion.swift */; };
-		AB1000000000000000000002 /* RecipeWebsiteImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB1000000000000000000001 /* RecipeWebsiteImporter.swift */; };
-		AB1000000000000000000004 /* WebsiteRecipeImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB1000000000000000000003 /* WebsiteRecipeImportView.swift */; };
-		AB1000000000000000000006 /* RecipeWebsiteImporterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB1000000000000000000005 /* RecipeWebsiteImporterTests.swift */; };
-		AB1000000000000000000008 /* RecipeWebsiteImporterLiveCorpusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB1000000000000000000007 /* RecipeWebsiteImporterLiveCorpusTests.swift */; };
-		AB2000000000000000000001 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB2000000000000000000011 /* ShareViewController.swift */; };
-		AB2000000000000000000002 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = F0A1B2C3D4E5F60718293A4B /* Localizable.strings */; };
-		AB2000000000000000000003 /* Doughy Share Extension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = AB2000000000000000000013 /* Doughy Share Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		DD0000000000000000000031 /* RecipeLookupTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000000000000000000030 /* RecipeLookupTests.swift */; };
 		DDA522364120C5B7AF1238D4 /* CreateRecipeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D3CD9D13F590A51EDD39033 /* CreateRecipeView.swift */; };
+		8D576933D11E20D1D9AE6650 /* CreateRecipeTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC15888122093A040A0CF07D /* CreateRecipeTypes.swift */; };
+		5DFAC86A0437D1EAE00286C8 /* CreateRecipeSupportViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC3DFB16A6CB91AE17606C0 /* CreateRecipeSupportViews.swift */; };
+		03D6FCD48481F746C92512D5 /* CreateRecipeView+Body.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DC3AB7D428FE0052F7CC23E /* CreateRecipeView+Body.swift */; };
+		2547BA0CEC3BE17B68108A2F /* CreateRecipeView+ModeScan.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A01FBADF69093A27E5645B5 /* CreateRecipeView+ModeScan.swift */; };
+		89AB683DC71D75ED3DB22478 /* CreateRecipeView+Processing.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6CA8776119DDD2083343ED0 /* CreateRecipeView+Processing.swift */; };
+		DEA42EF90DBCEB4E75D778DF /* CreateRecipeView+StepsIngredients.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A1FFE2CC008A39E93525152 /* CreateRecipeView+StepsIngredients.swift */; };
+		A994C4EB7D869D5B3741C6FD /* CreateRecipeView+StepsPreferment.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE1EF9A2390AB6D4199E83F8 /* CreateRecipeView+StepsPreferment.swift */; };
 		EAB3150D4BD26C22D891FC75 /* RecipeListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F3DC0F90C6416B3782E7EA1 /* RecipeListView.swift */; };
+		55BFBADF3DA19AC0A372AFF1 /* RecipeListView+TabletSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31DD51E77A0959F135C6187A /* RecipeListView+TabletSession.swift */; };
 		EE00000000000000000001 /* RecipeScannerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE00000000000000000002 /* RecipeScannerTests.swift */; };
 		EE00000000000000000003 /* Recipes in Resources */ = {isa = PBXBuildFile; fileRef = EE00000000000000000004 /* Recipes */; };
 		F0A1B2C3D4E5F60718293A4C /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = F0A1B2C3D4E5F60718293A4B /* Localizable.strings */; };
@@ -116,19 +130,19 @@
 			remoteGlobalIDString = BB30DECB2425B83D00BFD472;
 			remoteInfo = Doughy;
 		};
-		BB30DEE62425B83F00BFD472 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = BB30DEC42425B83D00BFD472 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = BB30DECB2425B83D00BFD472;
-			remoteInfo = "Recipe Helper";
-		};
 		AB2000000000000000000032 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = BB30DEC42425B83D00BFD472 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = AB2000000000000000000030;
 			remoteInfo = "Doughy Share Extension";
+		};
+		BB30DEE62425B83F00BFD472 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = BB30DEC42425B83D00BFD472 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = BB30DECB2425B83D00BFD472;
+			remoteInfo = "Recipe Helper";
 		};
 /* End PBXContainerItemProxy section */
 
@@ -156,12 +170,20 @@
 		3F8B76A22FE3548100A465ED /* Doughy Tests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = "Doughy Tests.xctestplan"; sourceTree = "<group>"; };
 		3F8B76A32FE354AA00A465ED /* Doughy.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = Doughy.xctestplan; sourceTree = "<group>"; };
 		4F3DC0F90C6416B3782E7EA1 /* RecipeListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeListView.swift; sourceTree = "<group>"; };
+		31DD51E77A0959F135C6187A /* RecipeListView+TabletSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "RecipeListView+TabletSession.swift"; sourceTree = "<group>"; };
 		543D7A006943456E8B96BB29 /* ScanRecipeIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanRecipeIntent.swift; sourceTree = "<group>"; };
 		614E010B5C07043996E736E3 /* WhatsNewView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WhatsNewView.swift; sourceTree = "<group>"; };
 		7CAF34DDF2C99075B8A49A02 /* CollectionAppearanceCatalog.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CollectionAppearanceCatalog.swift; sourceTree = "<group>"; };
 		7FC8E5E7394041E7BD9439F7 /* ShareRecipeIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareRecipeIntent.swift; sourceTree = "<group>"; };
 		8D5DEA7121902BEE05D59CD2 /* Doughy.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Doughy.entitlements; sourceTree = "<group>"; };
 		9D3CD9D13F590A51EDD39033 /* CreateRecipeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateRecipeView.swift; sourceTree = "<group>"; };
+		AC15888122093A040A0CF07D /* CreateRecipeTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CreateRecipeTypes.swift"; sourceTree = "<group>"; };
+		AAC3DFB16A6CB91AE17606C0 /* CreateRecipeSupportViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CreateRecipeSupportViews.swift"; sourceTree = "<group>"; };
+		2DC3AB7D428FE0052F7CC23E /* CreateRecipeView+Body.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CreateRecipeView+Body.swift"; sourceTree = "<group>"; };
+		0A01FBADF69093A27E5645B5 /* CreateRecipeView+ModeScan.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CreateRecipeView+ModeScan.swift"; sourceTree = "<group>"; };
+		D6CA8776119DDD2083343ED0 /* CreateRecipeView+Processing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CreateRecipeView+Processing.swift"; sourceTree = "<group>"; };
+		2A1FFE2CC008A39E93525152 /* CreateRecipeView+StepsIngredients.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CreateRecipeView+StepsIngredients.swift"; sourceTree = "<group>"; };
+		CE1EF9A2390AB6D4199E83F8 /* CreateRecipeView+StepsPreferment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CreateRecipeView+StepsPreferment.swift"; sourceTree = "<group>"; };
 		9F99454EBC63FB7409C87ABA /* CollectionAvatar.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CollectionAvatar.swift; sourceTree = "<group>"; };
 		A1A5897271E8466D9EA31C08 /* RecipeFile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeFile.swift; sourceTree = "<group>"; };
 		AA0000000000000000000001 /* Doughy UI Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Doughy UI Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -171,8 +193,6 @@
 		AA0000000000000000000005 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		AA0000000000000000000013 /* RecipeDataIntegrityUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeDataIntegrityUITests.swift; sourceTree = "<group>"; };
 		AA0000000000000000000015 /* RecipeCalculatorUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeCalculatorUITests.swift; sourceTree = "<group>"; };
-		FA57000000000000000000F1 /* SnapshotHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnapshotHelper.swift; sourceTree = "<group>"; };
-		FA57000000000000000000F3 /* ScreenshotUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotUITests.swift; sourceTree = "<group>"; };
 		AB1000000000000000000001 /* RecipeWebsiteImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeWebsiteImporter.swift; sourceTree = "<group>"; };
 		AB1000000000000000000003 /* WebsiteRecipeImportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebsiteRecipeImportView.swift; sourceTree = "<group>"; };
 		AB1000000000000000000005 /* RecipeWebsiteImporterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeWebsiteImporterTests.swift; sourceTree = "<group>"; };
@@ -181,7 +201,11 @@
 		AB2000000000000000000012 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		AB2000000000000000000013 /* Doughy Share Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "Doughy Share Extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
 		AC478C29AFD50FC6F4F02412 /* CalculatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalculatorView.swift; sourceTree = "<group>"; };
-		B31864D344883DD71A807B7C /* CalculatedRecipeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalculatedRecipeView.swift; sourceTree = "<group>"; };
+		7EE641052F9FD1BD3A7D55BE /* CalculatorView+RecipeMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CalculatorView+RecipeMode.swift"; sourceTree = "<group>"; };
+		20DE4D9F33003FFCD6D49C0A /* CalculatorView+IngredientsPeek.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CalculatorView+IngredientsPeek.swift"; sourceTree = "<group>"; };
+		1D8F3BAEC736E69814655DC9 /* CalculatorView+UnitCycling.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CalculatorView+UnitCycling.swift"; sourceTree = "<group>"; };
+		ED9EA2418249092005FF991D /* CalculatorView+AdjustMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CalculatorView+AdjustMode.swift"; sourceTree = "<group>"; };
+		BEFFFCE84F7253690F6E34A5 /* CalculatorView+Actions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CalculatorView+Actions.swift"; sourceTree = "<group>"; };
 		BB06F1722425F5F0001A03AD /* ObjectFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjectFactory.swift; sourceTree = "<group>"; };
 		BB06F1742425F681001A03AD /* CoreDataGateway.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataGateway.swift; sourceTree = "<group>"; };
 		BB06F1762425FAE6001A03AD /* RecipeReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeReader.swift; sourceTree = "<group>"; };
@@ -234,6 +258,8 @@
 		CA1000000000000000000004 /* RecipeSnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeSnapshotTests.swift; sourceTree = "<group>"; };
 		CA2000000000000000000002 /* SettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsTests.swift; sourceTree = "<group>"; };
 		CC1234567890ABCDEF000002 /* RecipeScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeScanner.swift; sourceTree = "<group>"; };
+		CB8F0349E42D42B6AC12C824 /* RecipeScannerTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeScannerTypes.swift; sourceTree = "<group>"; };
+		BD72AC578E7E42AE98982D3F /* RecipeScanner+LLMParsing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "RecipeScanner+LLMParsing.swift"; sourceTree = "<group>"; };
 		CC1234567890ABCDEF000004 /* IngredientConversionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IngredientConversionStore.swift; sourceTree = "<group>"; };
 		CC1234567890ABCDEF000006 /* VolumeUnitFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VolumeUnitFormatter.swift; sourceTree = "<group>"; };
 		D8A07378D8CC47F78A59F202 /* ImportRecipeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportRecipeView.swift; sourceTree = "<group>"; };
@@ -285,6 +311,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		AB2000000000000000000022 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		BB30DEC92425B83D00BFD472 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -293,13 +326,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		BB30DEE22425B83F00BFD472 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		AB2000000000000000000022 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -335,6 +361,15 @@
 			path = "Doughy UI Tests";
 			sourceTree = "<group>";
 		};
+		AB2000000000000000000020 /* Doughy Share Extension */ = {
+			isa = PBXGroup;
+			children = (
+				AB2000000000000000000011 /* ShareViewController.swift */,
+				AB2000000000000000000012 /* Info.plist */,
+			);
+			path = "Doughy Share Extension";
+			sourceTree = "<group>";
+		};
 		BB30DEC32425B83D00BFD472 = {
 			isa = PBXGroup;
 			children = (
@@ -356,15 +391,6 @@
 				AB2000000000000000000013 /* Doughy Share Extension.appex */,
 			);
 			name = Products;
-			sourceTree = "<group>";
-		};
-		AB2000000000000000000020 /* Doughy Share Extension */ = {
-			isa = PBXGroup;
-			children = (
-				AB2000000000000000000011 /* ShareViewController.swift */,
-				AB2000000000000000000012 /* Info.plist */,
-			);
-			path = "Doughy Share Extension";
 			sourceTree = "<group>";
 		};
 		BB30DECE2425B83D00BFD472 /* Doughy */ = {
@@ -456,6 +482,8 @@
 				BBD264342431520500DF8987 /* RecipePredicates.swift */,
 				BBE2FF492439497D0091A485 /* AppInfo.swift */,
 				CC1234567890ABCDEF000002 /* RecipeScanner.swift */,
+				CB8F0349E42D42B6AC12C824 /* RecipeScannerTypes.swift */,
+				BD72AC578E7E42AE98982D3F /* RecipeScanner+LLMParsing.swift */,
 				543D7A006943456E8B96BB29 /* ScanRecipeIntent.swift */,
 				7FC8E5E7394041E7BD9439F7 /* ShareRecipeIntent.swift */,
 				CC1234567890ABCDEF000004 /* IngredientConversionStore.swift */,
@@ -474,10 +502,22 @@
 			isa = PBXGroup;
 			children = (
 				4F3DC0F90C6416B3782E7EA1 /* RecipeListView.swift */,
+				31DD51E77A0959F135C6187A /* RecipeListView+TabletSession.swift */,
 				AC478C29AFD50FC6F4F02412 /* CalculatorView.swift */,
-				B31864D344883DD71A807B7C /* CalculatedRecipeView.swift */,
+				7EE641052F9FD1BD3A7D55BE /* CalculatorView+RecipeMode.swift */,
+				20DE4D9F33003FFCD6D49C0A /* CalculatorView+IngredientsPeek.swift */,
+				1D8F3BAEC736E69814655DC9 /* CalculatorView+UnitCycling.swift */,
+				ED9EA2418249092005FF991D /* CalculatorView+AdjustMode.swift */,
+				BEFFFCE84F7253690F6E34A5 /* CalculatorView+Actions.swift */,
 				DD0000000000000000000013 /* RecipeHistoryView.swift */,
 				9D3CD9D13F590A51EDD39033 /* CreateRecipeView.swift */,
+				AC15888122093A040A0CF07D /* CreateRecipeTypes.swift */,
+				AAC3DFB16A6CB91AE17606C0 /* CreateRecipeSupportViews.swift */,
+				2DC3AB7D428FE0052F7CC23E /* CreateRecipeView+Body.swift */,
+				0A01FBADF69093A27E5645B5 /* CreateRecipeView+ModeScan.swift */,
+				D6CA8776119DDD2083343ED0 /* CreateRecipeView+Processing.swift */,
+				2A1FFE2CC008A39E93525152 /* CreateRecipeView+StepsIngredients.swift */,
+				CE1EF9A2390AB6D4199E83F8 /* CreateRecipeView+StepsPreferment.swift */,
 				36E8F59880EE98064C4AD020 /* SettingsView.swift */,
 				FF0000000000000000000003 /* IngredientConversionsView.swift */,
 				BE9D64C9D3DE4E42B4B71BD9 /* RecipeShareView.swift */,
@@ -549,6 +589,24 @@
 			productReference = AA0000000000000000000001 /* Doughy UI Tests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
+		AB2000000000000000000030 /* Doughy Share Extension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AB2000000000000000000042 /* Build configuration list for PBXNativeTarget "Doughy Share Extension" */;
+			buildPhases = (
+				AB2000000000000000000021 /* Sources */,
+				AB2000000000000000000022 /* Frameworks */,
+				AB2000000000000000000023 /* Resources */,
+				AB2000000000000000000025 /* Set Build Number from Git Commit Count */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "Doughy Share Extension";
+			productName = "Doughy Share Extension";
+			productReference = AB2000000000000000000013 /* Doughy Share Extension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		BB30DECB2425B83D00BFD472 /* Doughy */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = BB30DEEE2425B83F00BFD472 /* Build configuration list for PBXNativeTarget "Doughy" */;
@@ -568,24 +626,6 @@
 			productName = "Recipe Helper";
 			productReference = BB30DECC2425B83D00BFD472 /* Doughy.app */;
 			productType = "com.apple.product-type.application";
-		};
-		AB2000000000000000000030 /* Doughy Share Extension */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = AB2000000000000000000042 /* Build configuration list for PBXNativeTarget "Doughy Share Extension" */;
-			buildPhases = (
-				AB2000000000000000000021 /* Sources */,
-				AB2000000000000000000022 /* Frameworks */,
-				AB2000000000000000000023 /* Resources */,
-				AB2000000000000000000025 /* Set Build Number from Git Commit Count */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = "Doughy Share Extension";
-			productName = "Doughy Share Extension";
-			productReference = AB2000000000000000000013 /* Doughy Share Extension.appex */;
-			productType = "com.apple.product-type.app-extension";
 		};
 		BB30DEE42425B83F00BFD472 /* Doughy Tests */ = {
 			isa = PBXNativeTarget;
@@ -673,6 +713,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		AB2000000000000000000023 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AB2000000000000000000002 /* Localizable.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		BB30DECA2425B83D00BFD472 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -691,32 +739,9 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		AB2000000000000000000023 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				AB2000000000000000000002 /* Localizable.strings in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		DD0000000000000000000021 /* Set Build Number from Git Commit Count */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "Set Build Number from Git Commit Count";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "buildNumber=$(git -C \"${SRCROOT}\" rev-list --count HEAD)\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion ${buildNumber}\" \"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}\"\npluginsPath=\"${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}/PlugIns\"\nif [ -d \"${pluginsPath}\" ]; then\n  find \"${pluginsPath}\" -path \"*.appex/Info.plist\" -print | while IFS= read -r plist; do\n    /usr/libexec/PlistBuddy -c \"Set :CFBundleVersion ${buildNumber}\" \"${plist}\"\n  done\nfi\n";
-		};
 		AB2000000000000000000025 /* Set Build Number from Git Commit Count */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
@@ -731,6 +756,21 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "buildNumber=$(git -C \"${SRCROOT}\" rev-list --count HEAD)\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion ${buildNumber}\" \"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}\"\n";
+		};
+		DD0000000000000000000021 /* Set Build Number from Git Commit Count */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Set Build Number from Git Commit Count";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "buildNumber=$(git -C \"${SRCROOT}\" rev-list --count HEAD)\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion ${buildNumber}\" \"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}\"\npluginsPath=\"${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}/PlugIns\"\nif [ -d \"${pluginsPath}\" ]; then\n  find \"${pluginsPath}\" -path \"*.appex/Info.plist\" -print | while IFS= read -r plist; do\n    /usr/libexec/PlistBuddy -c \"Set :CFBundleVersion ${buildNumber}\" \"${plist}\"\n  done\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -747,6 +787,14 @@
 				DD0000000000000000000018 /* RecipeHistoryUITests.swift in Sources */,
 				FA57000000000000000000F2 /* SnapshotHelper.swift in Sources */,
 				FA57000000000000000000F4 /* ScreenshotUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AB2000000000000000000021 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AB2000000000000000000001 /* ShareViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -789,6 +837,8 @@
 				BBD2642A24313B6E00DF8987 /* TemperatureFormatter.swift in Sources */,
 				BBD2643324314D6500DF8987 /* AlertViewHelper.swift in Sources */,
 				CC1234567890ABCDEF000001 /* RecipeScanner.swift in Sources */,
+				F5A129C79DE04E909FE7D50F /* RecipeScannerTypes.swift in Sources */,
+				8516001B0B91437091FFFB99 /* RecipeScanner+LLMParsing.swift in Sources */,
 				D54CC3B8CC2C438A93062B19 /* ScanRecipeIntent.swift in Sources */,
 				19204EE25AA44A11A93E218C /* ShareRecipeIntent.swift in Sources */,
 				CC1234567890ABCDEF000003 /* IngredientConversionStore.swift in Sources */,
@@ -805,13 +855,25 @@
 				BB30DEF72425BD2900BFD472 /* RecipeWriter.swift in Sources */,
 				73D001FFB0DEE3BBDB2BFEF3 /* RecipeStore.swift in Sources */,
 				EAB3150D4BD26C22D891FC75 /* RecipeListView.swift in Sources */,
+				55BFBADF3DA19AC0A372AFF1 /* RecipeListView+TabletSession.swift in Sources */,
 				D9BDE5D1CDE84BD8BF854E68 /* RecipeFile.swift in Sources */,
 				BB97B68A12EC421186D6E6C8 /* RecipeShareView.swift in Sources */,
 				6F4375F7382D44E2A055CFA8 /* ImportRecipeView.swift in Sources */,
 				AB1000000000000000000004 /* WebsiteRecipeImportView.swift in Sources */,
 				7D5BAD3319FBC2BBE8A0812A /* CalculatorView.swift in Sources */,
-				3FD1800DB04184845AC60A3F /* CalculatedRecipeView.swift in Sources */,
+				9DECB03C488A841D7BAB17F5 /* CalculatorView+RecipeMode.swift in Sources */,
+				23C9E937D08EB2C980FDB6CE /* CalculatorView+IngredientsPeek.swift in Sources */,
+				D40000A0D2EA2F1BAD6B071A /* CalculatorView+UnitCycling.swift in Sources */,
+				4E34E55BB18624B1D458DB94 /* CalculatorView+AdjustMode.swift in Sources */,
+				99974BDC2B77149E06B0CDAA /* CalculatorView+Actions.swift in Sources */,
 				DDA522364120C5B7AF1238D4 /* CreateRecipeView.swift in Sources */,
+				8D576933D11E20D1D9AE6650 /* CreateRecipeTypes.swift in Sources */,
+				5DFAC86A0437D1EAE00286C8 /* CreateRecipeSupportViews.swift in Sources */,
+				03D6FCD48481F746C92512D5 /* CreateRecipeView+Body.swift in Sources */,
+				2547BA0CEC3BE17B68108A2F /* CreateRecipeView+ModeScan.swift in Sources */,
+				89AB683DC71D75ED3DB22478 /* CreateRecipeView+Processing.swift in Sources */,
+				DEA42EF90DBCEB4E75D778DF /* CreateRecipeView+StepsIngredients.swift in Sources */,
+				A994C4EB7D869D5B3741C6FD /* CreateRecipeView+StepsPreferment.swift in Sources */,
 				6FFC277DF945E4E8632C1095 /* SettingsView.swift in Sources */,
 				DD0000000000000000000002 /* RecipeSnapshot.swift in Sources */,
 				DD0000000000000000000004 /* RecipeDiff.swift in Sources */,
@@ -848,14 +910,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		AB2000000000000000000021 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				AB2000000000000000000001 /* ShareViewController.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -864,15 +918,15 @@
 			target = BB30DECB2425B83D00BFD472 /* Doughy */;
 			targetProxy = AA000000000000000000000B /* PBXContainerItemProxy */;
 		};
-		BB30DEE72425B83F00BFD472 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = BB30DECB2425B83D00BFD472 /* Doughy */;
-			targetProxy = BB30DEE62425B83F00BFD472 /* PBXContainerItemProxy */;
-		};
 		AB2000000000000000000031 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = AB2000000000000000000030 /* Doughy Share Extension */;
 			targetProxy = AB2000000000000000000032 /* PBXContainerItemProxy */;
+		};
+		BB30DEE72425B83F00BFD472 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = BB30DECB2425B83D00BFD472 /* Doughy */;
+			targetProxy = BB30DEE62425B83F00BFD472 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -948,6 +1002,52 @@
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_TARGET_NAME = Doughy;
+			};
+			name = Release;
+		};
+		AB2000000000000000000040 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = RU9TPSC3GX;
+				INFOPLIST_FILE = "Doughy Share Extension/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.1;
+				PRODUCT_BUNDLE_IDENTIFIER = org.curiousurick.Doughy.ShareExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		AB2000000000000000000041 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = RU9TPSC3GX;
+				INFOPLIST_FILE = "Doughy Share Extension/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.1;
+				PRODUCT_BUNDLE_IDENTIFIER = org.curiousurick.Doughy.ShareExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};
@@ -1159,52 +1259,6 @@
 			};
 			name = Release;
 		};
-		AB2000000000000000000040 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				APPLICATION_EXTENSION_API_ONLY = YES;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = RU9TPSC3GX;
-				INFOPLIST_FILE = "Doughy Share Extension/Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				MARKETING_VERSION = 1.1;
-				PRODUCT_BUNDLE_IDENTIFIER = org.curiousurick.Doughy.ShareExtension;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SKIP_INSTALL = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Debug;
-		};
-		AB2000000000000000000041 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				APPLICATION_EXTENSION_API_ONLY = YES;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = RU9TPSC3GX;
-				INFOPLIST_FILE = "Doughy Share Extension/Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				MARKETING_VERSION = 1.1;
-				PRODUCT_BUNDLE_IDENTIFIER = org.curiousurick.Doughy.ShareExtension;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SKIP_INSTALL = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Release;
-		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -1213,6 +1267,15 @@
 			buildConfigurations = (
 				AA0000000000000000000010 /* Debug */,
 				AA0000000000000000000011 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AB2000000000000000000042 /* Build configuration list for PBXNativeTarget "Doughy Share Extension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AB2000000000000000000040 /* Debug */,
+				AB2000000000000000000041 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -1240,15 +1303,6 @@
 			buildConfigurations = (
 				BB30DEF22425B83F00BFD472 /* Debug */,
 				BB30DEF32425B83F00BFD472 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		AB2000000000000000000042 /* Build configuration list for PBXNativeTarget "Doughy Share Extension" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				AB2000000000000000000040 /* Debug */,
-				AB2000000000000000000041 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

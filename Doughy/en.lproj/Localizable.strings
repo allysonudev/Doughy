@@ -327,7 +327,7 @@
 "onboarding_scan_title" = "Create or Scan Recipes";
 "onboarding_scan_body" = "Type a recipe by percentage or by weight — or use Apple Intelligence On-Device models to photograph a recipe or scan a screenshot and create your recipe in seconds. Requires iPhone 15 or later.";
 "onboarding_private_title" = "Totally Free. Totally Private.";
-"onboarding_private_body" = "Doughy isn't interested in taking your money or your information. Doughy doesn't track your usage or use the internet.";
+"onboarding_private_body" = "Doughy isn't interested in taking your money or your information. Doughy doesn't track your usage or upload anything to the internet.";
 "onboarding_share_title" = "Share & Back Up";
 "onboarding_share_body" = "Export recipes and send them to other Doughy users with a personal note. Backup and restore your entire library to a file any time.";
 "onboarding_get_started" = "Get Started";

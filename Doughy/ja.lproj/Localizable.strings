@@ -338,7 +338,7 @@
 "onboarding_scan_title" = "レシピを作成またはスキャン";
 "onboarding_scan_body" = "レシピをパーセンテージまたは重量で入力するか、Apple Intelligenceを使ってレシピを撮影したりスクリーンショットをスキャンして数秒でレシピを作成できます。iPhone 15以降が必要です。";
 "onboarding_private_title" = "完全無料。完全プライベート。";
-"onboarding_private_body" = "Doughyはあなたのお金や情報を得ることに興味がありません。Doughyはあなたの使用状況を追跡せず、インターネットを使用しません。";
+"onboarding_private_body" = "Doughyはお金や個人情報を取得することに関心がありません。Doughyは利用状況を追跡したり、インターネットに何かをアップロードしたりすることはありません。";
 "onboarding_share_title" = "共有とバックアップ";
 "onboarding_share_body" = "レシピをエクスポートして個人メモとともに他のDoughyユーザーに送れます。いつでもライブラリ全体をファイルにバックアップして復元できます。";
 "onboarding_get_started" = "始める";

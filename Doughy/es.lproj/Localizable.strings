@@ -329,7 +329,7 @@
 "onboarding_scan_title" = "Crear o escanear recetas";
 "onboarding_scan_body" = "Escribe una receta por porcentaje o por peso, o usa Apple Intelligence para fotografiar una receta o escanear una captura de pantalla y crear tu receta en segundos. Requiere iPhone 15 o posterior.";
 "onboarding_private_title" = "Totalmente gratis. Totalmente privado.";
-"onboarding_private_body" = "Doughy no está interesado en tomar tu dinero ni tu información. Doughy no rastrea tu uso ni usa internet.";
+"onboarding_private_body" = "Doughy no está interesado en quedarse con tu dinero ni con tu información. Doughy no rastrea tu uso ni sube nada a internet.";
 "onboarding_share_title" = "Compartir y hacer copia de seguridad";
 "onboarding_share_body" = "Exporta recetas y envíalas a otros usuarios de Doughy con una nota personal. Haz una copia de seguridad y restaura toda tu biblioteca en un archivo en cualquier momento.";
 "onboarding_get_started" = "Comenzar";
