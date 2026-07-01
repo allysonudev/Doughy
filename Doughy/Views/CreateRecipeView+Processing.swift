@@ -432,6 +432,7 @@ extension CreateRecipeView {
                 CollectionAppearance(iconKey: collectionIconKey, colorKey: collectionColorKey),
                 for: effectiveCollection.trimmingCharacters(in: .whitespaces)
             )
+            onSave?(recipe)
             dismiss()
         } catch RecipeBuilderError.missingName {
             saveError = String(localized: "create.error.missing_name", defaultValue: "Recipe name is missing.")

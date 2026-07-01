@@ -18,6 +18,53 @@ final class CalculatorOverridesTests: XCTestCase {
         XCTAssertTrue(overrides(prefermentTotalPercent: 45).hasAnyOverride)
         XCTAssertTrue(overrides(singleDoughWeight: 1100).hasAnyOverride)
         XCTAssertTrue(overrides(extraIngredientAmounts: [2: 3]).hasAnyOverride)
+        XCTAssertTrue(overrides(pendingPreferment: Preferment(name: "Poolish", flourPercentage: 50, ingredients: [])).hasAnyOverride)
+        XCTAssertTrue(overrides(prefermentRemoved: true).hasAnyOverride)
+    }
+
+    func testApplyingPendingPrefermentAttachesItAndRemovesReplacedYeast() throws {
+        let recipe = plainRecipeWithYeast()
+        let starter = Preferment(
+            name: "Starter",
+            flourPercentage: 10,
+            ingredients: [
+                Ingredient(name: "Bread Flour", isFlour: true, defaultPercentage: 100, temperature: nil),
+                Ingredient(name: "Water", isFlour: false, defaultPercentage: 100, temperature: nil)
+            ]
+        )
+        let snapshot = overrides(pendingPreferment: starter, pendingRemovedYeastName: "Instant Yeast").applied(to: recipe)
+
+        let preferment = try XCTUnwrap(snapshot.preferment)
+        XCTAssertEqual(preferment.name, "Starter")
+        XCTAssertEqual(preferment.flourPercentage, 10)
+        XCTAssertNil(snapshot.ingredients.first { $0.name == "Instant Yeast" })
+        // The rest of the recipe's stored ingredients are untouched.
+        XCTAssertEqual(snapshot.ingredients.first { $0.name == "Water" }?.defaultPercentage, 70)
+    }
+
+    func testApplyingPrefermentRemovedDropsExistingPreferment() {
+        let recipe = percentPrefermentRecipe()
+        let snapshot = overrides(prefermentRemoved: true).applied(to: recipe)
+
+        XCTAssertNil(snapshot.preferment)
+        // The main dough ingredient totals - which already included the preferment's
+        // share - are untouched, so hydration is preserved without any recalculation.
+        XCTAssertEqual(snapshot.ingredients.first { $0.name == "Water" }?.defaultPercentage, 70)
+    }
+
+    private func plainRecipeWithYeast() -> Recipe {
+        Recipe(
+            name: "Sandwich Loaf",
+            collection: "Tests",
+            defaultWeight: 1000,
+            ingredients: [
+                Ingredient(name: "Bread Flour", isFlour: true, defaultPercentage: 100, temperature: nil),
+                Ingredient(name: "Water", isFlour: false, defaultPercentage: 70, temperature: nil),
+                Ingredient(name: "Salt", isFlour: false, defaultPercentage: 2, temperature: nil),
+                Ingredient(name: "Instant Yeast", isFlour: false, defaultPercentage: 1, temperature: nil)
+            ],
+            instructions: []
+        )
     }
 
     func testApplyingOverridesToPercentPrefermentRecipeUpdatesSnapshot() throws {
@@ -98,7 +145,10 @@ final class CalculatorOverridesTests: XCTestCase {
         prefermentTotalPercent: Double? = nil,
         singleDoughWeight: Double? = nil,
         extraIngredientAmounts: [Int: Double] = [:],
-        temperatureMeasurement: Temperature.Measurement = .fahrenheit
+        temperatureMeasurement: Temperature.Measurement = .fahrenheit,
+        pendingPreferment: Preferment? = nil,
+        pendingRemovedYeastName: String? = nil,
+        prefermentRemoved: Bool = false
     ) -> CalculatorOverrides {
         CalculatorOverrides(
             ingredientPercents: ingredientPercents,
@@ -109,7 +159,10 @@ final class CalculatorOverridesTests: XCTestCase {
             prefermentTotalPercent: prefermentTotalPercent,
             singleDoughWeight: singleDoughWeight,
             extraIngredientAmounts: extraIngredientAmounts,
-            temperatureMeasurement: temperatureMeasurement
+            temperatureMeasurement: temperatureMeasurement,
+            pendingPreferment: pendingPreferment,
+            pendingRemovedYeastName: pendingRemovedYeastName,
+            prefermentRemoved: prefermentRemoved
         )
     }
 }

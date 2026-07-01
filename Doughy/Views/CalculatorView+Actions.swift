@@ -21,6 +21,29 @@ extension CalculatorView {
         }
     }
 
+    func handleRecipeEditSaved(_ recipe: any RecipeProtocol) {
+        activeRecipeName = recipe.name
+        activeRecipeCollection = recipe.collection
+        store.refresh()
+        resetSessionAfterRecipeChange()
+    }
+
+    func resetSessionAfterRecipeChange() {
+        ingredientPercents = [:]
+        extraIngredientAmounts = [:]
+        ingredientTemps = [:]
+        prefermentIngredientPercents = [:]
+        ingredientWeights = [:]
+        prefermentIngredientWeights = [:]
+        prefermentTotalPercent = nil
+        ingredientDisplayUnits = [:]
+        ingredientsExpanded = false
+        ingredientsDragOffset = 0
+        ingredientsVisible = true
+        loadSharedNote()
+        calculateAndRefreshTweakText()
+    }
+
     func saveNote() {
         let text = combinedNoteText
         guard !text.isEmpty else { return }
@@ -30,6 +53,29 @@ extension CalculatorView {
         } catch {
             actionError = String(localized: "calculated.error.save_note", defaultValue: "Could not save this note.")
         }
+    }
+
+    /// Undoes a preferment added earlier this session, or - for the recipe's
+    /// actual stored preferment - marks it removed for this session. Either
+    /// way nothing is written until "Set as Default".
+    func removePreferment() {
+        if pendingPreferment != nil {
+            pendingPreferment = nil
+            pendingRemovedYeastName = nil
+        } else {
+            prefermentRemoved = true
+        }
+        resetPrefermentSessionOverrides()
+    }
+
+    /// Clears preferment-ingredient overrides, whose indices point into
+    /// whichever preferment array was on screen when they were set - stale
+    /// once that preferment is replaced or removed this session.
+    func resetPrefermentSessionOverrides() {
+        prefermentIngredientPercents = [:]
+        prefermentIngredientWeights = [:]
+        prefermentTotalPercent = nil
+        calculateAndRefreshTweakText()
     }
 
     func setAsDefault() {
@@ -89,12 +135,16 @@ extension CalculatorView {
             prefermentTotalPercent: prefermentTotalPercent,
             singleDoughWeight: singleDoughWeight,
             extraIngredientAmounts: extraIngredientAmounts,
-            temperatureMeasurement: settings.preferredTemp()
+            temperatureMeasurement: settings.preferredTemp(),
+            pendingPreferment: pendingPreferment,
+            pendingRemovedYeastName: pendingRemovedYeastName,
+            prefermentRemoved: prefermentRemoved
         )
     }
 
     func buildMeasuredIngredients() -> [MeasuredIngredient] {
-        currentRecipe.ingredients.enumerated().map { index, ingredient in
+        currentRecipe.ingredients.enumerated().compactMap { index, ingredient in
+            if let pendingRemovedYeastName, ingredient.name == pendingRemovedYeastName { return nil }
             let percent = ingredientPercents[index] ?? ingredient.defaultPercentage
             var temp = ingredient.temperature
             if let rawTemp = ingredientTemps[index] {
@@ -111,9 +161,9 @@ extension CalculatorView {
     }
 
     func buildMeasuredPreferment() -> MeasuredPreferment? {
-        guard let preferment else { return nil }
-        let fermentPercent = prefermentTotalPercent ?? preferment.flourPercentage
-        let fermentIngredients = preferment.ingredients.enumerated().map { index, ingredient in
+        guard let effectivePreferment else { return nil }
+        let fermentPercent = prefermentTotalPercent ?? effectivePreferment.flourPercentage
+        let fermentIngredients = effectivePreferment.ingredients.enumerated().map { index, ingredient in
             let percent = prefermentIngredientPercents[index] ?? ingredient.defaultPercentage
             var temp = ingredient.temperature
             if let rawTemp = ingredientTemps[1000 + index] {
@@ -126,6 +176,6 @@ extension CalculatorView {
                 weight: prefermentIngredientWeights[index] ?? ingredient.defaultWeight
             )
         }
-        return MeasuredPreferment(ingredients: fermentIngredients, name: preferment.name, flourPercentage: fermentPercent)
+        return MeasuredPreferment(ingredients: fermentIngredients, name: effectivePreferment.name, flourPercentage: fermentPercent)
     }
 }

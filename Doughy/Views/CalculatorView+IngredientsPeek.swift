@@ -340,10 +340,15 @@ extension CalculatorView {
 }
 
 extension View {
+    @ViewBuilder
     func calculatorNavigationGlass() -> some View {
-        self
-            .toolbarBackground(.bar, for: .navigationBar)
-            .toolbarBackgroundVisibility(.visible, for: .navigationBar)
+        if #available(iOS 26.0, *) {
+            self.toolbarBackgroundVisibility(.automatic, for: .navigationBar)
+        } else {
+            self
+                .toolbarBackground(.bar, for: .navigationBar)
+                .toolbarBackgroundVisibility(.visible, for: .navigationBar)
+        }
     }
 
     @ViewBuilder

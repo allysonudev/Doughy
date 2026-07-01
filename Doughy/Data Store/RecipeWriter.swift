@@ -34,6 +34,33 @@ class RecipeWriter: NSObject {
         }
     }
 
+    @discardableResult
+    func removeDuplicateDefaultRecipes() throws -> Int {
+        let defaultRecipes = recipeReader.getRecipes()
+            .filter { ($0.value(forKey: "defaultKey") as? String) != nil }
+        let recipesByDefaultKey = Dictionary(grouping: defaultRecipes) {
+            $0.value(forKey: "defaultKey") as? String ?? ""
+        }
+
+        var removedCount = 0
+        for recipes in recipesByDefaultKey.values where recipes.count > 1 {
+            let keeper = preferredDefaultRecipe(from: recipes)
+            for recipe in recipes where recipe != keeper && isSafeToDeleteDefaultDuplicate(recipe) {
+                deleteCoreDataRecipe(recipe)
+                removedCount += 1
+            }
+        }
+
+        guard removedCount > 0 else { return 0 }
+        do {
+            try coreDataGateway.managedObjectConext.save()
+            return removedCount
+        } catch {
+            coreDataGateway.managedObjectConext.rollback()
+            throw RecipeWritingError.couldNotSave
+        }
+    }
+
     func writeRecipe(recipe: RecipeProtocol) throws {
         print("Writing Recipe \(recipe)")
         
@@ -132,6 +159,21 @@ class RecipeWriter: NSObject {
             }
             self.coreDataGateway.managedObjectConext.delete(preferment)
         }
+    }
+
+    private func preferredDefaultRecipe(from recipes: [XCRecipe]) -> XCRecipe {
+        recipes.sorted { lhs, rhs in
+            let lhsHistoryCount = lhs.historyEntries?.count ?? 0
+            let rhsHistoryCount = rhs.historyEntries?.count ?? 0
+            if lhsHistoryCount != rhsHistoryCount {
+                return lhsHistoryCount > rhsHistoryCount
+            }
+            return lhs.objectID.uriRepresentation().absoluteString < rhs.objectID.uriRepresentation().absoluteString
+        }.first!
+    }
+
+    private func isSafeToDeleteDefaultDuplicate(_ recipe: XCRecipe) -> Bool {
+        (recipe.historyEntries?.count ?? 0) == 0
     }
 
 }

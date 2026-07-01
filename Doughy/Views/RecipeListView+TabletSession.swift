@@ -35,20 +35,21 @@ struct TabletRepeatButton: View {
     @ViewBuilder
     var styledButton: some View {
         if isProminent {
-            button
+            rawButton
                 .buttonStyle(.borderedProminent)
+                .tabletProminentIconButtonChrome()
         } else {
-            button
+            rawButton
                 .buttonStyle(.bordered)
+                .tabletIconButtonChrome()
         }
     }
 
-    var button: some View {
+    var rawButton: some View {
         Button(action: action) {
             Image(systemName: systemImage)
                 .frame(width: 44, height: 44)
         }
-        .tabletIconButtonChrome()
     }
 
     func startRepeating() {
@@ -99,6 +100,7 @@ struct TabletBakeSessionView: View {
     let onHistory: () -> Void
 
     @Environment(RecipeStore.self) var store
+    @Environment(\.colorScheme) var colorScheme
     @State var mode: TabletBakeSessionMode = .recipe
     @State var modeTransitionEdge: Edge = .bottom
     @State var quantity = 1
@@ -205,11 +207,11 @@ struct TabletBakeSessionView: View {
                 .transition(modeTransition)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color(.systemBackground))
+            .background(Color(.systemBackground).opacity(0.72))
             .clipped()
             .animation(.easeInOut(duration: 0.2), value: mode)
         }
-        .background(Color(.systemBackground))
+        .background(Color(.systemGroupedBackground))
         .onAppear {
             store.recordOpened(recipe: recipe)
             calculate()
@@ -252,6 +254,13 @@ struct TabletBakeSessionView: View {
         }
         .padding(.horizontal, 28)
         .padding(.vertical, 18)
+        .background {
+            Color.clear
+                .liquidGlassSurface(
+                    in: Rectangle(),
+                    tint: tabletHeaderTint
+                )
+        }
     }
 
     var modePicker: some View {
@@ -319,7 +328,13 @@ struct TabletBakeSessionView: View {
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 8))
+        .background {
+            Color.clear
+                .liquidGlassSurface(
+                    in: RoundedRectangle(cornerRadius: 8),
+                    tint: Color(.systemBackground).opacity(0.22)
+                )
+        }
     }
 
     var ingredientsColumn: some View {
@@ -474,6 +489,7 @@ struct TabletBakeSessionView: View {
                     saveNote()
                 }
                 .buttonStyle(.borderedProminent)
+                .tabletProminentButtonChrome()
                 .disabled(noteText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
 
@@ -561,7 +577,7 @@ struct TabletBakeSessionView: View {
                         .frame(width: 44, height: 44)
                 }
                 .buttonStyle(.borderedProminent)
-                .tabletIconButtonChrome()
+                .tabletProminentIconButtonChrome()
             }
         }
         .padding(20)
@@ -865,6 +881,10 @@ struct TabletBakeSessionView: View {
         default:
             50
         }
+    }
+
+    var tabletHeaderTint: Color {
+        Color(.systemBackground).opacity(colorScheme == .dark ? 0.28 : 0.34)
     }
 
     func incrementSingleBatchSize() {

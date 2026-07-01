@@ -11,7 +11,8 @@ final class RecipeDiffTests: XCTestCase {
     private func makeRecipe(
         defaultWeight: Double = 1000,
         ingredients: [Ingredient]? = nil,
-        instructions: [Instruction] = [Instruction(step: "Mix everything together.")]
+        instructions: [Instruction] = [Instruction(step: "Mix everything together.")],
+        measurementMode: RecipeMeasurementMode = .percent
     ) -> Recipe {
         let defaultIngredients = [
             Ingredient(name: "Bread Flour", isFlour: true, defaultPercentage: 100, temperature: nil),
@@ -20,7 +21,8 @@ final class RecipeDiffTests: XCTestCase {
             Ingredient(name: "Salt", isFlour: false, defaultPercentage: 2, temperature: nil),
         ]
         return Recipe(name: "Test Loaf", collection: "Test Collection", defaultWeight: defaultWeight,
-                       ingredients: ingredients ?? defaultIngredients, instructions: instructions)
+                       ingredients: ingredients ?? defaultIngredients, instructions: instructions,
+                       measurementMode: measurementMode)
     }
 
     private func makePrefermentRecipe(flourPercentage: Double = 20, prefermentIngredients: [Ingredient]? = nil) -> PrefermentRecipe {
@@ -68,6 +70,20 @@ final class RecipeDiffTests: XCTestCase {
         XCTAssertEqual(RecipeDiff.summarize(from: old, to: new), "Water temp: 75°F → 78°F")
     }
 
+    func testExtraIngredientAmountChange() {
+        let old = RecipeSnapshot(from: makeRecipe(ingredients: [
+            Ingredient(name: "Bread Flour", isFlour: true, defaultPercentage: 100, temperature: nil),
+            Ingredient(name: "Water", isFlour: false, defaultPercentage: 70, temperature: nil),
+            Ingredient(name: "Rosemary", isFlour: false, defaultPercentage: 0, temperature: nil, extraAmount: 2, extraUnit: "tablespoon")
+        ]))
+        var new = old
+        new.ingredients[2].extraAmount = 3
+
+        let oldAmount = VolumeUnitFormatter.format(amount: 2, unit: "tablespoon")
+        let newAmount = VolumeUnitFormatter.format(amount: 3, unit: "tablespoon")
+        XCTAssertEqual(RecipeDiff.summarize(from: old, to: new), "Rosemary: \(oldAmount) → \(newAmount)")
+    }
+
     func testAddedIngredient() {
         let old = RecipeSnapshot(from: makeRecipe())
         var new = old
@@ -93,6 +109,21 @@ final class RecipeDiffTests: XCTestCase {
         XCTAssertEqual(RecipeDiff.summarize(from: old, to: new), "Weight: 350g → 400g")
     }
 
+    func testWeightModeIngredientWeightChange() {
+        let old = RecipeSnapshot(from: makeRecipe(ingredients: [
+            Ingredient(name: "Chocolate", isFlour: false, defaultPercentage: 0, temperature: nil, defaultWeight: 200),
+            Ingredient(name: "Cream", isFlour: false, defaultPercentage: 0, temperature: nil, defaultWeight: 150),
+            Ingredient(name: "Vanilla", isFlour: false, defaultPercentage: 0, temperature: nil, extraAmount: 1, extraUnit: "teaspoon")
+        ], measurementMode: .weight))
+        var new = old
+        new.ingredients[0].defaultWeight = 225
+        new.defaultWeight = 375
+
+        let oldWeight = WeightFormatter.shared.format(weight: old.defaultWeight)
+        let newWeight = WeightFormatter.shared.format(weight: new.defaultWeight)
+        XCTAssertEqual(RecipeDiff.summarize(from: old, to: new), "Chocolate: 200g → 225g\nWeight: \(oldWeight) → \(newWeight)")
+    }
+
     // MARK: - Instructions
 
     func testInstructionsChange() {
@@ -109,6 +140,16 @@ final class RecipeDiffTests: XCTestCase {
         let new = RecipeSnapshot(from: makePrefermentRecipe(flourPercentage: 25))
 
         XCTAssertEqual(RecipeDiff.summarize(from: old, to: new), "Starter flour: 20% → 25%")
+    }
+
+    func testPrefermentIngredientPercentageChange() {
+        let old = RecipeSnapshot(from: makePrefermentRecipe())
+        let new = RecipeSnapshot(from: makePrefermentRecipe(prefermentIngredients: [
+            Ingredient(name: "Bread Flour", isFlour: true, defaultPercentage: 100, temperature: nil),
+            Ingredient(name: "Water", isFlour: false, defaultPercentage: 90, temperature: nil),
+        ]))
+
+        XCTAssertEqual(RecipeDiff.summarize(from: old, to: new), "Starter Water: 100% → 90%")
     }
 
     func testAddedPreferment() {

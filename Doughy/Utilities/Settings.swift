@@ -39,6 +39,8 @@ class Settings: NSObject {
     }
     
     func refreshRecipes() -> [RecipeCollection] {
+        repairDefaultRecipes()
+
         let recipes = recipeReader.getRecipes().map {
             recipeConverter.convertToExternal(recipe: $0)
         }
@@ -81,10 +83,18 @@ extension Settings {
             if !isUITesting {
                 userDefaults.set(true, forKey: hasInitializedDefaultsKey)
             }
-        } else {
-            backfillDefaultRecipeKeys()
-            fixNeapolitanSpelling()
-            fixBagelMaltSpelling()
+        }
+        repairDefaultRecipes()
+    }
+
+    private func repairDefaultRecipes() {
+        backfillDefaultRecipeKeys()
+        fixNeapolitanSpelling()
+        fixBagelMaltSpelling()
+        do {
+            _ = try recipeWriter.removeDuplicateDefaultRecipes()
+        } catch {
+            print("Failed to remove duplicate default recipes: \(error)")
         }
     }
 
@@ -126,17 +136,20 @@ extension Settings {
 
     private func backfillDefaultRecipeKeys() {
         let backfillKey = "hasBackfilledDefaultRecipeKeys"
-        guard !userDefaults.bool(forKey: backfillKey) else { return }
 
         let keysByName = DefaultRecipeFactory.Key.byStoredName
+        var changed = false
         for recipe in recipeReader.getRecipes() {
             guard let name = recipe.name,
                   let key = keysByName[name],
                   recipe.value(forKey: "defaultKey") == nil,
                   recipe.historyEntries?.count == 0 else { continue }
             recipe.setValue(key, forKey: "defaultKey")
+            changed = true
         }
-        try? coreDataGateway.managedObjectConext.save()
+        if changed {
+            try? coreDataGateway.managedObjectConext.save()
+        }
         userDefaults.set(true, forKey: backfillKey)
     }
     

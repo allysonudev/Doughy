@@ -45,17 +45,18 @@ struct RecipeListView: View {
         }) {
             CreateRecipeView(initialScanImage: intentScanImage,
                              openScanOptionsOnAppear: openScanOptionsOnCreate,
-                             initialWebsiteImportURL: initialWebsiteImportURL)
+                             initialWebsiteImportURL: initialWebsiteImportURL,
+                             onSave: openSavedRecipe)
                 .environment(store)
                 .environment(appearanceStore)
         }
         .fullScreenCover(item: $editingRecipe, onDismiss: { store.refresh() }) { wrapper in
-            CreateRecipeView(editingRecipe: wrapper.recipe)
+            CreateRecipeView(editingRecipe: wrapper.recipe, onSave: openSavedRecipe)
                 .environment(store)
                 .environment(appearanceStore)
         }
         .fullScreenCover(item: $copyingRecipe, onDismiss: { store.refresh() }) { wrapper in
-            CreateRecipeView(copyingRecipe: wrapper.recipe)
+            CreateRecipeView(copyingRecipe: wrapper.recipe, onSave: openSavedRecipe)
                 .environment(store)
                 .environment(appearanceStore)
         }
@@ -136,13 +137,7 @@ struct RecipeListView: View {
         .onChange(of: store.pendingOpenIntent) { (_: PendingOpenRecipeRequest?, pending: PendingOpenRecipeRequest?) in
             guard let pending else { return }
             store.pendingOpenIntent = nil
-            store.refresh()
-            guard let col = store.collections.first(where: { $0.name == pending.collection }),
-                  let recipe = col.recipes.first(where: { $0.name == pending.recipeName }) else { return }
-            select(recipe: recipe)
-            if horizontalSizeClass != .regular {
-                path = [RecipeWrapper(recipe: recipe)]
-            }
+            openRecipe(named: pending.recipeName, collection: pending.collection)
         }
         .fullScreenCover(isPresented: $showingNewUserOnboarding) {
             OnboardingView()
@@ -272,6 +267,27 @@ struct RecipeListView: View {
     func select(recipe: any RecipeProtocol) {
         selectedRecipe = RecipeWrapper(recipe: recipe)
         saveLastActive(recipe: recipe)
+    }
+
+    func openSavedRecipe(_ recipe: any RecipeProtocol) {
+        openRecipe(named: recipe.name, collection: recipe.collection)
+    }
+
+    func openRecipe(named name: String, collection: String) {
+        store.refresh()
+        guard let recipe = store.collections
+            .first(where: { $0.name == collection })?
+            .recipes.first(where: { $0.name == name }) else { return }
+        let wrapper = RecipeWrapper(recipe: recipe)
+        selectedRecipe = wrapper
+        saveLastActive(recipe: recipe)
+        if horizontalSizeClass == .regular {
+            withAnimation(.snappy) {
+                showingTabletLibrary = false
+            }
+        } else {
+            path = [wrapper]
+        }
     }
 
     var firstRecipeWrapper: RecipeWrapper? {
@@ -475,12 +491,17 @@ struct RecipeListView: View {
         return Button {
             showTabletLibrary(for: collection.name)
         } label: {
-            CollectionAvatar(collection: collection.name, size: 46)
-                .overlay {
-                    Circle()
-                        .strokeBorder(Color.accentColor, lineWidth: 3)
-                        .opacity(isActive ? 1 : 0)
-                }
+            ZStack {
+                Color.clear
+                    .tabletCircularGlassSurface()
+                CollectionAvatar(collection: collection.name, size: 42)
+            }
+            .frame(width: 54, height: 54)
+            .overlay {
+                Circle()
+                    .strokeBorder(Color.accentColor, lineWidth: 3)
+                    .opacity(isActive ? 1 : 0)
+            }
         }
         .buttonStyle(.plain)
         .accessibilityLabel(label)
@@ -550,6 +571,11 @@ struct RecipeListView: View {
                 }
             }
             .listStyle(.sidebar)
+            .scrollContentBackground(.hidden)
+            .background {
+                Color.clear
+                    .tabletSidebarGlassSurface()
+            }
             .onAppear {
                 guard let request = tabletLibraryScrollRequest else { return }
                 proxy.scrollTo(request.collectionName, anchor: .top)
@@ -570,15 +596,58 @@ extension View {
     /// `.bar` material on iOS 18–25.
     @ViewBuilder
     func railGlassSurface() -> some View {
+        self.liquidGlassSurface(
+            in: Rectangle(),
+            tint: Color(.systemBackground).opacity(0.24)
+        )
+    }
+
+    @ViewBuilder
+    func tabletIconButtonChrome() -> some View {
         if #available(iOS 26.0, *) {
-            self.glassEffect(.regular, in: .rect)
+            self
+                .buttonStyle(.glass)
+                .buttonBorderShape(.circle)
         } else {
-            self.background(.bar)
+            self.buttonBorderShape(.circle)
         }
     }
 
-    func tabletIconButtonChrome() -> some View {
-        self.buttonBorderShape(.circle)
+    @ViewBuilder
+    func tabletProminentIconButtonChrome() -> some View {
+        if #available(iOS 26.0, *) {
+            self
+                .buttonStyle(.glassProminent)
+                .buttonBorderShape(.circle)
+        } else {
+            self.buttonBorderShape(.circle)
+        }
+    }
+
+    @ViewBuilder
+    func tabletProminentButtonChrome() -> some View {
+        if #available(iOS 26.0, *) {
+            self.buttonStyle(.glassProminent)
+        } else {
+            self
+        }
+    }
+
+    @ViewBuilder
+    func tabletCircularGlassSurface() -> some View {
+        self.liquidGlassSurface(
+            in: Circle(),
+            tint: Color(.systemBackground).opacity(0.18),
+            interactive: true
+        )
+    }
+
+    @ViewBuilder
+    func tabletSidebarGlassSurface() -> some View {
+        self.liquidGlassSurface(
+            in: Rectangle(),
+            tint: Color(.systemBackground).opacity(0.18)
+        )
     }
 }
 

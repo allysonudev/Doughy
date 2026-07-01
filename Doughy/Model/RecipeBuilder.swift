@@ -104,7 +104,7 @@ class RecipeBuilder: NSObject {
                                     defaultWeight: defaultWeight, ingredients: ingredients,
                                     preferment: preferment, instructions: instructions,
                                     measurementMode: measurementMode)
-            try validatePrefermentRecipe(recipe: result)
+            try Self.validatePrefermentRecipe(recipe: result)
             return result
         }
         
@@ -114,7 +114,11 @@ class RecipeBuilder: NSObject {
                       measurementMode: measurementMode)
     }
     
-    private func validatePrefermentRecipe(recipe: PrefermentRecipe) throws {
+    /// Shared with `PrefermentTool` (the Adjust tab's add/remove-preferment feature) so both
+    /// entry points enforce the same rule: baker's percentages on the main dough list already
+    /// represent the recipe's total (main dough + preferment combined), so no preferment
+    /// ingredient can claim more than the matching main dough ingredient's total.
+    static func validatePrefermentRecipe(recipe: PrefermentRecipe) throws {
         let preferment = recipe.preferment
         let multiplier = preferment.flourPercentage / 100
         try preferment.ingredients.forEach { prefIng in

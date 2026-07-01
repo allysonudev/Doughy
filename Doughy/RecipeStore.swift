@@ -3,6 +3,7 @@
 //  Doughy
 
 import Foundation
+import CoreData
 import Observation
 import UIKit
 
@@ -41,11 +42,25 @@ class RecipeStore {
     private let recentlyDeletedStore = RecentlyDeletedRecipeStore.shared
     private let recentRecipeShortcutsKey = "recentRecipeShortcuts"
     private let maxRecentRecipeShortcuts = 3
+    private var remoteChangeObserver: NSObjectProtocol?
 
     init(isNewInstall: Bool = false) {
         self.isNewInstall = isNewInstall
+        remoteChangeObserver = NotificationCenter.default.addObserver(
+            forName: .NSPersistentStoreRemoteChange,
+            object: CoreDataGateway.shared.persistentContainer.persistentStoreCoordinator,
+            queue: .main
+        ) { [weak self] _ in
+            self?.refresh()
+        }
         refresh()
         updateRecentRecipeShortcutItems()
+    }
+
+    deinit {
+        if let remoteChangeObserver {
+            NotificationCenter.default.removeObserver(remoteChangeObserver)
+        }
     }
 
     func refresh() {

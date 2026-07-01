@@ -61,6 +61,9 @@ enum RecipeDiff {
             } else if differs(ingredient.defaultPercentage, match.defaultPercentage) {
                 lines.append("\(prefix)\(ingredient.name): \(percentFormatter.format(percent: ingredient.defaultPercentage)) \u{2192} \(percentFormatter.format(percent: match.defaultPercentage))")
             }
+            if let extraLine = extraAmountLine(prefix: prefix, ingredient: ingredient, other: match) {
+                lines.append(extraLine)
+            }
             if let oldLine = temperatureLine(prefix: prefix, ingredient: ingredient, other: match) {
                 lines.append(oldLine)
             }
@@ -69,6 +72,24 @@ enum RecipeDiff {
             lines.append("+ Added \(prefix)\(ingredient.name)")
         }
         return lines
+    }
+
+    private static func extraAmountLine(prefix: String, ingredient: IngredientSnapshot, other: IngredientSnapshot) -> String? {
+        guard differs(ingredient.extraAmount ?? 0, other.extraAmount ?? 0) || ingredient.extraUnit != other.extraUnit else {
+            return nil
+        }
+        guard let oldFormatted = extraAmountDescription(ingredient),
+              let newFormatted = extraAmountDescription(other),
+              oldFormatted != newFormatted else {
+            return nil
+        }
+
+        return "\(prefix)\(ingredient.name): \(oldFormatted) \u{2192} \(newFormatted)"
+    }
+
+    private static func extraAmountDescription(_ ingredient: IngredientSnapshot) -> String? {
+        guard let amount = ingredient.extraAmount, let unit = ingredient.extraUnit else { return nil }
+        return VolumeUnitFormatter.format(amount: amount, unit: unit)
     }
 
     private static func temperatureLine(prefix: String, ingredient: IngredientSnapshot, other: IngredientSnapshot) -> String? {

@@ -87,6 +87,79 @@ final class SettingsTests: XCTestCase {
         XCTAssertNotEqual(defaults.array(forKey: appleLanguagesKey) as? [String], ["ja", "en"])
     }
 
+    // MARK: - Default recipe repair
+
+    func testDuplicateDefaultRecipesAreCollapsedByDefaultKey() throws {
+        try withIsolatedRecipeStore {
+            let item = DefaultRecipeFactory.shared.createWithKeys()[0]
+            insertDefaultRecipe(item)
+            insertDefaultRecipe(item)
+            try CoreDataGateway.shared.managedObjectConext.save()
+
+            XCTAssertEqual(RecipeReader.shared.getRecipes().count, 2)
+
+            let removed = try RecipeWriter.shared.removeDuplicateDefaultRecipes()
+            let remaining = RecipeReader.shared.getRecipes()
+
+            XCTAssertEqual(removed, 1)
+            XCTAssertEqual(remaining.count, 1)
+            XCTAssertEqual(remaining.first?.value(forKey: "defaultKey") as? String, item.key)
+        }
+    }
+
+    func testDuplicateDefaultRecipeRepairPreservesEditedDefault() throws {
+        try withIsolatedRecipeStore {
+            let item = DefaultRecipeFactory.shared.createWithKeys()[0]
+            let editedDefault = insertDefaultRecipe(item)
+            let note = HistoryEntry(id: UUID(), date: Date(), kind: .note, text: "Keep my tweak")
+            editedDefault.addToHistoryEntries(HistoryEntryConverter.shared.convertToCoreData(entry: note))
+            insertDefaultRecipe(item)
+            try CoreDataGateway.shared.managedObjectConext.save()
+
+            let removed = try RecipeWriter.shared.removeDuplicateDefaultRecipes()
+            let remaining = RecipeReader.shared.getRecipes()
+
+            XCTAssertEqual(removed, 1)
+            XCTAssertEqual(remaining.count, 1)
+            XCTAssertEqual(remaining.first?.historyEntries?.count, 1)
+            XCTAssertEqual(remaining.first?.value(forKey: "defaultKey") as? String, item.key)
+        }
+    }
+
+    func testRefreshingRecipesRepairsDuplicateDefaultsBeforeDisplay() throws {
+        try withIsolatedRecipeStore {
+            let item = DefaultRecipeFactory.shared.createWithKeys()[0]
+            insertDefaultRecipe(item)
+            insertDefaultRecipe(item)
+            try CoreDataGateway.shared.managedObjectConext.save()
+
+            let recipeCount = Settings.shared.refreshRecipes().flatMap(\.recipes).count
+
+            XCTAssertEqual(recipeCount, 1)
+            XCTAssertEqual(RecipeReader.shared.getRecipes().count, 1)
+        }
+    }
+
+    private func withIsolatedRecipeStore(_ test: () throws -> Void) throws {
+        try RecipeWriter.shared.replaceLibrary(with: [])
+        defer { restoreDefaultRecipeLibrary() }
+        try test()
+    }
+
+    @discardableResult
+    private func insertDefaultRecipe(_ item: (recipe: RecipeProtocol, key: String)) -> XCRecipe {
+        let recipe = RecipeConverter.shared.convertToCoreData(recipe: item.recipe)
+        recipe.setValue(item.key, forKey: "defaultKey")
+        return recipe
+    }
+
+    private func restoreDefaultRecipeLibrary() {
+        try? RecipeWriter.shared.replaceLibrary(with: [])
+        for item in DefaultRecipeFactory.shared.createWithKeys() {
+            try? RecipeWriter.shared.writeDefaultRecipe(recipe: item.recipe, key: item.key)
+        }
+    }
+
     // MARK: - DensityUnit.systemDefault
 
     func testImperialPassesThroughNativeCookingUnits() {

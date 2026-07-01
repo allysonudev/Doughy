@@ -21,6 +21,7 @@ struct CreateRecipeView: View {
     let initialScanImage: UIImage?
     let openScanOptionsOnAppear: Bool
     let initialWebsiteImportURL: URL?
+    let onSave: ((any RecipeProtocol) -> Void)?
 
     @Environment(RecipeStore.self) var store
     @Environment(CollectionAppearanceStore.self) var appearanceStore
@@ -119,12 +120,14 @@ struct CreateRecipeView: View {
          copyingRecipe: (any RecipeProtocol)? = nil,
          initialScanImage: UIImage? = nil,
          openScanOptionsOnAppear: Bool = false,
-         initialWebsiteImportURL: URL? = nil) {
+         initialWebsiteImportURL: URL? = nil,
+         onSave: ((any RecipeProtocol) -> Void)? = nil) {
         self.editingRecipe = editingRecipe
         self.copyingRecipe = copyingRecipe
         self.initialScanImage = initialScanImage
         self.openScanOptionsOnAppear = openScanOptionsOnAppear
         self.initialWebsiteImportURL = initialWebsiteImportURL
+        self.onSave = onSave
         guard let recipe = editingRecipe ?? copyingRecipe else {
             _initialSnapshot = State(initialValue: DraftSnapshot())
             return

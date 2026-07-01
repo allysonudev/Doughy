@@ -19,6 +19,45 @@ struct CalculatorOverrides {
     let singleDoughWeight: Double?
     let extraIngredientAmounts: [Int: Double]
     let temperatureMeasurement: Temperature.Measurement
+    /// Set when the Adjust tab's "Add Preferment" tool was used this session -
+    /// applying overrides attaches this preferment to the recipe rather than
+    /// editing an existing one.
+    let pendingPreferment: Preferment?
+    /// The main dough ingredient this preferment replaces (e.g. a recipe's
+    /// commercial yeast, when the preferment is a sourdough starter). Only
+    /// meaningful alongside `pendingPreferment`.
+    let pendingRemovedYeastName: String?
+    /// Set when the Adjust tab's "Remove Preferment" action was used this
+    /// session on a recipe's existing preferment.
+    let prefermentRemoved: Bool
+
+    init(
+        ingredientPercents: [Int: Double],
+        ingredientWeights: [Int: Double],
+        ingredientTemps: [Int: Double],
+        prefermentIngredientPercents: [Int: Double],
+        prefermentIngredientWeights: [Int: Double],
+        prefermentTotalPercent: Double?,
+        singleDoughWeight: Double?,
+        extraIngredientAmounts: [Int: Double],
+        temperatureMeasurement: Temperature.Measurement,
+        pendingPreferment: Preferment? = nil,
+        pendingRemovedYeastName: String? = nil,
+        prefermentRemoved: Bool = false
+    ) {
+        self.ingredientPercents = ingredientPercents
+        self.ingredientWeights = ingredientWeights
+        self.ingredientTemps = ingredientTemps
+        self.prefermentIngredientPercents = prefermentIngredientPercents
+        self.prefermentIngredientWeights = prefermentIngredientWeights
+        self.prefermentTotalPercent = prefermentTotalPercent
+        self.singleDoughWeight = singleDoughWeight
+        self.extraIngredientAmounts = extraIngredientAmounts
+        self.temperatureMeasurement = temperatureMeasurement
+        self.pendingPreferment = pendingPreferment
+        self.pendingRemovedYeastName = pendingRemovedYeastName
+        self.prefermentRemoved = prefermentRemoved
+    }
 
     /// Whether the user set any "Adjust" value, regardless of whether it
     /// differs numerically from the recipe's current default.
@@ -27,6 +66,7 @@ struct CalculatorOverrides {
             || !prefermentIngredientPercents.isEmpty || !prefermentIngredientWeights.isEmpty
             || prefermentTotalPercent != nil || singleDoughWeight != nil
             || !extraIngredientAmounts.isEmpty
+            || pendingPreferment != nil || prefermentRemoved
     }
 
     /// Applies these overrides on top of `recipe`'s current values, producing
@@ -69,6 +109,15 @@ struct CalculatorOverrides {
                 preferment.ingredients[index].temperatureMeasurement = temperatureMeasurement.rawValue
             }
             snapshot.preferment = preferment
+        }
+
+        if let pendingPreferment {
+            if let pendingRemovedYeastName {
+                snapshot.ingredients.removeAll { $0.name == pendingRemovedYeastName }
+            }
+            snapshot.preferment = PrefermentSnapshot(from: pendingPreferment)
+        } else if prefermentRemoved {
+            snapshot.preferment = nil
         }
 
         if snapshot.measurementMode == .weight {

@@ -172,28 +172,36 @@ class Calculator: NSObject {
         return calculatedRecipe
     }
     
+    /// A preferment ingredient whose baker's percentage sits exactly at the
+    /// main dough's total (e.g. a preset default sized to use *all* of a
+    /// recipe's yeast) is legitimately zero left over, but the dough and
+    /// preferment weights below are computed independently against different
+    /// percentage totals, so floating-point rounding can land a hair on
+    /// either side of zero. Tolerate that instead of failing on "-0g".
+    private static let negativeWeightTolerance = 0.0001
+
     private func validateCalculation(calculatedRecipe: CalculatedRecipeProtocol) throws {
-        
+
         // Check that no weights are negative
         var prefermentIngredients: [CalculatedIngredient]? = nil
         if calculatedRecipe is CalculatedPrefermentRecipe {
             prefermentIngredients = (calculatedRecipe as! CalculatedPrefermentRecipe).preferment.ingredients
             for ingredient in prefermentIngredients! {
                 let weight = ingredient.weight
-                if ingredient.weight < 0 {
+                if weight < -Self.negativeWeightTolerance {
                     throw CalculationError.prefermentNegativeValue(name: ingredient.name, value: weight)
                 }
             }
         }
-        
+
         let ingredients = calculatedRecipe.ingredients
         for ingredient in ingredients {
             let weight = ingredient.weight
-            
+
             let matchingIngredient = prefermentIngredients?.first { $0.name == ingredient.name }
             let prefermentWeight = matchingIngredient?.weight ?? 0
             let doughWeight = weight - prefermentWeight
-            if doughWeight < 0 {
+            if doughWeight < -Self.negativeWeightTolerance {
                 throw CalculationError.finalDoughNegativeValue(name: ingredient.name, value: doughWeight)
             }
         }

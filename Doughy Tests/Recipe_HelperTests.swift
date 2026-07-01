@@ -58,6 +58,31 @@ final class CalculatorTests: XCTestCase {
         XCTAssertEqual(result.ingredients.first { $0.name == "Bread Flour" }?.weight ?? 0, flourWeight, accuracy: 0.0001)
     }
 
+    func testPercentRecipeSplitsMultipleFloursByBakersPercent() throws {
+        let recipe = Recipe(
+            name: "Country Loaf",
+            collection: "Tests",
+            defaultWeight: 1000,
+            ingredients: [
+                flour("Bread Flour", percent: 80),
+                flour("Whole Wheat", percent: 20),
+                ingredient("Water", percent: 75),
+                ingredient("Salt", percent: 2)
+            ],
+            instructions: []
+        )
+
+        let result = try calculator.calculate(recipe: recipe)
+        let breadFlour = try XCTUnwrap(result.ingredients.first { $0.name == "Bread Flour" })
+        let wholeWheat = try XCTUnwrap(result.ingredients.first { $0.name == "Whole Wheat" })
+
+        XCTAssertEqual(result.ingredients.reduce(0) { $0 + $1.weight }, 1000, accuracy: 0.0001)
+        XCTAssertEqual(breadFlour.weight, 1000.0 * 80.0 / 177.0, accuracy: 0.0001)
+        XCTAssertEqual(wholeWheat.weight, 1000.0 * 20.0 / 177.0, accuracy: 0.0001)
+        XCTAssertEqual(breadFlour.percentage, 80, accuracy: 0.0001)
+        XCTAssertEqual(wholeWheat.percentage, 20, accuracy: 0.0001)
+    }
+
     func testWeightRecipeUsesIngredientWeightsAndScalesByRequestedTotal() throws {
         let recipe = Recipe(
             name: "Ganache",
@@ -79,6 +104,67 @@ final class CalculatorTests: XCTestCase {
         XCTAssertEqual(result.ingredients.first { $0.name == "Chocolate" }?.weight ?? 0, 400, accuracy: 0.0001)
         XCTAssertEqual(result.ingredients.first { $0.name == "Cream" }?.weight ?? 0, 300, accuracy: 0.0001)
         XCTAssertEqual(result.ingredients.first { $0.name == "Salt" }?.weight ?? 0, 20, accuracy: 0.0001)
+    }
+
+    func testWeightRecipeScalesExtraIngredientOverridesWithoutAddingWeight() throws {
+        let recipe = Recipe(
+            name: "Chocolate Sauce",
+            collection: "Tests",
+            defaultWeight: 360,
+            ingredients: [
+                ingredient("Chocolate", percent: 0, weight: 200),
+                ingredient("Cream", percent: 0, weight: 150),
+                ingredient("Salt", percent: 0, weight: 10),
+                ingredient("Vanilla", percent: 0, extraAmount: 1, extraUnit: "teaspoon")
+            ],
+            instructions: [],
+            measurementMode: .weight
+        )
+        let measured = recipe.ingredients.map {
+            MeasuredIngredient(
+                ingredient: $0,
+                percent: $0.defaultPercentage,
+                temperature: $0.temperature,
+                weight: $0.defaultWeight,
+                extraAmountOverride: $0.name == "Vanilla" ? 1.5 : nil
+            )
+        }
+
+        let result = try calculator.calculate(ingredients: measured, preferment: nil, recipe: recipe, totalWeight: 720)
+        let vanilla = try XCTUnwrap(result.ingredients.first { $0.name == "Vanilla" })
+
+        XCTAssertEqual(result.ingredients.reduce(0) { $0 + $1.weight }, 720, accuracy: 0.0001)
+        XCTAssertEqual(vanilla.weight, 0, accuracy: 0.0001)
+        XCTAssertEqual(vanilla.extraAmount ?? 0, 3, accuracy: 0.0001)
+        XCTAssertEqual(vanilla.extraUnit, "teaspoon")
+    }
+
+    func testMeasuredTemperatureOverridesRecipeTemperature() throws {
+        let water = ingredient("Water", percent: 70, temperature: Temperature(value: 75, measurement: .fahrenheit))
+        let recipe = Recipe(
+            name: "Warm Dough",
+            collection: "Tests",
+            defaultWeight: 500,
+            ingredients: [
+                flour(),
+                water,
+                ingredient("Salt", percent: 2)
+            ],
+            instructions: []
+        )
+        let measured = recipe.ingredients.map {
+            MeasuredIngredient(
+                ingredient: $0,
+                percent: $0.defaultPercentage,
+                temperature: $0.name == "Water" ? Temperature(value: 24, measurement: .celsius) : $0.temperature
+            )
+        }
+
+        let result = try calculator.calculate(ingredients: measured, preferment: nil, recipe: recipe, totalWeight: 500)
+        let calculatedWater = try XCTUnwrap(result.ingredients.first { $0.name == "Water" })
+
+        XCTAssertEqual(calculatedWater.temperature?.value, 24)
+        XCTAssertEqual(calculatedWater.temperature?.measurement, .celsius)
     }
 
     func testExtraIngredientAmountsScaleWithBatchSize() throws {

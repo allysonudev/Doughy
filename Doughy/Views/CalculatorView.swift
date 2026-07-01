@@ -23,9 +23,19 @@ struct CalculatorView: View {
     @State var calculatedRecipe: (any CalculatedRecipeProtocol)?
     @State var calculationError: String?
     @State var actionError: String?
+    @State var activeRecipeName: String?
+    @State var activeRecipeCollection: String?
     @State var showingEdit = false
     @State var showingCopy = false
     @State var showingHistory = false
+    @State var showingAddPreferment = false
+    @State var showingRemovePrefermentConfirmation = false
+    /// Session-scoped preferment add/remove state, mirroring the other Adjust
+    /// tab overrides below - nothing here touches the stored recipe until
+    /// "Set as Default" applies it via `CalculatorOverrides`.
+    @State var pendingPreferment: Preferment?
+    @State var pendingRemovedYeastName: String?
+    @State var prefermentRemoved = false
     @State var sharingRecipe: RecipeWrapper?
     @State var sharedBy: String? = nil
     @State var sharedNote: String? = nil
@@ -56,7 +66,7 @@ struct CalculatorView: View {
         }
     }
 
-    var noteExpandedKey: String { "sharedNoteExpanded_\(recipe.name)" }
+    var noteExpandedKey: String { "sharedNoteExpanded_\(currentRecipe.collection)_\(currentRecipe.name)" }
 
     let calculator = Calculator.shared
     let settings = Settings.shared
@@ -77,13 +87,24 @@ struct CalculatorView: View {
     /// back to that snapshot if the recipe can no longer be found (e.g. it
     /// was just deleted).
     var currentRecipe: any RecipeProtocol {
-        store.collections
-            .first { $0.name == recipe.collection }?
-            .recipes.first { $0.name == recipe.name } ?? recipe
+        let collection = activeRecipeCollection ?? recipe.collection
+        let name = activeRecipeName ?? recipe.name
+        return store.collections
+            .first { $0.name == collection }?
+            .recipes.first { $0.name == name } ?? recipe
     }
 
     var prefermentRecipe: PrefermentRecipe? { currentRecipe as? PrefermentRecipe }
     var preferment: Preferment? { prefermentRecipe?.preferment }
+    /// The preferment as it stands this session: the stored one, unless the
+    /// user added or removed one via the Adjust tab without saving yet.
+    var effectivePreferment: Preferment? {
+        if prefermentRemoved { return nil }
+        return pendingPreferment ?? preferment
+    }
+    var canAddPreferment: Bool {
+        effectivePreferment == nil && PrefermentTool.hasFlourWaterYeast(currentRecipe)
+    }
     var hasTemps: Bool { currentRecipe.containsVariableTemps() }
     var isWeightRecipe: Bool { currentRecipe.measurementMode == .weight }
     var effectiveWeight: Double { singleDoughWeight ?? currentRecipe.defaultWeight }
@@ -101,8 +122,24 @@ struct CalculatorView: View {
         calculatedRecipe?.ingredients.filter { $0.extraAmount != nil } ?? []
     }
 
+    /// The `0.0001`g threshold below which a final-dough amount is treated as
+    /// nothing rather than a real, if tiny, quantity - matches the tolerance
+    /// `Calculator` uses to shrug off the same floating-point noise.
+    static let negligibleWeight = 0.0001
+
     var doughIngredients: [CalculatedIngredient] {
-        calculatedRecipe?.ingredients.filter { $0.extraAmount == nil } ?? []
+        guard let calculatedRecipe else { return [] }
+        return calculatedRecipe.ingredients.filter { ingredient in
+            guard ingredient.extraAmount == nil else { return false }
+            // Once a preferment claims effectively all of an ingredient, the final
+            // dough's share of it rounds to zero (or a hair negative, from summing
+            // two independently-computed weights) - hide that row instead of
+            // showing a phantom "0g"/"-0g" line for an ingredient that's really
+            // just living entirely in the preferment now.
+            guard let prefermentWeight = calculatedPrefermentRecipe?.preferment.ingredients
+                .first(where: { $0.name == ingredient.name })?.weight else { return true }
+            return ingredient.weight - prefermentWeight > Self.negligibleWeight
+        }
     }
 
     var overrideDiff: String? {
@@ -116,19 +153,13 @@ struct CalculatorView: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            modePicker
-                .padding(.horizontal)
-                .padding(.vertical, 10)
-                .background {
-                    Color.clear
-                        .liquidGlassSurface(
-                            in: Rectangle(),
-                            tint: calculatorChromeTint
-                        )
-                }
-            Divider()
+        ZStack(alignment: .top) {
+            calculatorNavigationBackdrop
+
             content
+                .safeAreaInset(edge: .top) {
+                    Color.clear.frame(height: calculatorTopChromeHeight)
+                }
                 .overlay(alignment: .bottom) {
                     if mode == .recipe && calculatedRecipe != nil && ingredientsOffscreen {
                         ZStack(alignment: .bottom) {
@@ -153,9 +184,8 @@ struct CalculatorView: View {
                     }
                 }
                 .animation(.easeInOut(duration: 0.2), value: ingredientsOffscreen)
-        }
-        .background(alignment: .top) {
-            calculatorNavigationBackdrop
+
+            modePickerBar
         }
         .navigationTitle(currentRecipe.name)
         .navigationBarTitleDisplayMode(.inline)
@@ -201,18 +231,31 @@ struct CalculatorView: View {
             RecipeHistoryView(recipe: currentRecipe)
         }
         .sheet(isPresented: $showingCopy, onDismiss: { store.refresh() }) {
-            CreateRecipeView(copyingRecipe: currentRecipe)
+            CreateRecipeView(copyingRecipe: currentRecipe) { recipe in
+                store.pendingOpenIntent = PendingOpenRecipeRequest(recipeName: recipe.name, collection: recipe.collection)
+            }
                 .environment(store)
                 .environment(appearanceStore)
         }
         .sheet(isPresented: $showingEdit, onDismiss: { store.refresh() }) {
-            CreateRecipeView(editingRecipe: currentRecipe)
+            CreateRecipeView(editingRecipe: currentRecipe) { recipe in
+                handleRecipeEditSaved(recipe)
+            }
                 .environment(store)
                 .environment(appearanceStore)
         }
         .sheet(item: $sharingRecipe) { wrapper in
             RecipeShareView(recipe: wrapper.recipe)
                 .environment(appearanceStore)
+        }
+        .sheet(isPresented: $showingAddPreferment) {
+            AddPrefermentView(recipe: currentRecipe) { preferment, removedYeastName in
+                pendingPreferment = preferment
+                pendingRemovedYeastName = removedYeastName
+                prefermentRemoved = false
+                resetPrefermentSessionOverrides()
+            }
+            .environment(store)
         }
         .alert("Something Went Wrong", isPresented: Binding(
             get: { actionError != nil },
@@ -221,6 +264,12 @@ struct CalculatorView: View {
             Button("OK", role: .cancel) { }
         } message: {
             Text(actionError ?? "")
+        }
+        .alert(String(localized: "preferment.remove.confirm_title", defaultValue: "Remove Preferment?"), isPresented: $showingRemovePrefermentConfirmation) {
+            Button(String(localized: "action.remove", defaultValue: "Remove"), role: .destructive) { removePreferment() }
+            Button(String(localized: "action.cancel", defaultValue: "Cancel"), role: .cancel) { }
+        } message: {
+            Text(String(localized: "preferment.remove.confirm_message", defaultValue: "Its flour and water fold back into the main dough. Total hydration stays the same."))
         }
         .onAppear {
             store.recordOpened(recipe: currentRecipe)
@@ -250,69 +299,43 @@ struct CalculatorView: View {
     }
 
     var modePicker: some View {
-        HStack(spacing: 0) {
-            modeButton("Recipe", mode: .recipe, accessibilityIdentifier: "recipeModeButton")
-            modeButton("Adjust", mode: .adjust, accessibilityIdentifier: "adjustModeButton")
+        Picker("Mode", selection: $mode) {
+            Text("Recipe")
+                .tag(RecipeSessionMode.recipe)
+                .accessibilityIdentifier("recipeModeButton")
+            Text("Adjust")
+                .tag(RecipeSessionMode.adjust)
+                .accessibilityIdentifier("adjustModeButton")
         }
-        .padding(4)
-        .frame(minHeight: 40)
-        .background {
-            Color.clear
-                .liquidGlassSurface(
-                    in: RoundedRectangle(cornerRadius: 14, style: .continuous),
-                    tint: calculatorChromeTint,
-                    interactive: true
-                )
-        }
-        .overlay {
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .strokeBorder(Color.white.opacity(colorScheme == .dark ? 0.12 : 0.28), lineWidth: 0.7)
-        }
+        .pickerStyle(.segmented)
         .accessibilityIdentifier("recipeSessionModePicker")
     }
 
-    func modeButton(_ title: String, mode targetMode: RecipeSessionMode, accessibilityIdentifier: String) -> some View {
-        let isSelected = mode == targetMode
-        return Button {
-            withAnimation(.snappy(duration: 0.2)) {
-                mode = targetMode
-            }
-        } label: {
-            Text(title)
-                .font(.subheadline.weight(isSelected ? .semibold : .medium))
-                .foregroundStyle(isSelected ? Color.primary : Color.secondary)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 7)
-                .contentShape(Rectangle())
+    var modePickerBar: some View {
+        VStack(spacing: 0) {
+            modePicker
+                .padding(.horizontal)
+                .padding(.vertical, 10)
+            Divider()
         }
-        .buttonStyle(.plain)
         .background {
-            if isSelected {
-                Color.clear
-                    .liquidGlassSurface(
-                        in: RoundedRectangle(cornerRadius: 10, style: .continuous),
-                        tint: Color(.systemBackground).opacity(colorScheme == .dark ? 0.42 : 0.64),
-                        interactive: true
-                    )
-            }
+            Color.clear
+                .liquidGlassSurface(
+                    in: Rectangle(),
+                    tint: calculatorChromeTint
+                )
         }
-        .accessibilityIdentifier(accessibilityIdentifier)
-        .accessibilityAddTraits(isSelected ? .isSelected : [])
-    }
-
-    var calculatorAccentColor: Color {
-        let appearance = appearanceStore.appearance(for: currentRecipe.collection)
-        return CollectionColorCatalog.color(for: appearance.colorKey)
-            ?? CollectionColorCatalog.derivedColor(for: currentRecipe.collection, dark: colorScheme == .dark)
     }
 
     var calculatorChromeTint: Color {
-        calculatorAccentColor.opacity(colorScheme == .dark ? 0.20 : 0.12)
+        Color(.systemBackground).opacity(colorScheme == .dark ? 0.28 : 0.34)
     }
 
+    var calculatorTopChromeHeight: CGFloat { 61 }
+
     var calculatorNavigationBackdrop: some View {
-        calculatorAccentColor
-            .opacity(colorScheme == .dark ? 0.20 : 0.13)
+        Color(.systemGroupedBackground)
+            .opacity(colorScheme == .dark ? 0.86 : 0.92)
             .frame(height: 160)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             .ignoresSafeArea(edges: .top)
