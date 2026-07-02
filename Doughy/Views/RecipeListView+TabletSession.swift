@@ -115,6 +115,16 @@ struct TabletBakeSessionView: View {
     @State var calculatedRecipe: (any CalculatedRecipeProtocol)?
     @State var calculationError: String?
     @State var noteText = ""
+    /// Session-scoped preferment add/remove state. There's no "Set as Default"
+    /// mechanism on the tablet Adjust tab for any override yet, so - like
+    /// every other field here - this only affects this bake session and is
+    /// never written back to the stored recipe.
+    @State var pendingPreferment: Preferment?
+    @State var pendingRemovedYeastName: String?
+    @State var prefermentRemoved = false
+    @State var showingAddPreferment = false
+    @State var showingRemovePrefermentConfirmation = false
+    @State var showingSetAsDefaultConfirmation = false
 
     let calculator = Calculator.shared
     let settings = Settings.shared
@@ -140,8 +150,24 @@ struct TabletBakeSessionView: View {
         _singleBatchSize = State(initialValue: savedSize > 0 ? savedSize : recipe.defaultWeight)
     }
 
+    /// The recipe as currently stored, looked up from `store.collections` so
+    /// edits made elsewhere (e.g. "Set as Default", or the recipe editor) are
+    /// reflected here once the store refreshes - the `recipe` passed at init
+    /// is a snapshot and doesn't update on its own. Falls back to that
+    /// snapshot if the recipe can no longer be found (e.g. it was just
+    /// deleted).
+    var currentRecipe: any RecipeProtocol {
+        store.collections
+            .first { $0.name == recipe.collection }?
+            .recipes.first { $0.name == recipe.name } ?? recipe
+    }
+
     var totalBatchSize: Double {
         singleBatchSize * Double(max(quantity, 1))
+    }
+
+    var overrideDiff: String? {
+        RecipeDiff.summarize(from: RecipeSnapshot(from: currentRecipe), to: currentOverrides().applied(to: currentRecipe))
     }
 
     var modeBinding: Binding<TabletBakeSessionMode> {
@@ -167,7 +193,18 @@ struct TabletBakeSessionView: View {
     }
 
     var finalDoughIngredients: [CalculatedIngredient] {
-        calculatedRecipe?.ingredients.filter { $0.extraAmount == nil } ?? []
+        guard let calculatedRecipe else { return [] }
+        return calculatedRecipe.ingredients.filter { ingredient in
+            guard ingredient.extraAmount == nil else { return false }
+            // Once a preferment claims effectively all of an ingredient, the final
+            // dough's share of it rounds to zero (or a hair negative, from summing
+            // two independently-computed weights) - hide that row instead of
+            // showing a phantom "0g"/"-0g" line for an ingredient that's really
+            // just living entirely in the preferment now.
+            guard let prefermentWeight = prefermentRecipe?.preferment.ingredients
+                .first(where: { $0.name == ingredient.name })?.weight else { return true }
+            return ingredient.weight - prefermentWeight > CalculatorView.negligibleWeight
+        }
     }
 
     var extraIngredients: [CalculatedIngredient] {
@@ -175,19 +212,30 @@ struct TabletBakeSessionView: View {
     }
 
     var preferment: Preferment? {
-        (recipe as? PrefermentRecipe)?.preferment
+        (currentRecipe as? PrefermentRecipe)?.preferment
+    }
+
+    /// The preferment as it stands this session: the stored one, unless the
+    /// user added or removed one via the Adjust tab this bake session.
+    var effectivePreferment: Preferment? {
+        if prefermentRemoved { return nil }
+        return pendingPreferment ?? preferment
+    }
+
+    var canAddPreferment: Bool {
+        effectivePreferment == nil && PrefermentTool.hasFlourWaterYeast(currentRecipe)
     }
 
     var hasTemperatures: Bool {
-        recipe.containsVariableTemps()
+        currentRecipe.containsVariableTemps()
     }
 
     var isWeightRecipe: Bool {
-        recipe.measurementMode == .weight
+        currentRecipe.measurementMode == .weight
     }
 
     var hasAdditionalIngredients: Bool {
-        recipe.ingredients.contains { $0.extraAmount != nil }
+        currentRecipe.ingredients.contains { $0.extraAmount != nil }
     }
 
     var body: some View {
@@ -213,7 +261,7 @@ struct TabletBakeSessionView: View {
         }
         .background(Color(.systemGroupedBackground))
         .onAppear {
-            store.recordOpened(recipe: recipe)
+            store.recordOpened(recipe: currentRecipe)
             calculate()
         }
         .onChange(of: quantity) { _, _ in
@@ -231,18 +279,33 @@ struct TabletBakeSessionView: View {
         .onChange(of: ingredientWeights) { _, _ in calculate() }
         .onChange(of: prefermentIngredientWeights) { _, _ in calculate() }
         .onChange(of: prefermentTotalPercent) { _, _ in calculate() }
+        .sheet(isPresented: $showingAddPreferment) {
+            AddPrefermentView(recipe: currentRecipe) { preferment, removedYeastName in
+                pendingPreferment = preferment
+                pendingRemovedYeastName = removedYeastName
+                prefermentRemoved = false
+                resetPrefermentSessionOverrides()
+            }
+            .environment(store)
+        }
+        .alert(String(localized: "preferment.remove.confirm_title", defaultValue: "Remove Preferment?"), isPresented: $showingRemovePrefermentConfirmation) {
+            Button(String(localized: "action.remove", defaultValue: "Remove"), role: .destructive) { removePreferment() }
+            Button(String(localized: "action.cancel", defaultValue: "Cancel"), role: .cancel) { }
+        } message: {
+            Text(String(localized: "preferment.remove.confirm_message", defaultValue: "Its flour and water fold back into the main dough. Total hydration stays the same."))
+        }
     }
 
     var header: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(spacing: 16) {
-                CollectionAvatar(collection: recipe.collection, size: 52)
+                CollectionAvatar(collection: currentRecipe.collection, size: 52)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(recipe.name)
+                    Text(currentRecipe.name)
                         .font(.largeTitle.bold())
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
-                    Text(DefaultLocalization.collectionName(recipe.collection))
+                    Text(DefaultLocalization.collectionName(currentRecipe.collection))
                         .font(.title3)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
@@ -448,12 +511,12 @@ struct TabletBakeSessionView: View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Instructions")
                 .font(.headline)
-            if recipe.instructions.isEmpty {
+            if currentRecipe.instructions.isEmpty {
                 ContentUnavailableView("No Instructions", systemImage: "list.number")
             } else {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 14) {
-                        ForEach(Array(recipe.instructions.enumerated()), id: \.offset) { index, instruction in
+                        ForEach(Array(currentRecipe.instructions.enumerated()), id: \.offset) { index, instruction in
                             HStack(alignment: .top, spacing: 12) {
                                 Text("\(index + 1)")
                                     .font(.headline)
@@ -485,6 +548,21 @@ struct TabletBakeSessionView: View {
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
+                if currentOverrides().hasAnyOverride {
+                    Button("Set as Default") {
+                        showingSetAsDefaultConfirmation = true
+                    }
+                    .buttonStyle(.bordered)
+                    .accessibilityIdentifier("setAsDefaultButton")
+                    .confirmationDialog("Set as Default", isPresented: $showingSetAsDefaultConfirmation, titleVisibility: .visible) {
+                        Button("Set as Default") {
+                            setAsDefault()
+                        }
+                        Button("Cancel", role: .cancel) { }
+                    } message: {
+                        Text(overrideDiff ?? "No changes to apply.")
+                    }
+                }
                 Button("Save Note") {
                     saveNote()
                 }
@@ -522,8 +600,10 @@ struct TabletBakeSessionView: View {
                 }
 
                 HStack(alignment: .top, spacing: 18) {
-                    if preferment != nil {
+                    if effectivePreferment != nil {
                         prefermentAdjustPanel
+                    } else if canAddPreferment {
+                        addPrefermentPanel
                     }
                     mainDoughAdjustPanel
                     temperatureAdjustPanel
@@ -617,9 +697,38 @@ struct TabletBakeSessionView: View {
         }
     }
 
+    var addPrefermentPanel: some View {
+        adjustPanel(title: String(localized: "calculator.preferment.add_panel_title", defaultValue: "Preferment")) {
+            Text(String(localized: "calculator.preferment.add_panel_body", defaultValue: "Carve out part of this dough into a poolish, biga, or starter. Total hydration stays the same."))
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .padding(.bottom, 4)
+            Button {
+                showingAddPreferment = true
+            } label: {
+                Label(String(localized: "calculator.preferment.add_button", defaultValue: "Add Preferment"), systemImage: "plus")
+                    .frame(maxWidth: .infinity)
+            }
+            .accessibilityIdentifier("addPrefermentButton")
+        }
+    }
+
     var prefermentAdjustPanel: some View {
-        adjustPanel(title: "Preferment") {
-            if let preferment {
+        adjustPanel(title: {
+            HStack {
+                Text(String(format: String(localized: "calculator.preferment.section_title", defaultValue: "Preferment: %@"), effectivePreferment?.name ?? ""))
+                    .font(.headline)
+                Spacer()
+                Button(role: .destructive) {
+                    showingRemovePrefermentConfirmation = true
+                } label: {
+                    Text(String(localized: "calculator.preferment.remove_button", defaultValue: "Remove"))
+                        .font(.subheadline)
+                }
+                .accessibilityIdentifier("removePrefermentButton")
+            }
+        }) {
+            if let preferment = effectivePreferment {
                 adjustInputRow(
                     title: "Flour of Total",
                     placeholder: preferment.flourPercentage,
@@ -663,8 +772,8 @@ struct TabletBakeSessionView: View {
 
     var mainDoughAdjustPanel: some View {
         adjustPanel(title: isWeightRecipe ? "Main Dough Weights" : "Main Dough") {
-            ForEach(Array(recipe.ingredients.enumerated()), id: \.offset) { index, ingredient in
-                if ingredient.extraAmount != nil {
+            ForEach(Array(currentRecipe.ingredients.enumerated()), id: \.offset) { index, ingredient in
+                if ingredient.extraAmount != nil || pendingRemovedYeastName == ingredient.name {
                     EmptyView()
                 } else if isWeightRecipe {
                     adjustInputRow(
@@ -701,7 +810,7 @@ struct TabletBakeSessionView: View {
                     .textCase(.uppercase)
                     .foregroundStyle(.secondary)
                     .padding(.top, 2)
-                ForEach(Array(recipe.ingredients.enumerated()), id: \.offset) { index, ingredient in
+                ForEach(Array(currentRecipe.ingredients.enumerated()), id: \.offset) { index, ingredient in
                     if let amount = ingredient.extraAmount, let unit = ingredient.extraUnit {
                         adjustInputRow(
                             title: ingredient.name,
@@ -721,8 +830,8 @@ struct TabletBakeSessionView: View {
     var temperatureAdjustPanel: some View {
         adjustPanel(title: "Temperature") {
             if hasTemperatures {
-                ForEach(Array(recipe.ingredients.enumerated()), id: \.offset) { index, ingredient in
-                    if let temperature = ingredient.temperature {
+                ForEach(Array(currentRecipe.ingredients.enumerated()), id: \.offset) { index, ingredient in
+                    if let temperature = ingredient.temperature, pendingRemovedYeastName != ingredient.name {
                         adjustInputRow(
                             title: ingredient.name,
                             placeholder: temperature.value,
@@ -734,7 +843,7 @@ struct TabletBakeSessionView: View {
                         )
                     }
                 }
-                if let preferment {
+                if let preferment = effectivePreferment {
                     ForEach(Array(preferment.ingredients.enumerated()), id: \.offset) { index, ingredient in
                         if let temperature = ingredient.temperature {
                             adjustInputRow(
@@ -757,9 +866,15 @@ struct TabletBakeSessionView: View {
     }
 
     func adjustPanel<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
+        adjustPanel(title: { Text(title).font(.headline) }, content: content)
+    }
+
+    func adjustPanel<TitleContent: View, Content: View>(
+        @ViewBuilder title: () -> TitleContent,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(title)
-                .font(.headline)
+            title()
             content()
             Spacer(minLength: 0)
         }
@@ -829,7 +944,7 @@ struct TabletBakeSessionView: View {
                 .textCase(.uppercase)
                 .foregroundStyle(.secondary)
             HStack(alignment: .firstTextBaseline, spacing: 8) {
-                TextField("\(Int(recipe.defaultWeight))",
+                TextField("\(Int(currentRecipe.defaultWeight))",
                           value: $singleBatchSize,
                           format: .number)
                 .font(.system(size: 42, weight: .bold, design: .rounded))
@@ -900,7 +1015,7 @@ struct TabletBakeSessionView: View {
             calculatedRecipe = try calculator.calculate(
                 ingredients: measuredIngredients(),
                 preferment: measuredPreferment(),
-                recipe: recipe,
+                recipe: currentRecipe,
                 totalWeight: totalBatchSize
             )
             calculationError = nil
@@ -922,7 +1037,8 @@ struct TabletBakeSessionView: View {
     }
 
     func measuredIngredients() -> [MeasuredIngredient] {
-        recipe.ingredients.enumerated().map { index, ingredient in
+        currentRecipe.ingredients.enumerated().compactMap { index, ingredient in
+            if let pendingRemovedYeastName, ingredient.name == pendingRemovedYeastName { return nil }
             var temperature = ingredient.temperature
             if let rawTemp = ingredientTemps[index] {
                 temperature = Temperature(value: rawTemp, measurement: settings.preferredTemp())
@@ -938,7 +1054,7 @@ struct TabletBakeSessionView: View {
     }
 
     func measuredPreferment() -> MeasuredPreferment? {
-        guard let preferment else { return nil }
+        guard let preferment = effectivePreferment else { return nil }
         return MeasuredPreferment(
             ingredients: preferment.ingredients.enumerated().map { index, ingredient in
                 var temperature = ingredient.temperature
@@ -966,10 +1082,64 @@ struct TabletBakeSessionView: View {
         let text = noteText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return }
         do {
-            try store.addNote(text, to: recipe)
+            try store.addNote(text, to: currentRecipe)
             noteText = ""
         } catch {
             calculationError = String(localized: "calculated.error.save_note", defaultValue: "Could not save this note.")
+        }
+    }
+
+    /// Undoes a preferment added earlier this session, or - for the recipe's
+    /// actual stored preferment - marks it removed for this session.
+    func removePreferment() {
+        if pendingPreferment != nil {
+            pendingPreferment = nil
+            pendingRemovedYeastName = nil
+        } else {
+            prefermentRemoved = true
+        }
+        resetPrefermentSessionOverrides()
+    }
+
+    func resetPrefermentSessionOverrides() {
+        prefermentIngredientPercents = [:]
+        prefermentIngredientWeights = [:]
+        prefermentTotalPercent = nil
+        calculate()
+    }
+
+    func currentOverrides() -> CalculatorOverrides {
+        CalculatorOverrides(
+            ingredientPercents: ingredientPercents,
+            ingredientWeights: ingredientWeights,
+            ingredientTemps: ingredientTemps,
+            prefermentIngredientPercents: prefermentIngredientPercents,
+            prefermentIngredientWeights: prefermentIngredientWeights,
+            prefermentTotalPercent: prefermentTotalPercent,
+            // `singleBatchSize` always holds a value (it's seeded from the recipe's default
+            // weight or a previously-saved batch size), unlike iPhone's optional field - only
+            // treat it as an override when it actually diverges from the recipe's own default.
+            singleDoughWeight: singleBatchSize == currentRecipe.defaultWeight ? nil : singleBatchSize,
+            extraIngredientAmounts: extraIngredientAmounts,
+            temperatureMeasurement: settings.preferredTemp(),
+            pendingPreferment: pendingPreferment,
+            pendingRemovedYeastName: pendingRemovedYeastName,
+            prefermentRemoved: prefermentRemoved
+        )
+    }
+
+    func setAsDefault() {
+        do {
+            try store.setAsDefault(recipe: currentRecipe, overrides: currentOverrides())
+            store.refresh()
+            // These are now baked into the stored recipe `currentRecipe` resolves to - clear
+            // them so a later "Remove" tap treats the (now real) preferment as stored rather
+            // than as an undo of this already-committed pending add.
+            pendingPreferment = nil
+            pendingRemovedYeastName = nil
+            prefermentRemoved = false
+        } catch {
+            calculationError = String(localized: "calculated.error.set_default", defaultValue: "Could not update this recipe's default values.")
         }
     }
 }

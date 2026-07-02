@@ -191,19 +191,37 @@ extension CreateRecipeView {
 
     var scanReviewFormContent: some View {
         Form {
-            Section {
-                ForEach(pendingNameChoices.indices, id: \.self) { index in
-                    ScanAlternativeReviewRow(
-                        primaryName: pendingNameChoices[index].primaryName,
-                        alternativeName: pendingNameChoices[index].alternativeName,
-                        selectedName: $pendingNameChoices[index].selectedName
-                    )
-                    .accessibilityIdentifier("scanAlternativeReviewRow_\(index)")
+            if !pendingNameChoices.isEmpty {
+                Section {
+                    ForEach(pendingNameChoices.indices, id: \.self) { index in
+                        ScanAlternativeReviewRow(
+                            primaryName: pendingNameChoices[index].primaryName,
+                            alternativeName: pendingNameChoices[index].alternativeName,
+                            selectedName: $pendingNameChoices[index].selectedName
+                        )
+                        .accessibilityIdentifier("scanAlternativeReviewRow_\(index)")
+                    }
+                } header: {
+                    Text("Ingredient Choices")
+                } footer: {
+                    Text("Pick the ingredient name to use, or enter the corrected name from the source recipe.")
                 }
-            } header: {
-                Text("Ingredient Choices")
-            } footer: {
-                Text("Pick the ingredient name to use, or enter the corrected name from the source recipe.")
+            }
+
+            if !pendingUncertainIngredients.isEmpty {
+                Section {
+                    ForEach(pendingUncertainIngredients.indices, id: \.self) { index in
+                        UncertainIngredientReviewRow(
+                            editedName: $pendingUncertainIngredients[index].editedName,
+                            shouldRemove: $pendingUncertainIngredients[index].shouldRemove
+                        )
+                        .accessibilityIdentifier("uncertainIngredientReviewRow_\(index)")
+                    }
+                } header: {
+                    Text("Flagged Ingredients")
+                } footer: {
+                    Text("These didn't clearly match a real ingredient. Fix the name, or remove the row if it shouldn't be here.")
+                }
             }
         }
     }
@@ -222,6 +240,7 @@ extension CreateRecipeView {
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Continue") {
                     applyNameChoices()
+                    applyUncertainIngredients()
                     navPath.append(.details)
                     scheduleNextScanPrompt()
                 }

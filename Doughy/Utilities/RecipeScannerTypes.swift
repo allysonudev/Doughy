@@ -285,6 +285,43 @@ struct ParsedIngredient: Sendable {
     var isPreferment: Bool
 }
 
+// MARK: - Ingredient name cleanup pass
+
+/// A single entry from the on-device cleanup pass over an already-parsed ingredient list
+/// (see `RecipeScanner.cleanIngredientNames`). Reviews names for leftover formatting
+/// artifacts the local regex parser missed, and flags entries that don't look like real
+/// ingredients at all - without touching quantities/units, which the parser already gets right.
+@available(iOS 26, *)
+@Generable
+struct IngredientNameReview: Sendable {
+    @Guide(description: """
+        The index of this ingredient in the list provided, matching its position exactly \
+        (0 for the first ingredient, 1 for the second, and so on).
+        """)
+    var index: Int
+    @Guide(description: """
+        The ingredient name with any leftover formatting artifacts removed: a category or \
+        section label (e.g. "Additional toppings:", "Optional:", "For the crust:"), OCR \
+        noise, or stray quantity words that don't belong in the name. Keep it as close to \
+        the original as possible - only remove things that clearly aren't part of the \
+        ingredient itself. Leave the name unchanged if it already looks correct.
+        """)
+    var cleanedName: String
+    @Guide(description: """
+        False only when this entry is clearly NOT a real ingredient - e.g. it reads like a \
+        fragment of cooking instructions, a section header, or scanner noise rather than \
+        something a baker would add to the dough. True for anything that's plausibly a real \
+        ingredient, even an unusual one - when in doubt, use true.
+        """)
+    var isValidIngredient: Bool
+}
+
+@available(iOS 26, *)
+@Generable
+struct IngredientNameReviewBatch: Sendable {
+    var reviews: [IngredientNameReview]
+}
+
 // MARK: - Errors
 
 @available(iOS 26, *)
@@ -339,6 +376,10 @@ struct ResolvedIngredient: Sendable {
     /// (e.g. "lukewarm water"), in Fahrenheit. Only set for `.water` ingredients whose
     /// name matched a known descriptor; that descriptor is stripped from `name`.
     var temperatureFahrenheit: Double?
+    /// Set when the on-device cleanup pass (`RecipeScanner.cleanIngredientNames`) flagged
+    /// this entry as possibly not being a real ingredient (e.g. leaked instruction text).
+    /// Surfaced to the user in the scan review step rather than silently kept or dropped.
+    var isUncertain: Bool = false
 }
 
 @available(iOS 26, *)

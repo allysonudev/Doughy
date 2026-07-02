@@ -222,4 +222,194 @@ final class DoughyFileRoundTripTests: XCTestCase {
 
         XCTAssertEqual(imported.collections, appearances)
     }
+
+    func testLibraryBackupRoundTripsUserState() throws {
+        let userState = RecipeLibraryUserState(
+            settings: Settings.BackupData(preferredLanguageCode: "de",
+                                          preferredVolumeSystem: VolumeSystem.metric.rawValue,
+                                          prefersCelsius: true),
+            ingredientDensities: IngredientDensityStore.BackupData(
+                densityOverrides: ["breadFlour": 130],
+                displayUnits: ["breadFlour": "cup"],
+                eggOverrides: ["large_whole": 52],
+                defaultEggSize: "jumbo",
+                hiddenCategories: ["cakeFlour"]
+            ),
+            ingredientConversions: IngredientConversionStore.BackupData(
+                conversions: ["rosemary leaves|tablespoon": 1.7],
+                alwaysExtra: ["sesame seeds|pinch"],
+                entryGroups: ["rosemary leaves|tablespoon": IngredientCategoryGroup.other.rawValue]
+            ),
+            recipes: RecipeStore.BackupData(
+                recentRecipeShortcuts: [RecentRecipeShortcut(collection: "Pizza", name: "New York Pizza")],
+                lastRecipeAddedCollection: "Pizza",
+                recentlyDeletedRecipes: nil
+            )
+        )
+        let backup = RecipeLibraryBackupFile.backup(from: [simpleRecipe()], userState: userState)
+
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let imported = try decoder.decode(RecipeLibraryBackup.self, from: try encoder.encode(backup))
+
+        XCTAssertEqual(imported.userState, userState)
+    }
+
+    func testCustomEmojiIconKeyResolvesToEmojiGlyph() throws {
+        let key = try XCTUnwrap(CollectionIconCatalog.customEmojiKey(for: " 🌯 "))
+        let icon = try XCTUnwrap(CollectionIconCatalog.icon(for: key))
+
+        XCTAssertEqual(key, "emoji:🌯")
+        XCTAssertEqual(icon.key, key)
+        if case .emoji(let value) = icon.glyph {
+            XCTAssertEqual(value, "🌯")
+        } else {
+            XCTFail("Expected custom emoji key to resolve to an emoji glyph.")
+        }
+        XCTAssertNil(CollectionIconCatalog.customEmojiKey(for: "AB"))
+        XCTAssertNil(CollectionIconCatalog.customEmojiKey(for: "1"))
+    }
+
+    func testCollectionAppearanceStoreRemembersRecentCustomEmojiIcons() throws {
+        let suiteName = "CollectionAppearanceStoreTests-\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let store = CollectionAppearanceStore(userDefaults: defaults, cloudStore: nil)
+        store.rememberEmojiIcon("🌯")
+        store.rememberEmojiIcon("🥟")
+        store.rememberEmojiIcon("🌯")
+        store.rememberEmojiIcon("1")
+
+        XCTAssertEqual(store.recentEmojiIconKeys, ["emoji:🌯", "emoji:🥟"])
+
+        let reloaded = CollectionAppearanceStore(userDefaults: defaults, cloudStore: nil)
+        XCTAssertEqual(reloaded.recentEmojiIconKeys, ["emoji:🌯", "emoji:🥟"])
+    }
+
+    func testCollectionAppearanceStoreRestoresAppearancesFromCloudAfterReinstall() throws {
+        let firstInstallSuite = "CollectionAppearanceStoreTests-\(UUID().uuidString)"
+        let firstInstallDefaults = try XCTUnwrap(UserDefaults(suiteName: firstInstallSuite))
+        let cloudStore = TestCollectionAppearanceKeyValueStore()
+        defer { firstInstallDefaults.removePersistentDomain(forName: firstInstallSuite) }
+
+        let firstInstall = CollectionAppearanceStore(userDefaults: firstInstallDefaults,
+                                                     cloudStore: cloudStore)
+        firstInstall.set(CollectionAppearance(iconKey: "emoji:🌯", colorKey: "mint"), for: "Wraps")
+
+        let reinstallSuite = "CollectionAppearanceStoreTests-\(UUID().uuidString)"
+        let reinstallDefaults = try XCTUnwrap(UserDefaults(suiteName: reinstallSuite))
+        defer { reinstallDefaults.removePersistentDomain(forName: reinstallSuite) }
+
+        let reinstalled = CollectionAppearanceStore(userDefaults: reinstallDefaults,
+                                                    cloudStore: cloudStore)
+
+        XCTAssertEqual(reinstalled.appearance(for: "Wraps").iconKey, "emoji:🌯")
+        XCTAssertEqual(reinstalled.appearance(for: "Wraps").colorKey, "mint")
+    }
+
+    func testCollectionAppearanceStoreMirrorsRecentEmojiIconsToCloud() throws {
+        let firstInstallSuite = "CollectionAppearanceStoreTests-\(UUID().uuidString)"
+        let firstInstallDefaults = try XCTUnwrap(UserDefaults(suiteName: firstInstallSuite))
+        let cloudStore = TestCollectionAppearanceKeyValueStore()
+        defer { firstInstallDefaults.removePersistentDomain(forName: firstInstallSuite) }
+
+        let firstInstall = CollectionAppearanceStore(userDefaults: firstInstallDefaults,
+                                                     cloudStore: cloudStore)
+        firstInstall.rememberEmojiIcon("🌯")
+
+        let reinstallSuite = "CollectionAppearanceStoreTests-\(UUID().uuidString)"
+        let reinstallDefaults = try XCTUnwrap(UserDefaults(suiteName: reinstallSuite))
+        defer { reinstallDefaults.removePersistentDomain(forName: reinstallSuite) }
+
+        let reinstalled = CollectionAppearanceStore(userDefaults: reinstallDefaults,
+                                                    cloudStore: cloudStore)
+
+        XCTAssertEqual(reinstalled.recentEmojiIconKeys, ["emoji:🌯"])
+    }
+
+    func testIngredientConversionStoreRestoresFromCloudAfterReinstall() throws {
+        let firstInstallSuite = "IngredientConversionStoreTests-\(UUID().uuidString)"
+        let firstInstallDefaults = try XCTUnwrap(UserDefaults(suiteName: firstInstallSuite))
+        let cloudStore = TestCollectionAppearanceKeyValueStore()
+        defer { firstInstallDefaults.removePersistentDomain(forName: firstInstallSuite) }
+
+        let firstInstall = IngredientConversionStore(userDefaults: firstInstallDefaults, cloudStore: cloudStore)
+        firstInstall.save(name: "Rosemary Leaves", unit: "tablespoon", gramsPerUnit: 1.7, group: .other)
+        firstInstall.markAsExtra(name: "Sesame Seeds", unit: "pinch")
+
+        let reinstallSuite = "IngredientConversionStoreTests-\(UUID().uuidString)"
+        let reinstallDefaults = try XCTUnwrap(UserDefaults(suiteName: reinstallSuite))
+        defer { reinstallDefaults.removePersistentDomain(forName: reinstallSuite) }
+
+        let reinstalled = IngredientConversionStore(userDefaults: reinstallDefaults, cloudStore: cloudStore)
+
+        XCTAssertEqual(reinstalled.gramsPerUnit(name: "rosemary leaves", unit: "tablespoon"), 1.7)
+        XCTAssertTrue(reinstalled.isAlwaysExtra(name: "sesame seeds", unit: "pinch"))
+        XCTAssertEqual(reinstalled.allEntries().first?.group, .other)
+    }
+
+    func testIngredientDensityStoreRestoresFromCloudAfterReinstall() throws {
+        let firstInstallSuite = "IngredientDensityStoreTests-\(UUID().uuidString)"
+        let firstInstallDefaults = try XCTUnwrap(UserDefaults(suiteName: firstInstallSuite))
+        let cloudStore = TestCollectionAppearanceKeyValueStore()
+        defer { firstInstallDefaults.removePersistentDomain(forName: firstInstallSuite) }
+
+        let firstInstall = IngredientDensityStore(userDefaults: firstInstallDefaults, cloudStore: cloudStore)
+        firstInstall.setGramsPerCup(130, for: .breadFlour)
+        firstInstall.setDisplayUnit(.cup, for: .breadFlour)
+        firstInstall.setGramsPerEgg(52, for: .large)
+        firstInstall.setDefaultEggSize(.jumbo)
+        firstInstall.hide(category: .cakeFlour)
+
+        let reinstallSuite = "IngredientDensityStoreTests-\(UUID().uuidString)"
+        let reinstallDefaults = try XCTUnwrap(UserDefaults(suiteName: reinstallSuite))
+        defer { reinstallDefaults.removePersistentDomain(forName: reinstallSuite) }
+
+        let reinstalled = IngredientDensityStore(userDefaults: reinstallDefaults, cloudStore: cloudStore)
+
+        XCTAssertEqual(reinstalled.gramsPerCup(for: .breadFlour), 130)
+        XCTAssertEqual(reinstalled.displayUnit(for: .breadFlour), .cup)
+        XCTAssertEqual(reinstalled.gramsPerEgg(for: .large), 52)
+        XCTAssertEqual(reinstalled.defaultEggSize(), .jumbo)
+        XCTAssertTrue(reinstalled.hiddenCategories().contains(.cakeFlour))
+    }
+}
+
+private final class TestCollectionAppearanceKeyValueStore: DoughyKeyValueStore {
+    private var values: [String: Any] = [:]
+
+    func data(forKey defaultName: String) -> Data? {
+        values[defaultName] as? Data
+    }
+
+    func dictionary(forKey defaultName: String) -> [String: Any]? {
+        values[defaultName] as? [String: Any]
+    }
+
+    func string(forKey defaultName: String) -> String? {
+        values[defaultName] as? String
+    }
+
+    func object(forKey defaultName: String) -> Any? {
+        values[defaultName]
+    }
+
+    func set(_ value: Any?, forKey defaultName: String) {
+        values[defaultName] = value
+    }
+
+    func removeObject(forKey defaultName: String) {
+        values.removeValue(forKey: defaultName)
+    }
+
+    func stringArray(forKey defaultName: String) -> [String]? {
+        values[defaultName] as? [String]
+    }
+
+    func synchronize() -> Bool {
+        true
+    }
 }

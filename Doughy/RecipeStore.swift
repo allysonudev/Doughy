@@ -7,7 +7,7 @@ import CoreData
 import Observation
 import UIKit
 
-private struct RecentRecipeShortcut: Codable, Equatable {
+struct RecentRecipeShortcut: Codable, Equatable {
     let collection: String
     let name: String
 }
@@ -41,11 +41,26 @@ class RecipeStore {
     private let historyWriter = HistoryWriter.shared
     private let recentlyDeletedStore = RecentlyDeletedRecipeStore.shared
     private let recentRecipeShortcutsKey = "recentRecipeShortcuts"
+    private let lastRecipeAddedCollectionKey = "lastRecipeAddedCollection"
+    private let cloudStore: DoughyKeyValueStore? = NSUbiquitousKeyValueStore.default
     private let maxRecentRecipeShortcuts = 3
     private var remoteChangeObserver: NSObjectProtocol?
 
+    struct BackupData: Codable, Equatable {
+        let recentRecipeShortcuts: [RecentRecipeShortcut]?
+        let lastRecipeAddedCollection: String?
+        let recentlyDeletedRecipes: [DeletedRecipe]?
+
+        var isEmpty: Bool {
+            (recentRecipeShortcuts?.isEmpty ?? true) &&
+            lastRecipeAddedCollection == nil &&
+            (recentlyDeletedRecipes?.isEmpty ?? true)
+        }
+    }
+
     init(isNewInstall: Bool = false) {
         self.isNewInstall = isNewInstall
+        hydrateUserStateFromCloud()
         remoteChangeObserver = NotificationCenter.default.addObserver(
             forName: .NSPersistentStoreRemoteChange,
             object: CoreDataGateway.shared.persistentContainer.persistentStoreCoordinator,
@@ -70,6 +85,19 @@ class RecipeStore {
 
     var collectionNames: [String] {
         collections.map(\.name)
+    }
+
+    var defaultCollectionForNewRecipe: String? {
+        if let stored = UserDefaults.standard.string(forKey: lastRecipeAddedCollectionKey),
+           collections.contains(where: { $0.name == stored }) {
+            return stored
+        }
+
+        return loadRecentRecipeShortcuts()
+            .first { recent in
+                collections.contains { $0.name == recent.collection }
+            }?
+            .collection
     }
 
     func isNameTaken(_ name: String, excluding existingName: String? = nil) -> Bool {
@@ -108,15 +136,24 @@ class RecipeStore {
         refresh()
     }
 
-    func save(recipe: any RecipeProtocol) throws {
+    func save(recipe: any RecipeProtocol, recordsAddedCollection: Bool = true) throws {
         try writer.writeRecipe(recipe: recipe)
         refresh()
+        if recordsAddedCollection {
+            recordRecipeAdded(to: recipe.collection)
+        }
     }
 
     func exportLibraryBackup(appearances: [String: CollectionAppearance] = [:]) throws -> URL {
         let recipes = collections.flatMap(\.recipes)
+        let userState = RecipeLibraryUserState(
+            settings: Settings.shared.backupData(),
+            ingredientDensities: IngredientDensityStore.shared.backupData(),
+            ingredientConversions: IngredientConversionStore.shared.backupData(),
+            recipes: backupData()
+        )
         return try RecipeLibraryBackupFile.write(
-            RecipeLibraryBackupFile.backup(from: recipes, appearances: appearances)
+            RecipeLibraryBackupFile.backup(from: recipes, appearances: appearances, userState: userState)
         )
     }
 
@@ -133,6 +170,7 @@ class RecipeStore {
         try writer.replaceLibrary(with: recipes)
         refresh()
         updateRecentRecipeShortcutItems()
+        restore(backup.userState?.recipes)
     }
 
     func update(recipe: any RecipeProtocol, existingName: String, existingCollection: String) throws {
@@ -176,6 +214,13 @@ class RecipeStore {
         let summary = RecipeDiff.summarize(from: currentSnapshot, to: newSnapshot)
         try historyWriter.setAsDefault(snapshot: newSnapshot, summary: summary, recipe: recipe)
         refresh()
+    }
+
+    private func recordRecipeAdded(to collection: String) {
+        guard collections.contains(where: { $0.name == collection }) else { return }
+        UserDefaults.standard.set(collection, forKey: lastRecipeAddedCollectionKey)
+        cloudStore?.set(collection, forKey: lastRecipeAddedCollectionKey)
+        _ = cloudStore?.synchronize()
     }
 
     private func removeRecentRecipeShortcut(collection: String, name: String) {
@@ -224,6 +269,54 @@ class RecipeStore {
     private func saveRecentRecipeShortcuts(_ recents: [RecentRecipeShortcut]) {
         guard let data = try? JSONEncoder().encode(Array(recents.prefix(maxRecentRecipeShortcuts))) else { return }
         UserDefaults.standard.set(data, forKey: recentRecipeShortcutsKey)
+        cloudStore?.set(data, forKey: recentRecipeShortcutsKey)
+        _ = cloudStore?.synchronize()
+    }
+
+    func backupData() -> BackupData? {
+        let data = BackupData(
+            recentRecipeShortcuts: loadRecentRecipeShortcuts().nilIfEmpty,
+            lastRecipeAddedCollection: UserDefaults.standard.string(forKey: lastRecipeAddedCollectionKey),
+            recentlyDeletedRecipes: recentlyDeletedStore.items().nilIfEmpty
+        )
+        return data.isEmpty ? nil : data
+    }
+
+    func restore(_ data: BackupData?) {
+        guard let data else { return }
+        saveRecentRecipeShortcuts(data.recentRecipeShortcuts ?? [])
+        if let collection = data.lastRecipeAddedCollection {
+            UserDefaults.standard.set(collection, forKey: lastRecipeAddedCollectionKey)
+            cloudStore?.set(collection, forKey: lastRecipeAddedCollectionKey)
+        } else {
+            UserDefaults.standard.removeObject(forKey: lastRecipeAddedCollectionKey)
+            cloudStore?.removeObject(forKey: lastRecipeAddedCollectionKey)
+        }
+        recentlyDeletedStore.restore(data.recentlyDeletedRecipes ?? [])
+        _ = cloudStore?.synchronize()
+        refresh()
+    }
+
+    private func hydrateUserStateFromCloud() {
+        _ = cloudStore?.synchronize()
+        let localRecents = loadRecentRecipeShortcuts()
+        let cloudRecents = cloudStore?.data(forKey: recentRecipeShortcutsKey).flatMap {
+            try? JSONDecoder().decode([RecentRecipeShortcut].self, from: $0)
+        } ?? []
+        var mergedRecents: [RecentRecipeShortcut] = []
+        for recent in localRecents + cloudRecents where !mergedRecents.contains(recent) {
+            mergedRecents.append(recent)
+        }
+        saveRecentRecipeShortcuts(Array(mergedRecents.prefix(maxRecentRecipeShortcuts)))
+
+        if UserDefaults.standard.object(forKey: lastRecipeAddedCollectionKey) == nil,
+           let cloudCollection = cloudStore?.string(forKey: lastRecipeAddedCollectionKey) {
+            UserDefaults.standard.set(cloudCollection, forKey: lastRecipeAddedCollectionKey)
+        }
+        if let localCollection = UserDefaults.standard.string(forKey: lastRecipeAddedCollectionKey) {
+            cloudStore?.set(localCollection, forKey: lastRecipeAddedCollectionKey)
+            _ = cloudStore?.synchronize()
+        }
     }
 }
 
@@ -261,10 +354,13 @@ private final class RecentlyDeletedRecipeStore {
     private let key = "recentlyDeletedRecipes"
     private let retentionDays = 30
     private let userDefaults = UserDefaults.standard
+    private let cloudStore: DoughyKeyValueStore? = NSUbiquitousKeyValueStore.default
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
 
-    private init() { }
+    private init() {
+        hydrateFromCloud()
+    }
 
     func archive(recipe: any RecipeProtocol) throws {
         let deletedRecipe = DeletedRecipe(
@@ -298,6 +394,8 @@ private final class RecentlyDeletedRecipeStore {
 
     func removeAll() {
         userDefaults.removeObject(forKey: key)
+        cloudStore?.removeObject(forKey: key)
+        _ = cloudStore?.synchronize()
     }
 
     func expirationDate(for deletedRecipe: DeletedRecipe) -> Date {
@@ -317,8 +415,32 @@ private final class RecentlyDeletedRecipeStore {
         do {
             let data = try encoder.encode(recipes)
             userDefaults.set(data, forKey: key)
+            cloudStore?.set(data, forKey: key)
+            _ = cloudStore?.synchronize()
         } catch {
             throw RecentlyDeletedRecipeError.couldNotArchive
         }
     }
+
+    func restore(_ recipes: [DeletedRecipe]) {
+        try? save(recipes)
+    }
+
+    private func hydrateFromCloud() {
+        _ = cloudStore?.synchronize()
+        let local = load()
+        let cloud = cloudStore?.data(forKey: key).flatMap {
+            try? decoder.decode([DeletedRecipe].self, from: $0)
+        } ?? []
+        var merged: [DeletedRecipe] = []
+        for item in local + cloud
+        where !merged.contains(where: { $0.name == item.name && $0.collection == item.collection }) {
+            merged.append(item)
+        }
+        try? save(merged)
+    }
+}
+
+private extension Array {
+    var nilIfEmpty: Self? { isEmpty ? nil : self }
 }

@@ -25,6 +25,23 @@ struct RecipeLibraryBackup: Codable, Equatable {
     /// Appearance per collection name, so a full restore can bring icons/colors along.
     /// Optional for backward compatibility with backups made before appearances existed.
     let collections: [String: CollectionAppearance]?
+    /// User preferences and scanner/conversion learning that live outside the recipe
+    /// Core Data store. Optional so older backups continue to import.
+    let userState: RecipeLibraryUserState?
+}
+
+struct RecipeLibraryUserState: Codable, Equatable {
+    let settings: Settings.BackupData?
+    let ingredientDensities: IngredientDensityStore.BackupData?
+    let ingredientConversions: IngredientConversionStore.BackupData?
+    let recipes: RecipeStore.BackupData?
+
+    var isEmpty: Bool {
+        settings == nil &&
+        ingredientDensities == nil &&
+        ingredientConversions == nil &&
+        recipes == nil
+    }
 }
 
 struct RecipeFileData: Codable, Equatable {
@@ -167,13 +184,15 @@ enum RecipeLibraryBackupFile {
     private static let version = 1
 
     static func backup(from recipes: [any RecipeProtocol],
-                       appearances: [String: CollectionAppearance] = [:]) -> RecipeLibraryBackup {
+                       appearances: [String: CollectionAppearance] = [:],
+                       userState: RecipeLibraryUserState? = nil) -> RecipeLibraryBackup {
         RecipeLibraryBackup(
             version: version,
             type: type,
             exportedAt: Date(),
             recipes: recipes.map { RecipeFile.payload(from: $0, author: nil) },
-            collections: appearances.isEmpty ? nil : appearances
+            collections: appearances.isEmpty ? nil : appearances,
+            userState: userState?.isEmpty == false ? userState : nil
         )
     }
 

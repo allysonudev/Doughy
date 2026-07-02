@@ -28,10 +28,13 @@ extension CreateRecipeView {
         prefermentFlours = [FlourRow()]
         prefermentIngredientRows = [IngredientRow()]
         pendingNameChoices = []
+        pendingUncertainIngredients = []
         pendingConversions = []
         activeConversion = nil
         conversionSheetData = nil
+        #if DOUGHY_SCAN_DIAGNOSTICS
         lastScanDiagnostics = nil
+        #endif
         sourcePhotoImage = nil
 
         let weightedIngredients = draft.resolvedIngredients
@@ -152,8 +155,10 @@ extension CreateRecipeView {
         let totalPrefFlourWeight = prefFlours.reduce(0) { $0 + $1.weightGrams }
         let totalFlourWeight = totalMainFlourWeight + totalPrefFlourWeight
         guard totalFlourWeight > 0 else {
+            #if DOUGHY_SCAN_DIAGNOSTICS
             lastScanDiagnostics = makeScanDiagnostics(result: result, defaultWeightGrams: nil,
                                                        flours: [], ingredients: [], extras: [], preferment: nil)
+            #endif
             throw ScanError.noFlourFound
         }
 
@@ -176,23 +181,28 @@ extension CreateRecipeView {
         defaultWeight = valid.reduce(0) { $0 + $1.weightGrams }
 
         pendingNameChoices = []
+        pendingUncertainIngredients = []
         activeConversion = nil
 
         flours = mainFlours.map {
             FlourRow(name: localizedIngredientName(for: $0), value: $0.weightGrams)
         }
         queueNameChoices(source: mainFlours, rows: flours, kind: .flour)
+        queueUncertainIngredients(source: mainFlours, rows: flours, kind: .flour)
         if flours.isEmpty { flours = [FlourRow()] }
 
         ingredients = mainOthers.map {
             IngredientRow(name: localizedIngredientName(for: $0), value: $0.weightGrams, tempValue: scannedTempValue(for: $0))
         }
         queueNameChoices(source: mainOthers, rows: ingredients, kind: .ingredient)
+        queueUncertainIngredients(source: mainOthers, rows: ingredients, kind: .ingredient)
         if ingredients.isEmpty { ingredients = [IngredientRow()] }
 
         instructions = parsed.instructions.map { InstructionRow(text: $0) }
 
+        #if DOUGHY_SCAN_DIAGNOSTICS
         var diagPreferment: ScanDiagnostics.DiagFinalRecipe.DiagPreferment? = nil
+        #endif
         if parsed.hasPreferment && totalPrefFlourWeight > 0 {
             containsPreferment = true
             prefermentName = parsed.prefermentName
@@ -202,24 +212,28 @@ extension CreateRecipeView {
                 FlourRow(name: localizedIngredientName(for: $0), value: $0.weightGrams)
             }
             queueNameChoices(source: prefFlours, rows: prefFlourRows, kind: .prefermentFlour)
+            queueUncertainIngredients(source: prefFlours, rows: prefFlourRows, kind: .prefermentFlour)
             prefermentFlours = prefFlourRows.isEmpty ? [FlourRow()] : prefFlourRows
 
             let prefIngRows = prefOthers.map {
                 IngredientRow(name: localizedIngredientName(for: $0), value: $0.weightGrams, tempValue: scannedTempValue(for: $0))
             }
             queueNameChoices(source: prefOthers, rows: prefIngRows, kind: .prefermentIngredient)
+            queueUncertainIngredients(source: prefOthers, rows: prefIngRows, kind: .prefermentIngredient)
             prefermentIngredientRows = prefIngRows.isEmpty ? [IngredientRow()] : prefIngRows
 
             // Pre-seed the "Main Dough" step with any preferment ingredient names not
             // already present (e.g. when all of a flour is in the preferment).
             syncMainDoughFromPreferment()
 
+            #if DOUGHY_SCAN_DIAGNOSTICS
             diagPreferment = .init(
                 name: prefermentName,
                 flourPercentOfTotalFlour: prefermentFlourPercent ?? 0,
                 ingredients: prefFlourRows.map { .init(name: $0.name, percent: $0.value ?? 0) }
                     + prefIngRows.map { .init(name: $0.name, percent: $0.value ?? 0) }
             )
+            #endif
         } else {
             containsPreferment = false
         }
@@ -246,6 +260,7 @@ extension CreateRecipeView {
             }
         }
 
+        #if DOUGHY_SCAN_DIAGNOSTICS
         lastScanDiagnostics = makeScanDiagnostics(
             result: result,
             defaultWeightGrams: defaultWeight,
@@ -254,9 +269,10 @@ extension CreateRecipeView {
             extras: extras.map { .init(name: $0.name, amount: $0.extraAmount, unit: $0.extraUnit.rawValue, isPreferment: $0.isPreferment) },
             preferment: diagPreferment
         )
+        #endif
 
         inputMode = .byWeight
-        if pendingNameChoices.isEmpty {
+        if pendingNameChoices.isEmpty && pendingUncertainIngredients.isEmpty {
             navPath.append(.details)
             scheduleNextScanPrompt()
         } else {
@@ -285,6 +301,19 @@ extension CreateRecipeView {
                                                           primaryName: localizedIngredientName(for: resolved),
                                                           alternativeName: localizedAltName(alt),
                                                           selectedName: localizedIngredientName(for: resolved)))
+        }
+    }
+
+    /// Queues a `PendingUncertainIngredient` for each row whose source ingredient was
+    /// flagged by the on-device cleanup pass. Same 1:1 pairing contract as `queueNameChoices`.
+    @available(iOS 26, *)
+    func queueUncertainIngredients<Row: Identifiable>(source: [ResolvedIngredient], rows: [Row], kind: IngredientRowKind) where Row.ID == UUID {
+        for (resolved, row) in zip(source, rows) {
+            guard resolved.isUncertain else { continue }
+            let name = localizedIngredientName(for: resolved)
+            pendingUncertainIngredients.append(PendingUncertainIngredient(rowID: row.id, kind: kind,
+                                                                            suggestedName: name,
+                                                                            editedName: name))
         }
     }
 
@@ -320,13 +349,14 @@ extension CreateRecipeView {
         }
     }
 
+    #if DOUGHY_SCAN_DIAGNOSTICS
     @available(iOS 26, *)
     func makeScanDiagnostics(result: ScanResult,
-                                      defaultWeightGrams: Double?,
-                                      flours: [ScanDiagnostics.DiagFinalRecipe.DiagPercent],
-                                      ingredients: [ScanDiagnostics.DiagFinalRecipe.DiagPercent],
-                                      extras: [ScanDiagnostics.DiagFinalRecipe.DiagExtra],
-                                      preferment: ScanDiagnostics.DiagFinalRecipe.DiagPreferment?) -> String {
+                             defaultWeightGrams: Double?,
+                             flours: [ScanDiagnostics.DiagFinalRecipe.DiagPercent],
+                             ingredients: [ScanDiagnostics.DiagFinalRecipe.DiagPercent],
+                             extras: [ScanDiagnostics.DiagFinalRecipe.DiagExtra],
+                             preferment: ScanDiagnostics.DiagFinalRecipe.DiagPreferment?) -> String {
         let rawIngredients = result.rawRecipe.ingredients.map {
             ScanDiagnostics.DiagIngredient(name: $0.name,
                                             alternativeName: $0.alternativeName.isEmpty ? nil : $0.alternativeName,
@@ -362,6 +392,7 @@ extension CreateRecipeView {
         )
         return diagnostics.jsonString()
     }
+    #endif
     #endif
 
     /// Handles the user's response to an "unknown ingredient" conversion prompt: either
@@ -418,6 +449,48 @@ extension CreateRecipeView {
         }
     }
 
+    /// Applies the user's edited name for each flagged ingredient, or removes the row
+    /// entirely when marked for removal.
+    func applyUncertainIngredients() {
+        for pending in pendingUncertainIngredients {
+            if pending.shouldRemove {
+                switch pending.kind {
+                case .flour:
+                    flours.removeAll { $0.id == pending.rowID }
+                case .ingredient:
+                    ingredients.removeAll { $0.id == pending.rowID }
+                case .prefermentFlour:
+                    prefermentFlours.removeAll { $0.id == pending.rowID }
+                case .prefermentIngredient:
+                    prefermentIngredientRows.removeAll { $0.id == pending.rowID }
+                }
+                continue
+            }
+
+            let edited = pending.editedName.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !edited.isEmpty else { continue }
+
+            switch pending.kind {
+            case .flour:
+                if let index = flours.firstIndex(where: { $0.id == pending.rowID }) {
+                    flours[index].name = edited
+                }
+            case .ingredient:
+                if let index = ingredients.firstIndex(where: { $0.id == pending.rowID }) {
+                    ingredients[index].name = edited
+                }
+            case .prefermentFlour:
+                if let index = prefermentFlours.firstIndex(where: { $0.id == pending.rowID }) {
+                    prefermentFlours[index].name = edited
+                }
+            case .prefermentIngredient:
+                if let index = prefermentIngredientRows.firstIndex(where: { $0.id == pending.rowID }) {
+                    prefermentIngredientRows[index].name = edited
+                }
+            }
+        }
+    }
+
     // MARK: - Save
 
     func saveRecipe() {
@@ -426,7 +499,7 @@ extension CreateRecipeView {
             if let existing = editingRecipe {
                 try store.update(recipe: recipe, existingName: existing.name, existingCollection: existing.collection)
             } else {
-                try store.save(recipe: recipe)
+                try store.save(recipe: recipe, recordsAddedCollection: copyingRecipe == nil)
             }
             appearanceStore.set(
                 CollectionAppearance(iconKey: collectionIconKey, colorKey: collectionColorKey),

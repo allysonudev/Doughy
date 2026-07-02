@@ -18,6 +18,7 @@ struct RecipeListView: View {
     @State var deletionError: String?
     @State var intentScanImage: UIImage? = nil
     @State var initialWebsiteImportURL: URL? = nil
+    @State var createDefaultCollectionName: String?
     @State var openScanOptionsOnCreate = false
     @State var path: [RecipeWrapper] = []
     @State var collapsedCollections: Set<String> = {
@@ -41,11 +42,13 @@ struct RecipeListView: View {
             store.refresh()
             intentScanImage = nil
             initialWebsiteImportURL = nil
+            createDefaultCollectionName = nil
             openScanOptionsOnCreate = false
         }) {
             CreateRecipeView(initialScanImage: intentScanImage,
                              openScanOptionsOnAppear: openScanOptionsOnCreate,
                              initialWebsiteImportURL: initialWebsiteImportURL,
+                             defaultCollectionName: createDefaultCollectionName,
                              onSave: openSavedRecipe)
                 .environment(store)
                 .environment(appearanceStore)
@@ -116,6 +119,7 @@ struct RecipeListView: View {
             intentScanImage = image
             openScanOptionsOnCreate = false
             store.pendingIntentImage = nil
+            createDefaultCollectionName = defaultCollectionForCreateSheet()
             showingCreate = true
         }
         .onChange(of: store.pendingScanShortcut) { _, pending in
@@ -161,7 +165,7 @@ struct RecipeListView: View {
                         .accessibilityLabel("Settings")
                     }
                     ToolbarItem(placement: .topBarTrailing) {
-                        Button { showingCreate = true } label: {
+                        Button { presentCreateRecipe() } label: {
                             Image(systemName: "plus")
                         }
                         .accessibilityIdentifier("addRecipeButton")
@@ -243,6 +247,7 @@ struct RecipeListView: View {
         intentScanImage = nil
         initialWebsiteImportURL = nil
         openScanOptionsOnCreate = true
+        createDefaultCollectionName = defaultCollectionForCreateSheet()
         showingCreate = true
     }
 
@@ -252,6 +257,7 @@ struct RecipeListView: View {
         intentScanImage = nil
         openScanOptionsOnCreate = false
         initialWebsiteImportURL = pending.url
+        createDefaultCollectionName = defaultCollectionForCreateSheet()
         showingCreate = true
     }
 
@@ -309,6 +315,21 @@ struct RecipeListView: View {
 
     var activeTabletCollectionName: String? {
         (selectedRecipe ?? firstRecipeWrapper)?.recipe.collection
+    }
+
+    func defaultCollectionForCreateSheet() -> String? {
+        if horizontalSizeClass == .regular {
+            return activeTabletCollectionName ?? store.defaultCollectionForNewRecipe
+        }
+        return store.defaultCollectionForNewRecipe
+    }
+
+    func presentCreateRecipe() {
+        intentScanImage = nil
+        initialWebsiteImportURL = nil
+        openScanOptionsOnCreate = false
+        createDefaultCollectionName = defaultCollectionForCreateSheet()
+        showingCreate = true
     }
 
     func showTabletLibrary(for collectionName: String? = nil) {
@@ -441,7 +462,7 @@ struct RecipeListView: View {
             .accessibilityLabel("Recipe library")
 
             Button {
-                showingCreate = true
+                presentCreateRecipe()
             } label: {
                 Image(systemName: "plus")
                     .font(.title3)

@@ -304,6 +304,31 @@ struct ScanAlternativeReviewRow: View {
     }
 }
 
+/// A row for a `PendingUncertainIngredient`: an editable name (pre-filled with the model's
+/// cleaned-up suggestion) plus a toggle to remove the row instead, for ingredients the
+/// on-device cleanup pass wasn't confident about.
+struct UncertainIngredientReviewRow: View {
+    @Binding var editedName: String
+    @Binding var shouldRemove: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Label("We're not sure this is a real ingredient", systemImage: "questionmark.circle")
+                .font(.subheadline)
+                .foregroundStyle(.orange)
+
+            TextField("Ingredient name", text: $editedName)
+                .autocorrectionDisabled()
+                .textInputAutocapitalization(.words)
+                .strikethrough(shouldRemove)
+                .disabled(shouldRemove)
+
+            Toggle("Remove this ingredient", isOn: $shouldRemove)
+        }
+        .padding(.vertical, 4)
+    }
+}
+
 /// A suggestion to convert an "additional ingredient" (e.g. "2 large eggs") to a
 /// weight-based ingredient, presented to the user with a toggle before continuing
 /// past the Ingredients step.
@@ -354,6 +379,19 @@ struct PendingNameChoice: Identifiable {
     var selectedName: String
 }
 
+/// A scanned ingredient the on-device cleanup pass wasn't confident about - either its
+/// name still needed cleanup, or it might not be a real ingredient at all (e.g. leaked
+/// instruction text). Non-blocking: defaults to kept with the model's suggested name
+/// rather than forcing a decision before the user can continue.
+struct PendingUncertainIngredient: Identifiable {
+    var id = UUID()
+    var rowID: UUID
+    var kind: IngredientRowKind
+    var suggestedName: String
+    var editedName: String
+    var shouldRemove: Bool = false
+}
+
 enum CreateStep: Hashable {
     case scanReview
     case details
@@ -386,6 +424,7 @@ struct DraftSnapshot: Equatable {
 /// A snapshot of a recipe scan's inputs/outputs (OCR text, raw + resolved model output,
 /// and the final recipe values applied to the form), exportable as JSON for debugging
 /// and improving the scan prompt/category mappings.
+#if DOUGHY_SCAN_DIAGNOSTICS
 struct ScanDiagnostics: Codable {
     var ocrText: String
     var rawIngredients: [DiagIngredient]
@@ -441,4 +480,4 @@ struct ScanDiagnostics: Codable {
         return string
     }
 }
-
+#endif

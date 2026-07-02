@@ -397,8 +397,18 @@ extension RecipeScanner {
 
     static func ingredientName(from line: String) -> String {
         var working = line
+            // A leading "Label:" (e.g. "Additional toppings:", "Optional:", "For the filling:")
+            // is a section/category tag, not part of the ingredient name - unlike `isSectionHeader`,
+            // this fires even when the rest of the line has a quantity, since it only strips the
+            // prefix rather than requiring the whole line to be header-only. Anchored to the start
+            // and requiring the label to be letters only (no digits) so it never touches a
+            // quantity-first line like "2 TBSP/17g Kosher Salt".
+            .replacingOccurrences(of: #"(?i)^\s*[a-z][a-z\s'-]{0,38}:\s*(?=\S)"#, with: "", options: .regularExpression)
             .replacingOccurrences(of: #"\([^)]*\)"#, with: "", options: .regularExpression)
             .replacingOccurrences(of: #"\s*\([^)]*$"#, with: "", options: .regularExpression)
+            // Bracketed asides like "[or whatever you like]" - same treatment as parens above.
+            .replacingOccurrences(of: #"\[[^\]]*\]"#, with: "", options: .regularExpression)
+            .replacingOccurrences(of: #"\s*\[[^\]]*$"#, with: "", options: .regularExpression)
             .replacingOccurrences(of: #"^\s*\d+(?:[.,]\d+)?\s+9\b"#,
                                   with: "",
                                   options: .regularExpression)
@@ -695,6 +705,32 @@ extension RecipeScanner {
         """
         let response = try await session.respond(to: prompt, generating: ParsedRecipeEssentials.self)
         return response.content
+    }
+
+    /// A lightweight on-device pass over an already-parsed ingredient list: cleans up any
+    /// leftover formatting artifacts in each name (category labels, OCR noise) and flags
+    /// entries that don't look like real ingredients at all (e.g. leaked instruction text),
+    /// so those can be surfaced for the user to confirm or remove rather than silently kept
+    /// or dropped. Quantities/units are left untouched - the local parser already gets those
+    /// right; this pass only touches names and validity.
+    func cleanIngredientNames(_ ingredients: [ParsedIngredient]) async throws -> [IngredientNameReview] {
+        let session = LanguageModelSession()
+        let itemsList = ingredients.enumerated()
+            .map { index, ingredient in "\(index). \(ingredient.name)" }
+            .joined(separator: "\n")
+
+        let prompt = """
+        Here is a list of ingredient names extracted from a scanned bread recipe. Some may \
+        still have leftover text that doesn't belong: a category label like "Additional \
+        toppings:", stray words from OCR noise, or (rarely) a fragment of instruction text \
+        that was mistakenly captured as an ingredient. Review each one and, for every index, \
+        return a cleaned name and whether it's a genuine ingredient.
+
+        Ingredients:
+        \(itemsList)
+        """
+        let response = try await session.respond(to: prompt, generating: IngredientNameReviewBatch.self)
+        return response.content.reviews
     }
 
     static func chunkedLines(from text: String, maxCharacters: Int = 1_500) -> [String] {

@@ -517,28 +517,51 @@ class IngredientDensityStore: NSObject {
 
     static let shared = IngredientDensityStore()
 
-    private let userDefaults = UserDefaults.standard
+    private let userDefaults: UserDefaults
+    private let cloudStore: DoughyKeyValueStore?
     private let storageKey = "ingredientDensityStoreKey"
     private let displayUnitStorageKey = "ingredientDensityDisplayUnitStoreKey"
     private let eggOverridesStorageKey = "ingredientDensityEggOverridesKey"
     private let defaultEggSizeStorageKey = "ingredientDensityDefaultEggSizeKey"
     private let hiddenCategoriesKey = "ingredientDensityHiddenCategoriesKey"
 
-    private override init() { super.init() }
+    struct BackupData: Codable, Equatable {
+        let densityOverrides: [String: Double]?
+        let displayUnits: [String: String]?
+        let eggOverrides: [String: Double]?
+        let defaultEggSize: String?
+        let hiddenCategories: [String]?
+
+        var isEmpty: Bool {
+            (densityOverrides?.isEmpty ?? true) &&
+            (displayUnits?.isEmpty ?? true) &&
+            (eggOverrides?.isEmpty ?? true) &&
+            defaultEggSize == nil &&
+            (hiddenCategories?.isEmpty ?? true)
+        }
+    }
+
+    init(userDefaults: UserDefaults = .standard,
+         cloudStore: DoughyKeyValueStore? = NSUbiquitousKeyValueStore.default) {
+        self.userDefaults = userDefaults
+        self.cloudStore = cloudStore
+        super.init()
+        hydrateFromCloud()
+    }
 
     private var overrides: [String: Double] {
         get { userDefaults.dictionary(forKey: storageKey) as? [String: Double] ?? [:] }
-        set { userDefaults.set(newValue, forKey: storageKey) }
+        set { persist(newValue, forKey: storageKey) }
     }
 
     private var displayUnits: [String: String] {
         get { userDefaults.dictionary(forKey: displayUnitStorageKey) as? [String: String] ?? [:] }
-        set { userDefaults.set(newValue, forKey: displayUnitStorageKey) }
+        set { persist(newValue, forKey: displayUnitStorageKey) }
     }
 
     private var eggOverrides: [String: Double] {
         get { userDefaults.dictionary(forKey: eggOverridesStorageKey) as? [String: Double] ?? [:] }
-        set { userDefaults.set(newValue, forKey: eggOverridesStorageKey) }
+        set { persist(newValue, forKey: eggOverridesStorageKey) }
     }
 
     /// Returns the unit `category`'s density should be displayed/edited in. Explicit
@@ -590,7 +613,10 @@ class IngredientDensityStore: NSObject {
         overrides = [:]
         eggOverrides = [:]
         displayUnits = [:]
-        userDefaults.removeObject(forKey: hiddenCategoriesKey)
+        setHiddenCategoryKeys([])
+        userDefaults.removeObject(forKey: defaultEggSizeStorageKey)
+        cloudStore?.removeObject(forKey: defaultEggSizeStorageKey)
+        _ = cloudStore?.synchronize()
     }
 
     /// Returns the set of categories the user has hidden from the conversions list.
@@ -603,7 +629,7 @@ class IngredientDensityStore: NSObject {
     func hide(category: IngredientCategory) {
         var current = hiddenCategories()
         current.insert(category)
-        userDefaults.set(current.map(\.rawValue), forKey: hiddenCategoriesKey)
+        setHiddenCategoryKeys(current.map(\.rawValue))
     }
 
     private func eggOverrideKey(_ size: EggSize, _ part: EggPart) -> String {
@@ -644,6 +670,77 @@ class IngredientDensityStore: NSObject {
     /// Remembers the egg size to assume when a recipe gives an egg quantity with no
     /// size word.
     func setDefaultEggSize(_ size: EggSize) {
-        userDefaults.set(size.rawValue, forKey: defaultEggSizeStorageKey)
+        persist(size.rawValue, forKey: defaultEggSizeStorageKey)
     }
+
+    func backupData() -> BackupData? {
+        let defaultEggSize = userDefaults.string(forKey: defaultEggSizeStorageKey)
+        let data = BackupData(
+            densityOverrides: overrides.nilIfEmpty,
+            displayUnits: displayUnits.nilIfEmpty,
+            eggOverrides: eggOverrides.nilIfEmpty,
+            defaultEggSize: defaultEggSize,
+            hiddenCategories: hiddenCategories().map(\.rawValue).sorted().nilIfEmpty
+        )
+        return data.isEmpty ? nil : data
+    }
+
+    func restore(_ data: BackupData?) {
+        guard let data else { return }
+        overrides = data.densityOverrides ?? [:]
+        displayUnits = data.displayUnits ?? [:]
+        eggOverrides = data.eggOverrides ?? [:]
+        if let defaultEggSize = data.defaultEggSize {
+            persist(defaultEggSize, forKey: defaultEggSizeStorageKey)
+        } else {
+            userDefaults.removeObject(forKey: defaultEggSizeStorageKey)
+            cloudStore?.removeObject(forKey: defaultEggSizeStorageKey)
+            _ = cloudStore?.synchronize()
+        }
+        setHiddenCategoryKeys(data.hiddenCategories ?? [])
+    }
+
+    private func hydrateFromCloud() {
+        _ = cloudStore?.synchronize()
+
+        let cloudOverrides = cloudStore?.dictionary(forKey: storageKey) as? [String: Double] ?? [:]
+        let cloudDisplayUnits = cloudStore?.dictionary(forKey: displayUnitStorageKey) as? [String: String] ?? [:]
+        let cloudEggOverrides = cloudStore?.dictionary(forKey: eggOverridesStorageKey) as? [String: Double] ?? [:]
+        let cloudHidden = Set(cloudStore?.stringArray(forKey: hiddenCategoriesKey) ?? [])
+
+        persist(cloudOverrides.merging(overrides) { _, local in local }, forKey: storageKey)
+        persist(cloudDisplayUnits.merging(displayUnits) { _, local in local }, forKey: displayUnitStorageKey)
+        persist(cloudEggOverrides.merging(eggOverrides) { _, local in local }, forKey: eggOverridesStorageKey)
+        setHiddenCategoryKeys(Array(cloudHidden.union(hiddenCategories().map(\.rawValue))))
+
+        if userDefaults.object(forKey: defaultEggSizeStorageKey) == nil,
+           let cloudDefaultEggSize = cloudStore?.string(forKey: defaultEggSizeStorageKey) {
+            userDefaults.set(cloudDefaultEggSize, forKey: defaultEggSizeStorageKey)
+        }
+        if let localDefaultEggSize = userDefaults.string(forKey: defaultEggSizeStorageKey) {
+            cloudStore?.set(localDefaultEggSize, forKey: defaultEggSizeStorageKey)
+            _ = cloudStore?.synchronize()
+        }
+    }
+
+    private func setHiddenCategoryKeys(_ keys: [String]) {
+        let sorted = Array(Set(keys)).sorted()
+        userDefaults.set(sorted, forKey: hiddenCategoriesKey)
+        cloudStore?.set(sorted, forKey: hiddenCategoriesKey)
+        _ = cloudStore?.synchronize()
+    }
+
+    private func persist(_ value: Any, forKey key: String) {
+        userDefaults.set(value, forKey: key)
+        cloudStore?.set(value, forKey: key)
+        _ = cloudStore?.synchronize()
+    }
+}
+
+private extension Dictionary {
+    var nilIfEmpty: Self? { isEmpty ? nil : self }
+}
+
+private extension Array {
+    var nilIfEmpty: Self? { isEmpty ? nil : self }
 }

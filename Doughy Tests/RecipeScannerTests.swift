@@ -1013,6 +1013,34 @@ final class RecipeScannerTests: XCTestCase {
         #endif
     }
 
+    /// A leading category label like "Additional toppings:" is a section tag, not part of the
+    /// ingredient name, even when the rest of the line has a quantity (so `isSectionHeader`'s
+    /// whole-line, no-digit check doesn't apply). Real OCR text from a scanned blog recipe -
+    /// note the source photo's "[or whatever you'd like]" lost its brackets to OCR (misread as
+    /// "l"), which is a scan-quality issue this parser can't correct, not something in scope here.
+    func testLocalParserStripsLeadingCategoryLabel() throws {
+        guard #available(iOS 26, *) else {
+            throw XCTSkip("RecipeScanner requires iOS 26.")
+        }
+        #if canImport(FoundationModels)
+        let text = """
+        Ingredients
+        1 Package Active Dry Yeast
+        6 Cups/780g Bread Flour
+        Additional toppings: 4 Cloves crushed garlic lor
+        whatever you'd likel
+        """
+
+        let parsed = RecipeScanner.parseIngredientsLocally(from: text)
+        let resolved = parsed.ingredients.map(RecipeScanner.resolve)
+
+        XCTAssertTrue(resolved.contains { $0.name == "Cloves Crushed Garlic Lor" && $0.isExtra && $0.extraAmount == 4 && $0.extraUnit == .count })
+        XCTAssertFalse(resolved.contains { $0.name.localizedCaseInsensitiveContains("additional toppings") })
+        #else
+        throw XCTSkip("FoundationModels is not available in this build.")
+        #endif
+    }
+
     func testLocalParserHandlesFreeRangeEggCounts() throws {
         guard #available(iOS 26, *) else {
             throw XCTSkip("RecipeScanner requires iOS 26.")

@@ -26,7 +26,18 @@ class Settings: NSObject {
     private let recipeWriter = RecipeWriter.shared
     private let defaultRecipeFactory = DefaultRecipeFactory.shared
     private let userDefaults = UserDefaults.standard
+    private let cloudStore: DoughyKeyValueStore? = NSUbiquitousKeyValueStore.default
     private let coreDataGateway = CoreDataGateway.shared
+
+    struct BackupData: Codable, Equatable {
+        let preferredLanguageCode: String?
+        let preferredVolumeSystem: String?
+        let prefersCelsius: Bool?
+
+        var isEmpty: Bool {
+            preferredLanguageCode == nil && preferredVolumeSystem == nil && prefersCelsius == nil
+        }
+    }
     
     lazy var recipes = self.refreshRecipes()
     
@@ -34,7 +45,8 @@ class Settings: NSObject {
     
     private override init() {
         super.init()
-        
+
+        self.hydrateUserPreferencesFromCloud()
         self.initializeDefaultRecipes()
     }
     
@@ -71,7 +83,9 @@ extension Settings {
 
         if isUITesting || !userDefaults.bool(forKey: hasInitializedDefaultsKey) {
             let isUS = Locale.current.region?.identifier == "US"
-            setPreferredTemp(measurement: isUS ? .fahrenheit : .celsius)
+            if userDefaults.object(forKey: preferredTempKey) == nil {
+                setPreferredTemp(measurement: isUS ? .fahrenheit : .celsius)
+            }
 
             defaultRecipeFactory.createWithKeys().forEach { item in
                 do {
@@ -167,11 +181,14 @@ extension Settings {
     func setPreferredLanguageCode(_ code: String?) {
         if let code = code {
             userDefaults.set(code, forKey: Settings.preferredLanguageKey)
+            cloudStore?.set(code, forKey: Settings.preferredLanguageKey)
             userDefaults.set([code, "en"], forKey: "AppleLanguages")
         } else {
             userDefaults.removeObject(forKey: Settings.preferredLanguageKey)
+            cloudStore?.removeObject(forKey: Settings.preferredLanguageKey)
             userDefaults.removeObject(forKey: "AppleLanguages")
         }
+        _ = cloudStore?.synchronize()
     }
 }
 
@@ -188,6 +205,8 @@ extension Settings {
 
     func setPreferredVolumeSystem(_ system: VolumeSystem) {
         userDefaults.set(system.rawValue, forKey: Settings.preferredVolumeSystemKey)
+        cloudStore?.set(system.rawValue, forKey: Settings.preferredVolumeSystemKey)
+        _ = cloudStore?.synchronize()
     }
 }
 
@@ -199,6 +218,8 @@ extension Settings {
     
     func setPreferredTemp(measurement: Temperature.Measurement) {
         userDefaults.set(measurement == .celsius, forKey: preferredTempKey)
+        cloudStore?.set(measurement == .celsius, forKey: preferredTempKey)
+        _ = cloudStore?.synchronize()
     }
     
     func updateRecipeTemps(original: Temperature.Measurement,
@@ -223,6 +244,64 @@ extension Settings {
                 }
         }
         try self.coreDataGateway.managedObjectConext.save()
+    }
+}
+
+extension Settings {
+    func backupData() -> BackupData? {
+        let data = BackupData(
+            preferredLanguageCode: preferredLanguageCode(),
+            preferredVolumeSystem: userDefaults.string(forKey: Settings.preferredVolumeSystemKey),
+            prefersCelsius: userDefaults.object(forKey: preferredTempKey) as? Bool
+        )
+        return data.isEmpty ? nil : data
+    }
+
+    func restore(_ data: BackupData?) {
+        guard let data else { return }
+        setPreferredLanguageCode(data.preferredLanguageCode)
+        if let raw = data.preferredVolumeSystem, let system = VolumeSystem(rawValue: raw) {
+            setPreferredVolumeSystem(system)
+        } else {
+            userDefaults.removeObject(forKey: Settings.preferredVolumeSystemKey)
+            cloudStore?.removeObject(forKey: Settings.preferredVolumeSystemKey)
+        }
+        if let prefersCelsius = data.prefersCelsius {
+            setPreferredTemp(measurement: prefersCelsius ? .celsius : .fahrenheit)
+        } else {
+            userDefaults.removeObject(forKey: preferredTempKey)
+            cloudStore?.removeObject(forKey: preferredTempKey)
+        }
+        _ = cloudStore?.synchronize()
+    }
+
+    private func hydrateUserPreferencesFromCloud() {
+        _ = cloudStore?.synchronize()
+
+        if userDefaults.object(forKey: Settings.preferredLanguageKey) == nil,
+           let code = cloudStore?.string(forKey: Settings.preferredLanguageKey) {
+            userDefaults.set(code, forKey: Settings.preferredLanguageKey)
+            userDefaults.set([code, "en"], forKey: "AppleLanguages")
+        }
+        if userDefaults.object(forKey: Settings.preferredVolumeSystemKey) == nil,
+           let raw = cloudStore?.string(forKey: Settings.preferredVolumeSystemKey) {
+            userDefaults.set(raw, forKey: Settings.preferredVolumeSystemKey)
+        }
+        if userDefaults.object(forKey: preferredTempKey) == nil,
+           let prefersCelsius = cloudStore?.object(forKey: preferredTempKey) as? Bool {
+            userDefaults.set(prefersCelsius, forKey: preferredTempKey)
+        }
+
+        if let code = userDefaults.string(forKey: Settings.preferredLanguageKey) {
+            cloudStore?.set(code, forKey: Settings.preferredLanguageKey)
+        }
+        if let raw = userDefaults.string(forKey: Settings.preferredVolumeSystemKey) {
+            cloudStore?.set(raw, forKey: Settings.preferredVolumeSystemKey)
+        }
+        if let prefersCelsius = userDefaults.object(forKey: preferredTempKey) as? Bool {
+            cloudStore?.set(prefersCelsius, forKey: preferredTempKey)
+        }
+        _ = cloudStore?.synchronize()
     }
 }
 

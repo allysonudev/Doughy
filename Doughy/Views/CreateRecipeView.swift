@@ -21,6 +21,7 @@ struct CreateRecipeView: View {
     let initialScanImage: UIImage?
     let openScanOptionsOnAppear: Bool
     let initialWebsiteImportURL: URL?
+    let defaultCollectionName: String?
     let onSave: ((any RecipeProtocol) -> Void)?
 
     @Environment(RecipeStore.self) var store
@@ -43,7 +44,9 @@ struct CreateRecipeView: View {
     @State var selectedPhotoItem: PhotosPickerItem?
     @State var isScanning = false
     @State var scanError: String?
+    #if DOUGHY_SCAN_DIAGNOSTICS
     @State var lastScanDiagnostics: String?
+    #endif
     @State var detectedRecipeLanguage: String? = nil
     @State var didOpenInitialScanOptions = false
     @State var sourcePhotoImage: UIImage?
@@ -90,6 +93,8 @@ struct CreateRecipeView: View {
 
     // Name-alternative prompts for scanned ingredients with two listed options
     @State var pendingNameChoices: [PendingNameChoice] = []
+    // Ingredients the on-device cleanup pass flagged as uncertain, awaiting confirmation
+    @State var pendingUncertainIngredients: [PendingUncertainIngredient] = []
     @State var lastTotalFlourWeight: Double = 0
     @State var lastTotalPrefFlourWeight: Double = 0
 
@@ -121,15 +126,19 @@ struct CreateRecipeView: View {
          initialScanImage: UIImage? = nil,
          openScanOptionsOnAppear: Bool = false,
          initialWebsiteImportURL: URL? = nil,
+         defaultCollectionName: String? = nil,
          onSave: ((any RecipeProtocol) -> Void)? = nil) {
         self.editingRecipe = editingRecipe
         self.copyingRecipe = copyingRecipe
         self.initialScanImage = initialScanImage
         self.openScanOptionsOnAppear = openScanOptionsOnAppear
         self.initialWebsiteImportURL = initialWebsiteImportURL
+        self.defaultCollectionName = defaultCollectionName
         self.onSave = onSave
         guard let recipe = editingRecipe ?? copyingRecipe else {
-            _initialSnapshot = State(initialValue: DraftSnapshot())
+            let defaultCollection = defaultCollectionName ?? ""
+            _collectionName = State(initialValue: defaultCollection)
+            _initialSnapshot = State(initialValue: DraftSnapshot(collectionName: defaultCollection))
             return
         }
         let recipeName = copyingRecipe == nil ? recipe.name : Self.copyName(for: recipe.name)

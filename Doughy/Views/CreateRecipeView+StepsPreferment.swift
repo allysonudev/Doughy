@@ -323,6 +323,7 @@ extension CreateRecipeView {
                 .accessibilityHint("Enter step text to enable")
             }
 
+            #if DOUGHY_SCAN_DIAGNOSTICS
             if let diagnostics = lastScanDiagnostics {
                 Section {
                     Button("Copy Scan Diagnostics") {
@@ -332,6 +333,7 @@ extension CreateRecipeView {
                     Text("Copies the scan's OCR text and parsed ingredient data to the clipboard for debugging.")
                 }
             }
+            #endif
         }
     }
 

@@ -11,12 +11,31 @@ class IngredientConversionStore: NSObject {
 
     static let shared = IngredientConversionStore()
 
-    private let userDefaults = UserDefaults.standard
+    private let userDefaults: UserDefaults
+    private let cloudStore: DoughyKeyValueStore?
     private let storageKey = "ingredientConversionStoreKey"
     private let extraStorageKey = "ingredientConversionStoreExtraKey"
     private let groupStorageKey = "ingredientConversionGroupKey"
 
-    private override init() { super.init() }
+    struct BackupData: Codable, Equatable {
+        let conversions: [String: Double]?
+        let alwaysExtra: [String]?
+        let entryGroups: [String: String]?
+
+        var isEmpty: Bool {
+            (conversions?.isEmpty ?? true) &&
+            (alwaysExtra?.isEmpty ?? true) &&
+            (entryGroups?.isEmpty ?? true)
+        }
+    }
+
+    init(userDefaults: UserDefaults = .standard,
+         cloudStore: DoughyKeyValueStore? = NSUbiquitousKeyValueStore.default) {
+        self.userDefaults = userDefaults
+        self.cloudStore = cloudStore
+        super.init()
+        hydrateFromCloud()
+    }
 
     private func key(name: String, unit: String) -> String {
         "\(name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased())|\(unit.lowercased())"
@@ -24,17 +43,17 @@ class IngredientConversionStore: NSObject {
 
     private var conversions: [String: Double] {
         get { userDefaults.dictionary(forKey: storageKey) as? [String: Double] ?? [:] }
-        set { userDefaults.set(newValue, forKey: storageKey) }
+        set { persist(newValue, forKey: storageKey) }
     }
 
     private var entryGroups: [String: String] {
         get { userDefaults.dictionary(forKey: groupStorageKey) as? [String: String] ?? [:] }
-        set { userDefaults.set(newValue, forKey: groupStorageKey) }
+        set { persist(newValue, forKey: groupStorageKey) }
     }
 
     private var alwaysExtra: Set<String> {
         get { Set(userDefaults.array(forKey: extraStorageKey) as? [String] ?? []) }
-        set { userDefaults.set(Array(newValue), forKey: extraStorageKey) }
+        set { persist(Array(newValue), forKey: extraStorageKey) }
     }
 
     /// Returns the learned grams-per-unit conversion for the given ingredient name and
@@ -103,4 +122,49 @@ class IngredientConversionStore: NSObject {
         currentGroups.removeValue(forKey: k)
         entryGroups = currentGroups
     }
+
+    func backupData() -> BackupData? {
+        let data = BackupData(
+            conversions: conversions.nilIfEmpty,
+            alwaysExtra: Array(alwaysExtra).sorted().nilIfEmpty,
+            entryGroups: entryGroups.nilIfEmpty
+        )
+        return data.isEmpty ? nil : data
+    }
+
+    func restore(_ data: BackupData?) {
+        guard let data else { return }
+        conversions = data.conversions ?? [:]
+        alwaysExtra = Set(data.alwaysExtra ?? [])
+        entryGroups = data.entryGroups ?? [:]
+    }
+
+    private func hydrateFromCloud() {
+        _ = cloudStore?.synchronize()
+        let cloudConversions = cloudStore?.dictionary(forKey: storageKey) as? [String: Double] ?? [:]
+        let cloudGroups = cloudStore?.dictionary(forKey: groupStorageKey) as? [String: String] ?? [:]
+        let cloudExtras = Set(cloudStore?.stringArray(forKey: extraStorageKey) ?? [])
+
+        let mergedConversions = cloudConversions.merging(conversions) { _, local in local }
+        let mergedGroups = cloudGroups.merging(entryGroups) { _, local in local }
+        let mergedExtras = cloudExtras.union(alwaysExtra)
+
+        persist(mergedConversions, forKey: storageKey)
+        persist(mergedGroups, forKey: groupStorageKey)
+        persist(Array(mergedExtras), forKey: extraStorageKey)
+    }
+
+    private func persist(_ value: Any, forKey key: String) {
+        userDefaults.set(value, forKey: key)
+        cloudStore?.set(value, forKey: key)
+        _ = cloudStore?.synchronize()
+    }
+}
+
+private extension Dictionary {
+    var nilIfEmpty: Self? { isEmpty ? nil : self }
+}
+
+private extension Array {
+    var nilIfEmpty: Self? { isEmpty ? nil : self }
 }

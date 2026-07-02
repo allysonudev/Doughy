@@ -23,7 +23,29 @@ struct RecipeScanner {
                 throw ScanError.noTextFound
             }
             let parsed = try await parseRecipe(from: text)
-            let resolvedIngredients = parsed.ingredients.map(Self.resolve)
+
+            // Best-effort on-device cleanup pass: fix leftover formatting artifacts in
+            // names and flag entries that don't look like real ingredients, without
+            // touching the quantities/units the parser already got right. Failures here
+            // (e.g. model unavailable) just fall back to the parser's own names.
+            var cleanedIngredients = parsed.ingredients
+            var uncertainIndices: Set<Int> = []
+            if !cleanedIngredients.isEmpty, let reviews = try? await cleanIngredientNames(cleanedIngredients) {
+                for review in reviews where cleanedIngredients.indices.contains(review.index) {
+                    let cleanedName = review.cleanedName.trimmingCharacters(in: .whitespacesAndNewlines)
+                    if !cleanedName.isEmpty {
+                        cleanedIngredients[review.index].name = cleanedName
+                    }
+                    if !review.isValidIngredient {
+                        uncertainIndices.insert(review.index)
+                    }
+                }
+            }
+
+            var resolvedIngredients = cleanedIngredients.map(Self.resolve)
+            for index in uncertainIndices where resolvedIngredients.indices.contains(index) {
+                resolvedIngredients[index].isUncertain = true
+            }
             let resolved = ResolvedRecipe(name: parsed.name,
                                            hasPreferment: parsed.hasPreferment,
                                            prefermentName: parsed.prefermentName,

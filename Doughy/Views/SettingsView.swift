@@ -461,12 +461,12 @@ struct SettingsView: View {
         pendingRestoreBackup = nil
         do {
             try store.restoreLibraryBackup(backup)
-            // Bring back collection appearances from the backup, without overwriting any the
-            // user has set locally since.
-            for (name, appearance) in backup.collections ?? [:]
-            where appearanceStore.appearance(for: name).isEmpty {
+            for (name, appearance) in backup.collections ?? [:] {
                 appearanceStore.set(appearance, for: name)
             }
+            Settings.shared.restore(backup.userState?.settings)
+            IngredientDensityStore.shared.restore(backup.userState?.ingredientDensities)
+            IngredientConversionStore.shared.restore(backup.userState?.ingredientConversions)
             backupRestoreMessage = "Recipe library restored."
         } catch {
             backupRestoreMessage = error.localizedDescription

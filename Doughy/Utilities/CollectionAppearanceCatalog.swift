@@ -34,6 +34,8 @@ struct CollectionIcon: Identifiable, Hashable {
 /// on Android still renders here. An unknown slug resolves to `nil`, so the avatar safely
 /// falls back to the collection's first letter.
 enum CollectionIconCatalog {
+    static let customEmojiPrefix = "emoji:"
+
     static let all: [CollectionIcon] = [
         CollectionIcon(key: "bread", label: String(localized: "collection.icon.bread", defaultValue: "Bread"), glyph: .emoji("🍞")),
         CollectionIcon(key: "bagel", label: String(localized: "collection.icon.bagel", defaultValue: "Bagel"), glyph: .emoji("🥯")),
@@ -81,7 +83,33 @@ enum CollectionIconCatalog {
     /// Resolves a persisted icon slug to its catalog entry, or nil (→ first-letter avatar).
     static func icon(for key: String?) -> CollectionIcon? {
         guard let key else { return nil }
+        if let emoji = customEmoji(from: key) {
+            return CollectionIcon(key: key, label: emoji, glyph: .emoji(emoji))
+        }
         return byKey[key]
+    }
+
+    static func customEmojiKey(for input: String) -> String? {
+        normalizedCustomEmoji(input).map { customEmojiPrefix + $0 }
+    }
+
+    static func customEmoji(from key: String) -> String? {
+        guard key.hasPrefix(customEmojiPrefix) else { return nil }
+        return normalizedCustomEmoji(String(key.dropFirst(customEmojiPrefix.count)))
+    }
+
+    static func normalizedCustomEmoji(_ input: String) -> String? {
+        let trimmed = input.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.count == 1, let character = trimmed.first else { return nil }
+        let scalars = Array(character.unicodeScalars)
+        let hasEmojiPresentation = scalars.contains { scalar in
+            scalar.properties.isEmojiPresentation || scalar.properties.isEmojiModifierBase
+        }
+        let hasEmojiSequenceMarker = scalars.contains { scalar in
+            scalar.value == 0xFE0F || scalar.value == 0x200D || scalar.value == 0x20E3 || scalar.properties.isEmojiModifier
+        }
+        guard hasEmojiPresentation || hasEmojiSequenceMarker else { return nil }
+        return String(character)
     }
 }
 

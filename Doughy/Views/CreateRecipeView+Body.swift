@@ -186,21 +186,27 @@ extension CreateRecipeView {
 
     var tabletModeSelectionStudio: some View {
         NavigationStack {
-            HStack(spacing: 0) {
-                studioStartOutline
-                    .frame(width: 220)
+            GeometryReader { proxy in
+                let usesPortraitLayout = tabletStudioUsesPortraitLayout(proxy.size)
 
-                Divider()
+                HStack(spacing: 0) {
+                    studioStartOutline
+                        .frame(width: usesPortraitLayout ? 190 : 220)
 
-                studioStartEditor
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    Divider()
 
-                Divider()
+                    studioStartEditor(showsCompactAction: usesPortraitLayout)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-                studioStartPreviewPane
-                    .frame(width: 400)
+                    if !usesPortraitLayout {
+                        Divider()
+
+                        studioStartPreviewPane
+                            .frame(width: 400)
+                    }
+                }
+                .background(Color(.systemGroupedBackground))
             }
-            .background(Color(.systemGroupedBackground))
             .navigationTitle(String(localized: "create.title.new", defaultValue: "New Recipe"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -253,7 +259,7 @@ extension CreateRecipeView {
         .background(Color(.systemBackground))
     }
 
-    var studioStartEditor: some View {
+    func studioStartEditor(showsCompactAction: Bool) -> some View {
         VStack(spacing: 0) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
@@ -276,6 +282,11 @@ extension CreateRecipeView {
                 Spacer()
             }
             .padding(24)
+
+            if showsCompactAction {
+                Divider()
+                studioStartCompactActionPane
+            }
         }
     }
 
@@ -363,6 +374,42 @@ extension CreateRecipeView {
         .background(Color(.secondarySystemGroupedBackground))
     }
 
+    var studioStartCompactActionPane: some View {
+        HStack(alignment: .center, spacing: 14) {
+            Image(systemName: selectedStudioStartOption.systemImage)
+                .font(.title3)
+                .foregroundStyle(Color.accentColor)
+                .frame(width: 34, height: 34)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(selectedStudioStartOption.title)
+                    .font(.headline)
+                Text(selectedStudioStartOption == .scan && !selectedStudioStartOptionIsEnabled
+                     ? studioScanUnavailableMessage
+                     : selectedStudioStartOption.subtitle)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .lineLimit(2)
+            }
+
+            Spacer(minLength: 12)
+
+            Button(studioStartPrimaryTitle) {
+                continueFromStudioStart()
+            }
+            .buttonStyle(.borderedProminent)
+            .disabled(!selectedStudioStartOptionIsEnabled)
+            .scanSourceConfirmationDialog(
+                isPresented: $showScanOptions,
+                showPhotoPicker: $showPhotoPicker,
+                showCamera: $showCamera
+            )
+        }
+        .padding(.horizontal, 24)
+        .padding(.vertical, 14)
+        .background(Color(.systemBackground))
+    }
+
     var studioStartPrimaryTitle: String {
         selectedStudioStartOption == .scan ? "Choose Source" : "Continue"
     }
@@ -441,21 +488,27 @@ extension CreateRecipeView {
 
     var tabletRecipeStudio: some View {
         NavigationStack {
-            HStack(spacing: 0) {
-                studioOutline
-                    .frame(width: 220)
+            GeometryReader { proxy in
+                let usesPortraitLayout = tabletStudioUsesPortraitLayout(proxy.size)
 
-                Divider()
+                HStack(spacing: 0) {
+                    studioOutline(showsLandscapeHint: usesPortraitLayout)
+                        .frame(width: usesPortraitLayout ? 190 : 220)
 
-                studioEditor
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    Divider()
 
-                Divider()
+                    studioEditor
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-                studioPreviewPane
-                    .frame(width: 400)
+                    if !usesPortraitLayout {
+                        Divider()
+
+                        studioPreviewPane
+                            .frame(width: 400)
+                    }
+                }
+                .background(Color(.systemGroupedBackground))
             }
-            .background(Color(.systemGroupedBackground))
             .navigationTitle(studioTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -500,6 +553,15 @@ extension CreateRecipeView {
                 selectedStudioStep = .scanReview
             }
         }
+        .onChange(of: pendingUncertainIngredients.count) { _, count in
+            if count > 0 {
+                selectedStudioStep = .scanReview
+            }
+        }
+    }
+
+    func tabletStudioUsesPortraitLayout(_ size: CGSize) -> Bool {
+        size.width < size.height
     }
 
     var studioTitle: String {
@@ -510,7 +572,7 @@ extension CreateRecipeView {
             : String(localized: "create.title.new", defaultValue: "New Recipe")
     }
 
-    var studioOutline: some View {
+    func studioOutline(showsLandscapeHint: Bool) -> some View {
         VStack(alignment: .leading, spacing: 18) {
             VStack(alignment: .leading, spacing: 6) {
                 Text(studioTitle)
@@ -523,7 +585,7 @@ extension CreateRecipeView {
             }
 
             VStack(spacing: 6) {
-                if !pendingNameChoices.isEmpty {
+                if !pendingNameChoices.isEmpty || !pendingUncertainIngredients.isEmpty {
                     studioOutlineButton(step: .scanReview, title: "Scan Review", systemImage: "checklist")
                 }
                 studioOutlineButton(step: .details, title: "Details", systemImage: "text.cursor")
@@ -536,32 +598,64 @@ extension CreateRecipeView {
 
             Spacer()
 
-            if sourcePhotoImage != nil || lastScanDiagnostics != nil || !pendingNameChoices.isEmpty {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Scan Review")
-                        .font(.caption)
-                        .textCase(.uppercase)
-                        .foregroundStyle(.secondary)
-                    if !pendingNameChoices.isEmpty {
-                        Text(String(format: "%d ingredient choices", pendingNameChoices.count))
-                            .font(.subheadline)
+            #if DOUGHY_SCAN_DIAGNOSTICS
+            let showsScanStatus = sourcePhotoImage != nil || lastScanDiagnostics != nil || !pendingNameChoices.isEmpty || !pendingUncertainIngredients.isEmpty
+            #else
+            let showsScanStatus = sourcePhotoImage != nil || !pendingNameChoices.isEmpty || !pendingUncertainIngredients.isEmpty
+            #endif
+
+            if showsScanStatus {
+                if sourcePhotoImage != nil {
+                    Button {
+                        showSourcePhotoViewer = true
+                    } label: {
+                        studioScanStatusCard(showsLandscapeHint: showsLandscapeHint)
                     }
-                    if lastScanDiagnostics != nil {
-                        Text("Diagnostics available")
-                            .font(.subheadline)
-                    }
-                    if sourcePhotoImage != nil {
-                        Text("Source photo attached")
-                            .font(.subheadline)
-                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("studioSourcePhotoButton")
+                } else {
+                    studioScanStatusCard(showsLandscapeHint: false)
                 }
-                .padding(12)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 8))
             }
         }
         .padding(18)
         .background(Color(.systemBackground))
+    }
+
+    func studioScanStatusCard(showsLandscapeHint: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Scan Review")
+                .font(.caption)
+                .textCase(.uppercase)
+                .foregroundStyle(.secondary)
+            if !pendingNameChoices.isEmpty {
+                Text(String(format: "%d ingredient choices", pendingNameChoices.count))
+                    .font(.subheadline)
+            }
+            if !pendingUncertainIngredients.isEmpty {
+                Text(String(format: "%d flagged ingredients", pendingUncertainIngredients.count))
+                    .font(.subheadline)
+            }
+            #if DOUGHY_SCAN_DIAGNOSTICS
+            if lastScanDiagnostics != nil {
+                Text("Diagnostics available")
+                    .font(.subheadline)
+            }
+            #endif
+            if sourcePhotoImage != nil {
+                Label("Source photo attached", systemImage: "photo")
+                    .font(.subheadline)
+            }
+            if showsLandscapeHint {
+                Label("Rotate to landscape to compare with the source image.", systemImage: "rotate.right")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 8))
     }
 
     func studioOutlineButton(step: CreateStep, title: String, systemImage: String) -> some View {
@@ -656,43 +750,10 @@ extension CreateRecipeView {
                     .buttonStyle(.plain)
                 }
 
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Live Recipe")
-                        .font(.headline)
-                    studioSummaryRow("Name", value: recipeName.isEmpty ? "Untitled" : recipeName)
-                    studioSummaryRow("Collection", value: effectiveCollection.isEmpty ? "Not set" : effectiveCollection)
-                    if let defaultWeight, inputMode == .byPercent {
-                        studioSummaryRow("Default Weight", value: formatGrams(defaultWeight))
-                    }
-                    studioSummaryRow("Flours", value: "\(activeFlourRows.count)")
-                    studioSummaryRow("Ingredients", value: "\(activeIngredientRows.count + extraIngredients.count)")
-                    if containsPreferment {
-                        studioSummaryRow("Preferment", value: prefermentName.isEmpty ? "Not named" : prefermentName)
-                    }
-                    studioSummaryRow("Steps", value: "\(instructions.count)")
-                }
-                .padding(14)
-                .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 8))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color(.separator), lineWidth: 0.7)
-                }
             }
             .padding(18)
         }
         .background(Color(.secondarySystemGroupedBackground))
-    }
-
-    func studioSummaryRow(_ title: String, value: String) -> some View {
-        HStack(alignment: .firstTextBaseline) {
-            Text(title)
-                .foregroundStyle(.secondary)
-            Spacer(minLength: 10)
-            Text(value)
-                .fontWeight(.semibold)
-                .multilineTextAlignment(.trailing)
-        }
-        .font(.subheadline)
     }
 
     var activeFlourRows: [FlourRow] {
@@ -777,7 +838,7 @@ extension CreateRecipeView {
     func studioStepIsEnabled(_ step: CreateStep) -> Bool {
         switch step {
         case .scanReview:
-            !pendingNameChoices.isEmpty
+            !pendingNameChoices.isEmpty || !pendingUncertainIngredients.isEmpty
         case .details:
             true
         case .preferment:
@@ -793,6 +854,7 @@ extension CreateRecipeView {
         switch selectedStudioStep {
         case .scanReview:
             applyNameChoices()
+            applyUncertainIngredients()
             scheduleNextScanPrompt()
             selectedStudioStep = .details
         case .details:

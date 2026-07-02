@@ -41,11 +41,14 @@ extension CreateRecipeView {
                     }
                     .accessibilityIdentifier("collectionPicker")
                     .onAppear {
-                        if collectionName.isEmpty, let first = collections.first {
-                            collectionName = first
+                        if collectionName.isEmpty, let fallback = collections.first {
+                            collectionName = fallback
                             // This is an automatic default, not a user edit — update the
                             // baseline so it doesn't trip the discard-changes safeguard.
-                            initialSnapshot.collectionName = first
+                            initialSnapshot.collectionName = fallback
+                        } else if !collectionName.isEmpty, !collections.contains(collectionName), let fallback = collections.first {
+                            collectionName = fallback
+                            initialSnapshot.collectionName = fallback
                         }
                     }
                 }
