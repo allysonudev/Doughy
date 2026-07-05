@@ -210,8 +210,7 @@ struct SettingsView: View {
         HStack(spacing: 24) {
             Text(title)
                 .foregroundStyle(.primary)
-                .frame(width: 220, alignment: .leading)
-            Spacer(minLength: 24)
+                .frame(width: 160, alignment: .leading)
             control()
                 .pickerStyle(.menu)
                 .frame(maxWidth: 280, alignment: .trailing)
@@ -322,12 +321,19 @@ struct SettingsView: View {
             .toolbar {
                 if showsCloseButton {
                     ToolbarItem(placement: .topBarLeading) {
-                        Button("Close", systemImage: "xmark") {
-                            dismiss()
+                        if #available(iOS 26.0, *) {
+                            Button("Close", systemImage: "xmark") {
+                                dismiss()
+                            }.glassEffect()
+                        } else {
+                            Button("Close", systemImage: "xmark") {
+                                dismiss()
+                            }
                         }
                     }
                 }
             }
+            .toolbar(removing: .sidebarToggle)
         } detail: {
             NavigationStack {
                 ZStack {
