@@ -48,8 +48,10 @@ enum RecipeDiff {
 
     private static func ingredientLines(from old: [IngredientSnapshot], to new: [IngredientSnapshot], prefix: String, weightMode: Bool) -> [String] {
         var lines: [String] = []
-        let newByName = Dictionary(uniqueKeysWithValues: new.map { ($0.name.lowercased(), $0) })
-        let oldByName = Dictionary(uniqueKeysWithValues: old.map { ($0.name.lowercased(), $0) })
+        // Ingredient names aren't guaranteed unique (e.g. an imported recipe can list the
+        // same ingredient twice), so merge defensively instead of trapping on duplicates.
+        let newByName = Dictionary(new.map { ($0.name.lowercased(), $0) }, uniquingKeysWith: { first, _ in first })
+        let oldByName = Dictionary(old.map { ($0.name.lowercased(), $0) }, uniquingKeysWith: { first, _ in first })
 
         for ingredient in old {
             guard let match = newByName[ingredient.name.lowercased()] else {

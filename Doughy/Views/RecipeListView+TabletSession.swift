@@ -5,11 +5,6 @@
 
 import SwiftUI
 
-struct TabletLibraryScrollRequest: Equatable {
-    let collectionName: String
-    let id = UUID()
-}
-
 struct TabletRepeatButton: View {
     let systemImage: String
     let isProminent: Bool
@@ -79,6 +74,10 @@ enum TabletBakeSessionMode: String, CaseIterable {
     }
 }
 
+private enum TabletBakeSessionScrollTarget {
+    case sessionNote
+}
+
 enum TabletBakeSessionKeys {
     static let lastCollection = "tabletBakeSession.lastCollection"
     static let lastRecipe = "tabletBakeSession.lastRecipe"
@@ -115,6 +114,7 @@ struct TabletBakeSessionView: View {
     @State var calculatedRecipe: (any CalculatedRecipeProtocol)?
     @State var calculationError: String?
     @State var noteText = ""
+    @FocusState var sessionNoteFocused: Bool
     /// Session-scoped preferment add/remove state. There's no "Set as Default"
     /// mechanism on the tablet Adjust tab for any override yet, so - like
     /// every other field here - this only affects this bake session and is
@@ -255,11 +255,13 @@ struct TabletBakeSessionView: View {
                 .transition(modeTransition)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color(.systemBackground).opacity(0.72))
+            // Clip only the mode transition; the background sits outside the clip so it
+            // can keep extending under the home indicator.
             .clipped()
+            .paneBackground(Color(.systemBackground).opacity(0.72))
             .animation(.easeInOut(duration: 0.2), value: mode)
         }
-        .background(Color(.systemGroupedBackground))
+        .paneBackground(Color(.systemGroupedBackground))
         .onAppear {
             store.recordOpened(recipe: currentRecipe)
             calculate()
@@ -357,17 +359,52 @@ struct TabletBakeSessionView: View {
     }
 
     var recipeFocus: some View {
-        VStack(spacing: 18) {
-            batchSummary
-            HStack(alignment: .top, spacing: 18) {
-                ingredientsColumn
-                    .frame(width: 310)
-                instructionsColumn
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+        GeometryReader { proxy in
+            ScrollViewReader { scrollProxy in
+                ScrollView {
+                    VStack(spacing: 18) {
+                        batchSummary
+                        HStack(alignment: .top, spacing: 18) {
+                            // Flexible so the column can give up width when the library panel is open
+                            // on narrower layouts instead of forcing the workspace wider than the screen.
+                            ingredientsColumn
+                                .frame(minWidth: 250, maxWidth: 310)
+                            instructionsColumn
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        }
+                        .frame(height: recipeFocusColumnsHeight(in: proxy))
+                        sessionNote
+                            .id(TabletBakeSessionScrollTarget.sessionNote)
+                    }
+                    .padding(24)
+                    .frame(minHeight: proxy.size.height, alignment: .top)
+                }
+                .scrollDismissesKeyboard(.interactively)
+                .onChange(of: sessionNoteFocused) { _, isFocused in
+                    guard isFocused else { return }
+                    scrollSessionNoteIntoView(using: scrollProxy)
+                }
             }
-            sessionNote
         }
-        .padding(24)
+    }
+
+    func recipeFocusColumnsHeight(in proxy: GeometryProxy) -> CGFloat {
+        // The outer recipe scroll view needs the middle columns to have a concrete
+        // height; otherwise their nested scroll views expand instead of leaving room
+        // to scroll the Session Note above the landscape keyboard.
+        max(220, proxy.size.height * 0.48)
+    }
+
+    func scrollSessionNoteIntoView(using proxy: ScrollViewProxy) {
+        withAnimation(.easeInOut(duration: 0.2)) {
+            proxy.scrollTo(TabletBakeSessionScrollTarget.sessionNote, anchor: .bottom)
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+            guard sessionNoteFocused else { return }
+            withAnimation(.easeInOut(duration: 0.2)) {
+                proxy.scrollTo(TabletBakeSessionScrollTarget.sessionNote, anchor: .bottom)
+            }
+        }
     }
 
     var batchSummary: some View {
@@ -572,6 +609,7 @@ struct TabletBakeSessionView: View {
             }
 
             TextField("Crumb, timing, temperature, substitutions...", text: $noteText, axis: .vertical)
+                .focused($sessionNoteFocused)
                 .lineLimit(4...8)
                 .textFieldStyle(.plain)
                 .padding(12)

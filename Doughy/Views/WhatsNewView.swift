@@ -64,6 +64,7 @@ struct WhatsNewView: View {
                 .frame(maxWidth: .infinity)
                 .padding()
                 .background(.regularMaterial)
+                .accessibilityIdentifier("whatsNewGotItButton")
             }
         }
     }

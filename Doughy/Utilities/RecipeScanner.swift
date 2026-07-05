@@ -17,8 +17,13 @@ struct RecipeScanner {
     private init() {}
 
     func scan(image: UIImage) async throws -> ScanResult {
+        try await scan(images: [image])
+    }
+
+    func scan(images: [UIImage]) async throws -> ScanResult {
         do {
-            let text = try await extractText(from: image)
+            let pageOCR = try await extractText(from: images)
+            let text = Self.stitchedText(from: pageOCR)
             guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
                 throw ScanError.noTextFound
             }
@@ -51,7 +56,7 @@ struct RecipeScanner {
                                            prefermentName: parsed.prefermentName,
                                            ingredients: resolvedIngredients,
                                            instructions: parsed.instructions)
-            return ScanResult(ocrText: text, rawRecipe: parsed, resolvedRecipe: resolved)
+            return ScanResult(ocrText: text, pageOCR: pageOCR, rawRecipe: parsed, resolvedRecipe: resolved)
         } catch {
             // availability can incorrectly return .available on unsupported hardware
             // (e.g. iPhone 13); assetsUnavailable is the true runtime signal in that case.
@@ -95,6 +100,8 @@ struct RecipeScanner {
             return amount * gramsPerCup(for: category) / 48
         case .tablespoon:
             return amount * gramsPerCup(for: category) / 16
+        case .fluidOunce:
+            return amount * gramsPerCup(for: category) / 8
         case .cup:
             return amount * gramsPerCup(for: category)
         case .ounce:
@@ -114,7 +121,7 @@ struct RecipeScanner {
 
     static func lineLooksIngredientLike(_ line: String) -> Bool {
         let lower = line.lowercased()
-        if lower.range(of: #"\b(for the|biga|poolish|levain|starter|preferment|dough|filling|glaze|frosting|ingredients?)\b"#,
+        if lower.range(of: #"\b(for the|biga|poolish|levain|starter|preferment|tangzhong|yudane|dough|filling|glaze|frosting|ingredients?)\b"#,
                        options: .regularExpression) != nil {
             return true
         }
@@ -123,7 +130,9 @@ struct RecipeScanner {
                                       options: .regularExpression) != nil
         guard hasQuantity else { return false }
 
-        return lower.range(of: #"\b(?:g|grams?|kg|ml|milliliters?|cups?|c\.|tablespoons?|tbsp\.?|teaspoons?|tsp\.?|ounces?|oz\.?|pounds?|lbs?\.?|eggs?|whites?|yolks?|sticks?|packages?|packets?|pinch|cloves?)\b"#,
+        // (?<![a-z]) instead of a leading \b so compact metric like "500g"/"250ml"/"2dl"
+        // still matches — there is no word boundary between a digit and the unit.
+        return lower.range(of: #"(?<![a-z])(?:g|grams?|kg|ml|milliliters?|dl|deciliters?|decilitres?|l|liters?|litres?|cups?|c\.|tablespoons?|tbsp\.?|teaspoons?|tsp\.?|ounces?|oz\.?|pounds?|lbs?\.?|eggs?|whites?|yolks?|sticks?|packages?|packets?|pinch|cloves?)\b"#,
                            options: .regularExpression) != nil
     }
 
@@ -145,9 +154,10 @@ struct RecipeScanner {
     ]
 
     /// Units whose gram conversion depends on the ingredient's density (and is therefore
-    /// only an estimate). Ounce amounts are an exact mass conversion and are excluded.
+    /// only an estimate). Ounce amounts are an exact mass conversion and are excluded;
+    /// fluid ounces are a volume and are not.
     static let densityDependentUnits: Set<ParsedVolumeUnit> = [
-        .teaspoon, .tablespoon, .cup, .milliliter, .deciliter, .liter,
+        .teaspoon, .tablespoon, .cup, .fluidOunce, .milliliter, .deciliter, .liter,
     ]
 
     /// Descriptors for water temperature commonly found in ingredient names (e.g.
@@ -260,11 +270,7 @@ struct RecipeScanner {
         }
 
         let isYeast = [.activeDryYeast, .instantYeast, .freshYeast].contains(category)
-        if isYeast && ingredient.weightGrams >= 6 && ingredient.weightGrams <= 8.5 {
-            return resolved(weightGrams: ingredient.weightGrams)
-        }
-
-        if ingredient.weightGrams > 0 && !hasVolume && ingredient.hasExplicitWeightGrams {
+        if isYeast && Self.isPlausiblePackagedYeastWeight(ingredient.weightGrams) {
             return resolved(weightGrams: ingredient.weightGrams)
         }
 
@@ -346,6 +352,14 @@ struct RecipeScanner {
         return resolved(weightGrams: volumeWeightGrams)
     }
 
+    /// Yeast weights reported without explicit grams (the packet rule) are trusted only
+    /// when they look like 1–4 standard 7 g packages, e.g. "2 packets" -> 14 g. Anything
+    /// else is more likely a hallucinated volume conversion (1 cup of yeast ≈ 144 g).
+    static func isPlausiblePackagedYeastWeight(_ grams: Double) -> Bool {
+        guard grams > 0 else { return false }
+        return (1...4).contains { abs(grams - 7 * Double($0)) <= 1.5 }
+    }
+
     static func normalizedExtraAmount(_ amount: Double, unit: ParsedVolumeUnit, category: ParsedIngredientCategory) -> Double {
         if category == .nuts && unit == .cup && abs(amount - (2 + 1.0 / 3.0)) < 0.001 {
             return 2.0 / 3.0
@@ -354,6 +368,16 @@ struct RecipeScanner {
     }
 
     // MARK: - OCR
+
+    func extractText(from images: [UIImage]) async throws -> [ScanResult.PageOCR] {
+        guard !images.isEmpty else { throw ScanError.invalidImage }
+        var pageOCR: [ScanResult.PageOCR] = []
+        for (index, image) in images.enumerated() {
+            let text = try await extractText(from: image)
+            pageOCR.append(.init(imageIndex: index + 1, text: text))
+        }
+        return pageOCR
+    }
 
     func extractText(from image: UIImage) async throws -> String {
         guard let cgImage = image.cgImage else { throw ScanError.invalidImage }
@@ -370,6 +394,10 @@ struct RecipeScanner {
             }
             request.recognitionLevel = .accurate
             request.usesLanguageCorrection = true
+            // Vision OCRs in English only by default; the app is localized into 15
+            // languages and the parse prompt handles non-English units, so let Vision
+            // pick the script/language from the image itself.
+            request.automaticallyDetectsLanguage = true
             let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
             do {
                 try handler.perform([request])
@@ -377,6 +405,53 @@ struct RecipeScanner {
                 continuation.resume(throwing: error)
             }
         }
+    }
+
+    static func stitchedText(from pageOCR: [ScanResult.PageOCR]) -> String {
+        var stitchedLines: [String] = []
+        for page in pageOCR {
+            var lines = page.text
+                .split(separator: "\n", omittingEmptySubsequences: false)
+                .map { String($0).trimmingCharacters(in: .whitespacesAndNewlines) }
+
+            while lines.first?.isEmpty == true {
+                lines.removeFirst()
+            }
+            while lines.last?.isEmpty == true {
+                lines.removeLast()
+            }
+
+            let overlap = overlappingBoundaryLineCount(previous: stitchedLines, next: lines)
+            if overlap > 0 {
+                lines.removeFirst(overlap)
+            }
+            if !stitchedLines.isEmpty, !lines.isEmpty {
+                stitchedLines.append("")
+            }
+            stitchedLines.append(contentsOf: lines)
+        }
+        return stitchedLines.joined(separator: "\n")
+    }
+
+    static func overlappingBoundaryLineCount(previous: [String], next: [String]) -> Int {
+        let maxOverlap = min(8, previous.count, next.count)
+        guard maxOverlap > 0 else { return 0 }
+
+        for count in stride(from: maxOverlap, through: 1, by: -1) {
+            let previousTail = previous.suffix(count).map(normalizedOCRBoundaryLine)
+            let nextHead = next.prefix(count).map(normalizedOCRBoundaryLine)
+            if previousTail == nextHead, previousTail.contains(where: { !$0.isEmpty }) {
+                return count
+            }
+        }
+        return 0
+    }
+
+    static func normalizedOCRBoundaryLine(_ line: String) -> String {
+        line
+            .lowercased()
+            .replacingOccurrences(of: #"[^a-z0-9¼½¾⅓⅔⅛⅜⅝⅞]+"#, with: " ", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }
 #endif

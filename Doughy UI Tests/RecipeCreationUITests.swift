@@ -248,4 +248,230 @@ final class RecipeCreationUITests: DoughyUITestCase {
         XCTAssertTrue(app.buttons["addRecipeButton"].waitForExistence(timeout: 5))
         XCTAssertFalse(app.staticTexts["Unsaved Recipe"].exists)
     }
+
+    // MARK: - Existing collection
+
+    /// Creates a recipe into a brand-new collection, then creates a second recipe
+    /// choosing that same collection from `collectionPicker` (rather than creating
+    /// another new one), and verifies both recipes appear in the home list.
+    func testCreateRecipeIntoExistingCollection() throws {
+        app.startCreateRecipe()
+        app.chooseMode(byPercent: true)
+        app.fillDetails(name: "First In Collection", newCollection: "Shared Collection", defaultWeight: "1000")
+        app.fillFlour(at: 0, name: "Bread Flour", value: "100")
+        app.fillIngredient(at: 0, name: "Water", value: "70")
+        app.tapIngredientsNext()
+        app.saveRecipe()
+        XCTAssertTrue(app.staticTexts["First In Collection"].waitForExistence(timeout: 5))
+
+        app.startCreateRecipe()
+        app.chooseMode(byPercent: true)
+
+        let nameField = app.textFields["recipeNameField"]
+        XCTAssertTrue(nameField.waitForExistence(timeout: 5))
+        nameField.enterText("Second In Collection", app: app)
+
+        // Leave "New Collection" off and pick the existing collection from the picker.
+        app.selectExistingCollection("Shared Collection")
+
+        app.tapDetailsNext()
+        app.fillFlour(at: 0, name: "Bread Flour", value: "100")
+        app.fillIngredient(at: 0, name: "Water", value: "65")
+        app.tapIngredientsNext()
+        app.saveRecipe()
+
+        // Saving dismisses the create sheet back to the recipe list, where both
+        // recipes in the shared collection should now be visible.
+        XCTAssertTrue(app.staticTexts["Second In Collection"].waitForExistence(timeout: 5))
+        let firstCell = app.staticTexts["First In Collection"]
+        app.scrollUntilExists(firstCell)
+        XCTAssertTrue(firstCell.waitForExistence(timeout: 5), "First recipe should still be listed in the shared collection")
+    }
+
+    // MARK: - Duplicate name
+
+    /// Saving a recipe whose name already exists in the same collection surfaces
+    /// `RecipeWritingError.recipeExistsDuringWrite`'s message in a "Save Error" alert,
+    /// and the create sheet stays open (the recipe is not saved a second time).
+    func testSavingRecipeWithExistingNameShowsError() throws {
+        app.startCreateRecipe()
+        app.chooseMode(byPercent: true)
+        app.fillDetails(name: "Duplicate Name Loaf", newCollection: "Duplicate Name Tests", defaultWeight: "1000")
+        app.fillFlour(at: 0, name: "Bread Flour", value: "100")
+        app.fillIngredient(at: 0, name: "Water", value: "70")
+        app.tapIngredientsNext()
+        app.saveRecipe()
+        XCTAssertTrue(app.staticTexts["Duplicate Name Loaf"].waitForExistence(timeout: 5))
+
+        // Attempt to create a second recipe with the identical name in the same collection.
+        app.startCreateRecipe()
+        app.chooseMode(byPercent: true)
+
+        let nameField = app.textFields["recipeNameField"]
+        XCTAssertTrue(nameField.waitForExistence(timeout: 5))
+        nameField.enterText("Duplicate Name Loaf", app: app)
+
+        // Only one collection exists at this point ("Duplicate Name Tests"), and
+        // `detailsFormContent`'s picker `.onAppear` auto-selects the first (only)
+        // collection when none has been chosen yet, so no picker interaction is needed.
+        app.tapDetailsNext()
+        app.fillFlour(at: 0, name: "Bread Flour", value: "100")
+        app.fillIngredient(at: 0, name: "Water", value: "70")
+        app.tapIngredientsNext()
+        app.saveRecipe()
+
+        let alert = app.alerts["Save Error"]
+        XCTAssertTrue(alert.waitForExistence(timeout: 5), "A Save Error alert should appear for a duplicate recipe name")
+        XCTAssertTrue(alert.staticTexts["A recipe with that name already exists in this collection. Please choose a different name."].waitForExistence(timeout: 5),
+                      "Save Error alert should explain the name conflict")
+        alert.buttons["OK"].tap()
+
+        // The create sheet should still be open on the preview step (save did not go through).
+        XCTAssertTrue(app.buttons["saveRecipeButton"].waitForExistence(timeout: 5), "Create sheet should remain open after the error")
+    }
+
+    // MARK: - Duplicate ingredient names
+
+    /// The app has no duplicate-ingredient validation anywhere in `RecipeBuilder`, so
+    /// entering the same ingredient name twice is accepted: both rows appear on the
+    /// preview screen and the recipe saves successfully with two separate ingredient
+    /// entries under that name.
+    func testCreateRecipeWithDuplicateIngredientNamesSavesBothEntries() throws {
+        app.startCreateRecipe()
+        app.chooseMode(byPercent: true)
+        app.fillDetails(name: "Duplicate Ingredient Loaf", newCollection: "Duplicate Ingredient Tests", defaultWeight: "1000")
+
+        app.fillFlour(at: 0, name: "Bread Flour", value: "100")
+        app.fillIngredient(at: 0, name: "Water", value: "40")
+        app.addIngredient()
+        app.fillIngredient(at: 1, name: "Water", value: "30")
+
+        app.tapIngredientsNext()
+
+        // Preview should show two "Water" rows (LabeledContent iterates the raw list).
+        let waterLabels = app.staticTexts.matching(NSPredicate(format: "label == %@", "Water"))
+        XCTAssertEqual(waterLabels.count, 2, "Preview should list both duplicate-named ingredients")
+
+        app.saveRecipe()
+        XCTAssertTrue(app.staticTexts["Duplicate Ingredient Loaf"].waitForExistence(timeout: 5), "Recipe with duplicate ingredient names should still save")
+    }
+
+    // MARK: - Suggestion chips
+
+    /// Tapping a suggestion chip fills the ingredient name field and advances focus to
+    /// the value field (via `pendingValueRowID`); typed-only ingredients (no chip tap)
+    /// work the same as before.
+    func testSuggestionChipFillsIngredientNameAndTypedNameAlsoWorks() throws {
+        app.startCreateRecipe()
+        app.chooseMode(byPercent: true)
+        app.fillDetails(name: "Suggestion Chip Loaf", newCollection: "Suggestion Chip Tests", defaultWeight: "1000")
+
+        // Flour name field is focused by default on appear; "Bread Flour" is a seeded
+        // suggestion, so its chip should be visible without typing anything.
+        app.tapSuggestionChip(named: "Bread Flour")
+        let flourNameField = app.textFields["flourNameField_0"]
+        XCTAssertTrue(flourNameField.waitForExistence(timeout: 5))
+        XCTAssertEqual(flourNameField.value as? String, "Bread Flour", "Tapping the chip should fill the flour name")
+
+        let flourValueField = app.textFields["flourValueField_0"]
+        XCTAssertTrue(flourValueField.waitForExistence(timeout: 5))
+        flourValueField.enterText("100", app: app)
+
+        // First ingredient row: type a name that has no matching suggestion chip.
+        app.fillIngredient(at: 0, name: "Zzzz Homemade Starter Water", value: "70")
+        app.assertIngredient(at: 0, name: "Zzzz Homemade Starter Water", value: "70")
+
+        app.tapIngredientsNext()
+        app.saveRecipe()
+
+        XCTAssertTrue(app.staticTexts["Suggestion Chip Loaf"].waitForExistence(timeout: 5))
+    }
+
+    // MARK: - Ingredient temperatures
+
+    /// A temperature entered on an ingredient (`ingredientTempField_N`) survives to the
+    /// preview screen and then to the calculator's results screen.
+    func testIngredientTemperatureSurvivesToCalculator() throws {
+        app.startCreateRecipe()
+        app.chooseMode(byPercent: true)
+        app.fillDetails(name: "Temp Loaf", newCollection: "Temp Tests", defaultWeight: "1000")
+
+        app.fillFlour(at: 0, name: "Bread Flour", value: "100")
+        app.fillIngredient(at: 0, name: "Water", value: "70")
+
+        let tempField = app.textFields["ingredientTempField_0"]
+        XCTAssertTrue(tempField.waitForExistence(timeout: 5), "Ingredient temperature field not found")
+        tempField.enterText("90", app: app)
+
+        app.tapIngredientsNext()
+
+        // Preview doesn't render temperature directly on the ingredient LabeledContent,
+        // but saving should carry it through without error.
+        app.saveRecipe()
+        XCTAssertTrue(app.staticTexts["Temp Loaf"].waitForExistence(timeout: 5))
+
+        app.openCalculator(for: "Temp Loaf")
+        app.tapCalculate()
+        app.expandIngredients()
+
+        // The calculator results row shows the ingredient's temperature under its name
+        // (see `finalDoughRow` in CalculatorView+RecipeMode.swift).
+        let tempText = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "90")).firstMatch
+        XCTAssertTrue(tempText.waitForExistence(timeout: 5), "Water's temperature should be shown on the results screen")
+    }
+
+    // MARK: - Instructions
+
+    /// Adds multiple instructions, deletes one, and confirms a whitespace-only
+    /// instruction can't be added: `CreateRecipeView+StepsPreferment.swift`'s "Add Step"
+    /// button is disabled whenever the trimmed text is empty, so entering only spaces
+    /// never creates a new instruction row.
+    func testInstructionsAddDeleteAndRejectWhitespaceOnly() throws {
+        app.startCreateRecipe()
+        app.chooseMode(byPercent: true)
+        app.fillDetails(name: "Instructions Loaf", newCollection: "Instructions Tests", defaultWeight: "1000")
+        app.fillFlour(at: 0, name: "Bread Flour", value: "100")
+        app.fillIngredient(at: 0, name: "Water", value: "70")
+        app.tapIngredientsNext()
+
+        // Now on the preview/instructions step.
+        let stepField = app.textFields["Step description"]
+        XCTAssertTrue(stepField.waitForExistence(timeout: 5), "Step description field not found")
+        let addStepButton = app.buttons["Add Step"]
+        XCTAssertTrue(addStepButton.waitForExistence(timeout: 5))
+
+        // Whitespace-only text should never enable "Add Step".
+        stepField.enterText("   ", app: app)
+        XCTAssertFalse(addStepButton.isEnabled, "Add Step should stay disabled for whitespace-only text")
+
+        stepField.clearAndType("Mix flour and water", app: app)
+        XCTAssertTrue(addStepButton.isEnabled)
+        addStepButton.tap()
+        XCTAssertTrue(app.staticTexts["1."].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Mix flour and water"].waitForExistence(timeout: 5))
+
+        stepField.clearAndType("Rest for 30 minutes", app: app)
+        addStepButton.tap()
+        XCTAssertTrue(app.staticTexts["2."].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Rest for 30 minutes"].waitForExistence(timeout: 5))
+
+        stepField.clearAndType("Bake at 450F", app: app)
+        addStepButton.tap()
+        XCTAssertTrue(app.staticTexts["3."].waitForExistence(timeout: 5))
+
+        // Delete the middle instruction via its context menu.
+        let middleStep = app.staticTexts["Rest for 30 minutes"]
+        XCTAssertTrue(middleStep.waitForExistence(timeout: 5))
+        middleStep.press(forDuration: 1.0)
+        let deleteButton = app.buttons["Delete"]
+        XCTAssertTrue(deleteButton.waitForExistence(timeout: 5), "Delete option not found in instruction context menu")
+        deleteButton.tap()
+
+        XCTAssertFalse(app.staticTexts["Rest for 30 minutes"].exists, "Deleted instruction should be gone")
+        XCTAssertTrue(app.staticTexts["Mix flour and water"].exists)
+        XCTAssertTrue(app.staticTexts["Bake at 450F"].exists)
+
+        app.saveRecipe()
+        XCTAssertTrue(app.staticTexts["Instructions Loaf"].waitForExistence(timeout: 5))
+    }
 }

@@ -27,6 +27,7 @@ class RecipeConverter: NSObject {
         coreData.collection = recipe.collection
         coreData.defaultWeight = NSNumber(floatLiteral: recipe.defaultWeight)
         coreData.setValue(recipe.measurementMode.rawValue, forKey: "measurementMode")
+        coreData.setValue(recipe.sourceURL?.absoluteString, forKey: "sourceURL")
         recipe.ingredients.enumerated().forEach { index, ingredient in
             let xcIng = ingredientConverter.convertToCoreData(ingredient: ingredient)
             xcIng.sortOrder = Int16(index)
@@ -55,6 +56,7 @@ class RecipeConverter: NSObject {
         existing.collection = recipe.collection
         existing.defaultWeight = NSNumber(floatLiteral: recipe.defaultWeight)
         existing.setValue(recipe.measurementMode.rawValue, forKey: "measurementMode")
+        existing.setValue(recipe.sourceURL?.absoluteString, forKey: "sourceURL")
         self.replaceIngredients(recipe: recipe, existing: existing)
         self.replaceInstructions(recipe: recipe, existing: existing)
         
@@ -109,6 +111,7 @@ class RecipeConverter: NSObject {
         let defaultWeight = recipe.defaultWeight!.doubleValue
         let measurementModeRaw = recipe.value(forKey: "measurementMode") as? String
         let measurementMode = RecipeMeasurementMode(rawValue: measurementModeRaw ?? "") ?? .percent
+        let sourceURL = (recipe.value(forKey: "sourceURL") as? String).flatMap(URL.init(string:))
         let ingredients = recipe.sortedIngredients.map {
             ingredientConverter.convertToExternal(ingredient: $0, localizeName: isDefault)
         }
@@ -120,10 +123,11 @@ class RecipeConverter: NSObject {
             return PrefermentRecipe(name: name, collection: collection,
                                     defaultWeight: defaultWeight, ingredients: ingredients,
                                     preferment: preferment, instructions: instructions,
-                                    measurementMode: measurementMode)
+                                    measurementMode: measurementMode,
+                                    sourceURL: sourceURL)
         }
         
-        return Recipe(name: name, collection: collection, defaultWeight: defaultWeight, ingredients: ingredients, instructions: instructions, measurementMode: measurementMode)
+        return Recipe(name: name, collection: collection, defaultWeight: defaultWeight, ingredients: ingredients, instructions: instructions, measurementMode: measurementMode, sourceURL: sourceURL)
         
     }
 }

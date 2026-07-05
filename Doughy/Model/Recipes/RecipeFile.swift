@@ -49,6 +49,7 @@ struct RecipeFileData: Codable, Equatable {
     let collection: String
     let defaultWeight: Double
     let measurementMode: RecipeMeasurementMode?
+    let sourceURL: String?
     let ingredients: [IngredientFileData]
     let preferment: PrefermentFileData?
     let instructions: [String]
@@ -58,6 +59,7 @@ struct RecipeFileData: Codable, Equatable {
         collection = recipe.collection
         defaultWeight = recipe.defaultWeight
         measurementMode = recipe.measurementMode
+        sourceURL = recipe.sourceURL?.absoluteString
         ingredients = recipe.ingredients.map { IngredientFileData(from: $0) }
         preferment = (recipe as? PrefermentRecipe).map { PrefermentFileData(from: $0.preferment) }
         instructions = recipe.instructions.map { $0.step }
@@ -165,16 +167,19 @@ enum RecipeFile {
     static func toRecipe(_ data: RecipeFileData, collection: String) -> any RecipeProtocol {
         let ingredients = data.ingredients.map { $0.toIngredient() }
         let instructions = data.instructions.map { Instruction(step: $0) }
+        let sourceURL = data.sourceURL.flatMap(URL.init(string:))
         if let pref = data.preferment {
             return PrefermentRecipe(name: data.name, collection: collection,
                                     defaultWeight: data.defaultWeight, ingredients: ingredients,
                                     preferment: pref.toPreferment(), instructions: instructions,
-                                    measurementMode: data.measurementMode ?? .percent)
+                                    measurementMode: data.measurementMode ?? .percent,
+                                    sourceURL: sourceURL)
         }
         return Recipe(name: data.name, collection: collection,
                       defaultWeight: data.defaultWeight, ingredients: ingredients,
                       instructions: instructions,
-                      measurementMode: data.measurementMode ?? .percent)
+                      measurementMode: data.measurementMode ?? .percent,
+                      sourceURL: sourceURL)
     }
 }
 

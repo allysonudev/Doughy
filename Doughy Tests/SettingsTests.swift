@@ -16,22 +16,26 @@ final class SettingsTests: XCTestCase {
     private let volumeKey = Settings.preferredVolumeSystemKey
     private let languageKey = Settings.preferredLanguageKey
     private let appleLanguagesKey = "AppleLanguages"
+    private let onboardingVersionKey = Settings.lastOnboardingVersionKey
 
     private var savedVolume: Any?
     private var savedLanguage: Any?
     private var savedAppleLanguages: Any?
+    private var savedOnboardingVersion: Any?
 
     override func setUp() {
         super.setUp()
         savedVolume = defaults.object(forKey: volumeKey)
         savedLanguage = defaults.object(forKey: languageKey)
         savedAppleLanguages = defaults.object(forKey: appleLanguagesKey)
+        savedOnboardingVersion = defaults.object(forKey: onboardingVersionKey)
     }
 
     override func tearDown() {
         restore(savedVolume, forKey: volumeKey)
         restore(savedLanguage, forKey: languageKey)
         restore(savedAppleLanguages, forKey: appleLanguagesKey)
+        restore(savedOnboardingVersion, forKey: onboardingVersionKey)
         super.tearDown()
     }
 
@@ -85,6 +89,16 @@ final class SettingsTests: XCTestCase {
         // AppleLanguages is an OS-managed key: removing our override makes it fall back to the
         // device language list (non-nil), so assert our override is gone rather than nil.
         XCTAssertNotEqual(defaults.array(forKey: appleLanguagesKey) as? [String], ["ja", "en"])
+    }
+
+    // MARK: - Onboarding version
+
+    func testLastOnboardingVersionRoundTrips() {
+        Settings.shared.setLastOnboardingVersion("1.1")
+        XCTAssertEqual(defaults.string(forKey: onboardingVersionKey), "1.1")
+
+        Settings.shared.setLastOnboardingVersion("1.2")
+        XCTAssertEqual(defaults.string(forKey: onboardingVersionKey), "1.2")
     }
 
     // MARK: - Default recipe repair

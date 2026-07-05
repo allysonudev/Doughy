@@ -307,6 +307,243 @@ final class RecipeScannerTests: XCTestCase {
         XCTAssertTrue(ExtraIngredientConversion.canSuggestWeightConversion(for: "cup"))
     }
 
+    func testParseAmountHandlesDecimalAndThousandsCommas() throws {
+        guard #available(iOS 26, *) else {
+            throw XCTSkip("RecipeScanner requires iOS 26.")
+        }
+        #if canImport(FoundationModels)
+        XCTAssertEqual(RecipeScanner.parseAmount("1,5") ?? 0, 1.5, accuracy: 0.001)
+        XCTAssertEqual(RecipeScanner.parseAmount("2,25") ?? 0, 2.25, accuracy: 0.001)
+        XCTAssertEqual(RecipeScanner.parseAmount("1,000") ?? 0, 1000, accuracy: 0.001)
+        XCTAssertEqual(RecipeScanner.parseAmount("12,345") ?? 0, 12345, accuracy: 0.001)
+        #else
+        throw XCTSkip("FoundationModels is not available in this build.")
+        #endif
+    }
+
+    func testLocalParserReadsDeciliterAndLiterLines() throws {
+        guard #available(iOS 26, *) else {
+            throw XCTSkip("RecipeScanner requires iOS 26.")
+        }
+        #if canImport(FoundationModels)
+        let deciliters = try XCTUnwrap(RecipeScanner.parseIngredientLine("2,5 dl water", section: ""))
+        XCTAssertEqual(deciliters.volumeAmount, 2.5, accuracy: 0.001)
+        XCTAssertEqual(deciliters.volumeUnit, .deciliter)
+        XCTAssertEqual(deciliters.name.lowercased(), "water")
+
+        let liters = try XCTUnwrap(RecipeScanner.parseIngredientLine("1 l milk", section: ""))
+        XCTAssertEqual(liters.volumeAmount, 1, accuracy: 0.001)
+        XCTAssertEqual(liters.volumeUnit, .liter)
+
+        // "large" must not be mistaken for a liter unit.
+        let eggs = try XCTUnwrap(RecipeScanner.parseIngredientLine("2 large eggs", section: ""))
+        XCTAssertEqual(eggs.volumeUnit, .egg)
+        #else
+        throw XCTSkip("FoundationModels is not available in this build.")
+        #endif
+    }
+
+    func testLineLooksIngredientLikeMatchesCompactMetric() throws {
+        guard #available(iOS 26, *) else {
+            throw XCTSkip("RecipeScanner requires iOS 26.")
+        }
+        #if canImport(FoundationModels)
+        XCTAssertTrue(RecipeScanner.lineLooksIngredientLike("500g bread flour"))
+        XCTAssertTrue(RecipeScanner.lineLooksIngredientLike("250ml lukewarm water"))
+        XCTAssertTrue(RecipeScanner.lineLooksIngredientLike("2dl milk"))
+        XCTAssertFalse(RecipeScanner.lineLooksIngredientLike("Mix everything for 2 minutes"))
+        #else
+        throw XCTSkip("FoundationModels is not available in this build.")
+        #endif
+    }
+
+    func testParsesLineStartingWithUnicodeFraction() throws {
+        guard #available(iOS 26, *) else {
+            throw XCTSkip("RecipeScanner requires iOS 26.")
+        }
+        #if canImport(FoundationModels)
+        let oil = try XCTUnwrap(RecipeScanner.parseIngredientLine("½ cup olive oil", section: ""))
+        XCTAssertEqual(oil.volumeAmount, 0.5, accuracy: 0.001)
+        XCTAssertEqual(oil.volumeUnit, .cup)
+        XCTAssertEqual(oil.name.lowercased(), "olive oil")
+        #else
+        throw XCTSkip("FoundationModels is not available in this build.")
+        #endif
+    }
+
+    func testButtermilkCategorizesAsButtermilkNotButter() throws {
+        XCTAssertEqual(ExtraIngredientConversion.ingredientCategory(forName: "Buttermilk"), .buttermilk)
+        XCTAssertEqual(ExtraIngredientConversion.ingredientCategory(forName: "Unsalted Butter"), .butter)
+
+        guard #available(iOS 26, *) else {
+            throw XCTSkip("RecipeScanner requires iOS 26.")
+        }
+        #if canImport(FoundationModels)
+        let buttermilk = try XCTUnwrap(RecipeScanner.parseIngredientLine("240 g buttermilk", section: ""))
+        XCTAssertEqual(buttermilk.category, .buttermilk)
+        #else
+        throw XCTSkip("FoundationModels is not available in this build.")
+        #endif
+    }
+
+    func testSectionHeaderAllowsParentheticalYields() throws {
+        guard #available(iOS 26, *) else {
+            throw XCTSkip("RecipeScanner requires iOS 26.")
+        }
+        #if canImport(FoundationModels)
+        XCTAssertTrue(RecipeScanner.isSectionHeader("For the poolish (makes 250 g)"))
+        XCTAssertFalse(RecipeScanner.isSectionHeader("100 g poolish"))
+
+        // The yield note must not become a fake 250 g "Poolish" ingredient, and the
+        // members below the header must be tagged as preferment.
+        let text = """
+        For the poolish (makes 250 g)
+        125 g bread flour
+        125 g water
+        """
+        let parsed = RecipeScanner.parseIngredientsLocally(from: text)
+        XCTAssertEqual(parsed.ingredients.count, 2)
+        XCTAssertTrue(parsed.ingredients.allSatisfy(\.isPreferment))
+        XCTAssertFalse(parsed.ingredients.contains { $0.name.lowercased().contains("poolish") })
+        #else
+        throw XCTSkip("FoundationModels is not available in this build.")
+        #endif
+    }
+
+    func testTangzhongSectionCountsAsPreferment() throws {
+        guard #available(iOS 26, *) else {
+            throw XCTSkip("RecipeScanner requires iOS 26.")
+        }
+        #if canImport(FoundationModels)
+        XCTAssertTrue(RecipeScanner.isPrefermentSection("Tangzhong"))
+        XCTAssertTrue(RecipeScanner.isSectionHeader("Tangzhong"))
+
+        let text = """
+        Tangzhong
+        25 g bread flour
+        120 g whole milk
+        For the dough
+        350 g bread flour
+        7 g salt
+        """
+        let parsed = RecipeScanner.parseIngredientsLocally(from: text)
+        let preferment = parsed.ingredients.filter(\.isPreferment)
+        XCTAssertEqual(preferment.count, 2)
+        XCTAssertEqual(parsed.ingredients.count - preferment.count, 2)
+        #else
+        throw XCTSkip("FoundationModels is not available in this build.")
+        #endif
+    }
+
+    func testFluidOuncesParseAsFluidOunceVolume() throws {
+        // The Settings conversion-table path shares the same DensityUnit math.
+        let suggestion = try XCTUnwrap(ExtraIngredientConversion.suggest(name: "milk", amount: 8, unit: "fluidOunce"))
+        XCTAssertEqual(suggestion.grams,
+                       IngredientDensityStore.shared.gramsPerCup(for: .milk),
+                       accuracy: 0.01)
+
+        guard #available(iOS 26, *) else {
+            throw XCTSkip("RecipeScanner requires iOS 26.")
+        }
+        #if canImport(FoundationModels)
+        let milk = try XCTUnwrap(RecipeScanner.parseIngredientLine("8 fl oz whole milk", section: ""))
+        XCTAssertEqual(milk.volumeUnit, .fluidOunce)
+        XCTAssertEqual(milk.volumeAmount, 8, accuracy: 0.001)
+        XCTAssertEqual(milk.name.lowercased(), "whole milk")
+
+        // 8 fl oz is exactly one US cup, so resolving must weigh one cup's worth.
+        let resolved = RecipeScanner.resolve(milk)
+        XCTAssertEqual(resolved.weightGrams,
+                       IngredientDensityStore.shared.gramsPerCup(for: .milk),
+                       accuracy: 0.01)
+
+        let dotted = try XCTUnwrap(RecipeScanner.parseIngredientLine("4 fl. oz. water", section: ""))
+        XCTAssertEqual(dotted.volumeUnit, .fluidOunce)
+        XCTAssertEqual(dotted.volumeAmount, 4, accuracy: 0.001)
+
+        // Plain mass ounces must still be ounces.
+        let chocolate = try XCTUnwrap(RecipeScanner.parseIngredientLine("4 oz dark chocolate", section: ""))
+        XCTAssertEqual(chocolate.volumeUnit, .ounce)
+        #else
+        throw XCTSkip("FoundationModels is not available in this build.")
+        #endif
+    }
+
+    func testLocalParserMultipliesYeastPackages() throws {
+        guard #available(iOS 26, *) else {
+            throw XCTSkip("RecipeScanner requires iOS 26.")
+        }
+        #if canImport(FoundationModels)
+        let twoPackages = try XCTUnwrap(RecipeScanner.parseIngredientLine("2 packages active dry yeast", section: ""))
+        XCTAssertEqual(twoPackages.weightGrams, 14, accuracy: 0.001)
+        XCTAssertEqual(twoPackages.name.lowercased(), "active dry yeast")
+
+        let resolved = RecipeScanner.resolve(twoPackages)
+        XCTAssertEqual(resolved.weightGrams, 14, accuracy: 0.001)
+
+        let onePackage = try XCTUnwrap(RecipeScanner.parseIngredientLine("1 package instant yeast", section: ""))
+        XCTAssertEqual(onePackage.weightGrams, 7, accuracy: 0.001)
+        #else
+        throw XCTSkip("FoundationModels is not available in this build.")
+        #endif
+    }
+
+    func testResolverAcceptsPackagedYeastWeightMultiples() throws {
+        guard #available(iOS 26, *) else {
+            throw XCTSkip("RecipeScanner requires iOS 26.")
+        }
+        #if canImport(FoundationModels)
+        XCTAssertTrue(RecipeScanner.isPlausiblePackagedYeastWeight(7))
+        XCTAssertTrue(RecipeScanner.isPlausiblePackagedYeastWeight(14))
+        XCTAssertTrue(RecipeScanner.isPlausiblePackagedYeastWeight(21))
+        XCTAssertFalse(RecipeScanner.isPlausiblePackagedYeastWeight(0))
+        XCTAssertFalse(RecipeScanner.isPlausiblePackagedYeastWeight(11))
+        XCTAssertFalse(RecipeScanner.isPlausiblePackagedYeastWeight(144))
+
+        let twoPackagesFromModel = ParsedIngredient(hasExplicitWeightGrams: false,
+                                                    name: "active dry yeast",
+                                                    alternativeName: "",
+                                                    category: .activeDryYeast,
+                                                    weightGrams: 14,
+                                                    volumeAmount: 0,
+                                                    volumeUnit: .none,
+                                                    eggSize: .unspecified,
+                                                    eggPart: .whole,
+                                                    isFlour: false,
+                                                    isPreferment: false)
+        XCTAssertEqual(RecipeScanner.resolve(twoPackagesFromModel).weightGrams, 14, accuracy: 0.001)
+        #else
+        throw XCTSkip("FoundationModels is not available in this build.")
+        #endif
+    }
+
+    func testSecondaryPlusAmountsAreIgnored() throws {
+        guard #available(iOS 26, *) else {
+            throw XCTSkip("RecipeScanner requires iOS 26.")
+        }
+        #if canImport(FoundationModels)
+        // The aside's gram amount must not become the ingredient's weight.
+        let cupsOnly = try XCTUnwrap(
+            RecipeScanner.parseIngredientLine("4 cups all-purpose flour, plus 30 g for dusting", section: "")
+        )
+        XCTAssertFalse(cupsOnly.hasExplicitWeightGrams)
+        XCTAssertEqual(cupsOnly.weightGrams, 0, accuracy: 0.001)
+        XCTAssertEqual(cupsOnly.volumeAmount, 4, accuracy: 0.001)
+        XCTAssertEqual(cupsOnly.volumeUnit, .cup)
+
+        let gramsFirst = try XCTUnwrap(
+            RecipeScanner.parseIngredientLine("480 g bread flour, plus more for dusting", section: "")
+        )
+        XCTAssertEqual(gramsFirst.weightGrams, 480, accuracy: 0.001)
+
+        // Compound amounts are a real measurement, not an aside.
+        XCTAssertEqual(RecipeScanner.strippedSecondaryAmounts("1 cup plus 2 tablespoons sugar"),
+                       "1 cup plus 2 tablespoons sugar")
+        #else
+        throw XCTSkip("FoundationModels is not available in this build.")
+        #endif
+    }
+
     func testResolverUsesLocalDensityWhenModelInventsGramWeight() throws {
         guard #available(iOS 26, *) else {
             throw XCTSkip("RecipeScanner requires iOS 26.")
@@ -696,6 +933,47 @@ final class RecipeScannerTests: XCTestCase {
         XCTAssertTrue(resolved.contains { $0.name == "Large Egg" && !$0.isExtra && $0.weightGrams == IngredientDensityStore.shared.gramsPerEgg(for: .large) })
         XCTAssertTrue(resolved.contains { $0.name == "Ground Cinnamon" && !$0.isExtra && $0.weightGrams == 6 })
         XCTAssertTrue(resolved.contains { $0.name == "Light Brown Sugar" && $0.weightGrams == 150 })
+        #else
+        throw XCTSkip("FoundationModels is not available in this build.")
+        #endif
+    }
+
+    func testStitchedOCRTextPreservesOrderedPages() throws {
+        guard #available(iOS 26, *) else {
+            throw XCTSkip("RecipeScanner requires iOS 26.")
+        }
+        #if canImport(FoundationModels)
+        let pages = [
+            ScanResult.PageOCR(imageIndex: 1, text: "Weekend Focaccia\nIngredients\n500 g bread flour"),
+            ScanResult.PageOCR(imageIndex: 2, text: "Instructions\nMix until shaggy\nRest for 30 minutes"),
+            ScanResult.PageOCR(imageIndex: 3, text: "Bake at 450°F\nCool before slicing")
+        ]
+
+        let stitched = RecipeScanner.stitchedText(from: pages)
+
+        XCTAssertTrue(stitched.contains("Weekend Focaccia\nIngredients\n500 g bread flour"))
+        XCTAssertTrue(stitched.contains("Instructions\nMix until shaggy\nRest for 30 minutes"))
+        XCTAssertTrue(stitched.contains("Bake at 450°F\nCool before slicing"))
+        XCTAssertLessThan(stitched.range(of: "500 g bread flour")!.lowerBound, stitched.range(of: "Bake at 450°F")!.lowerBound)
+        #else
+        throw XCTSkip("FoundationModels is not available in this build.")
+        #endif
+    }
+
+    func testStitchedOCRTextRemovesDuplicatePageBoundaryLines() throws {
+        guard #available(iOS 26, *) else {
+            throw XCTSkip("RecipeScanner requires iOS 26.")
+        }
+        #if canImport(FoundationModels)
+        let pages = [
+            ScanResult.PageOCR(imageIndex: 1, text: "Instructions\nCover and rest for 30 minutes\nStretch and fold the dough"),
+            ScanResult.PageOCR(imageIndex: 2, text: "Stretch and fold the dough\nTransfer to an oiled pan\nProof until bubbly")
+        ]
+
+        let stitched = RecipeScanner.stitchedText(from: pages)
+
+        XCTAssertEqual(stitched.components(separatedBy: "Stretch and fold the dough").count - 1, 1)
+        XCTAssertTrue(stitched.contains("Cover and rest for 30 minutes\nStretch and fold the dough\n\nTransfer to an oiled pan"))
         #else
         throw XCTSkip("FoundationModels is not available in this build.")
         #endif

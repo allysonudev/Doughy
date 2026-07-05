@@ -197,4 +197,114 @@ final class PrefermentToolTests: XCTestCase {
         XCTAssertNotNil(finalYeast)
         XCTAssertGreaterThanOrEqual(finalYeast?.weight ?? -1, 0)
     }
+
+    // MARK: - Edge cases: nonsensical percentages
+
+    /// A preferment with 0% of the total flour is a degenerate but not inherently invalid
+    /// configuration - the preferment ends up flour-less relative to the main dough total.
+    /// It shouldn't crash, and it shouldn't claim any of the main dough's flour, water, or
+    /// yeast (0 * anything = 0, always <= the main dough's total).
+    func testBuildPrefermentWithZeroFlourPercentDoesNotThrowOrGoNegative() throws {
+        let base = simpleRecipe()
+        let preferment = PrefermentTool.buildPreferment(
+            name: "Poolish", flourPercentOfTotal: 0,
+            flourAllocations: PrefermentTool.defaultFlourAllocations(for: base),
+            hydrationPercent: 100, waterName: "Water",
+            yeastPercent: 0.1, yeastName: "Instant Yeast"
+        )
+        let result = try PrefermentTool.addPreferment(preferment, to: base, removingYeastNamed: nil)
+
+        XCTAssertEqual(result.preferment.flourPercentage, 0, accuracy: 0.0001)
+        let calculated = try Calculator.shared.calculate(recipe: result)
+        XCTAssertGreaterThanOrEqual(calculated.ingredients.first { $0.name == "Water" }?.weight ?? -1, 0)
+        XCTAssertGreaterThanOrEqual(calculated.ingredients.first { $0.name == "Instant Yeast" }?.weight ?? -1, 0)
+    }
+
+    /// A preferment flour percent over 100% of the recipe's total flour is nonsensical -
+    /// the main dough (whose ingredient list already represents the recipe-wide total,
+    /// see the doc comment atop `PrefermentTool`) can never have less flour than a
+    /// preferment carved out of it. `addPreferment` should throw rather than silently
+    /// clamp or produce a recipe with a preferment "larger" than the whole.
+    func testAddPrefermentThrowsWhenFlourPercentOfTotalExceeds100() {
+        let base = simpleRecipe()
+        let preferment = PrefermentTool.buildPreferment(
+            name: "Poolish", flourPercentOfTotal: 150,
+            flourAllocations: PrefermentTool.defaultFlourAllocations(for: base),
+            hydrationPercent: 50, waterName: "Water",
+            yeastPercent: nil, yeastName: nil
+        )
+        XCTAssertThrowsError(try PrefermentTool.addPreferment(preferment, to: base, removingYeastNamed: nil)) { error in
+            guard case RecipeBuilderError.mainDoughLessThanPreferment = error else {
+                return XCTFail("Expected mainDoughLessThanPreferment, got \(error)")
+            }
+        }
+    }
+
+    /// Yeast percent alone can overshoot the main dough's total yeast even when flour and
+    /// hydration are both reasonable - each preferment ingredient is validated
+    /// independently against its main-dough counterpart.
+    func testAddPrefermentThrowsWhenYeastOverConsumesMainDough() {
+        let base = simpleRecipe(yeastPercent: 1)
+        // 50% of total flour at 3% yeast-of-preferment-flour claims 1.5% of the recipe's
+        // total flour weight as yeast - more than the recipe's 1% total yeast.
+        let preferment = PrefermentTool.buildPreferment(
+            name: "Biga", flourPercentOfTotal: 50,
+            flourAllocations: PrefermentTool.defaultFlourAllocations(for: base),
+            hydrationPercent: 60, waterName: "Water",
+            yeastPercent: 3, yeastName: "Instant Yeast"
+        )
+        XCTAssertThrowsError(try PrefermentTool.addPreferment(preferment, to: base, removingYeastNamed: nil)) { error in
+            guard case RecipeBuilderError.mainDoughLessThanPreferment(_, let prefermentIngredient) = error else {
+                return XCTFail("Expected mainDoughLessThanPreferment, got \(error)")
+            }
+            XCTAssertEqual(prefermentIngredient.name, "Instant Yeast")
+        }
+    }
+
+    /// A negative flour percentage is nonsensical input, but should behave predictably
+    /// (no crash) rather than producing garbage: since a negative preferment percentage
+    /// times any main dough percentage is <= the main dough's percentage, validation
+    /// should pass, and downstream weights should not go negative for ordinary ingredients.
+    func testBuildPrefermentWithNegativeFlourPercentDoesNotCrash() throws {
+        let base = simpleRecipe()
+        let preferment = PrefermentTool.buildPreferment(
+            name: "Poolish", flourPercentOfTotal: -10,
+            flourAllocations: PrefermentTool.defaultFlourAllocations(for: base),
+            hydrationPercent: 100, waterName: "Water",
+            yeastPercent: nil, yeastName: nil
+        )
+        let result = try PrefermentTool.addPreferment(preferment, to: base, removingYeastNamed: nil)
+        XCTAssertEqual(result.preferment.flourPercentage, -10, accuracy: 0.0001)
+    }
+
+    /// When the main dough contains a matching ingredient at 0% (e.g. a recipe that lists
+    /// "Water" at 0% because it's tracked but unused, or a flour blend where one flour is
+    /// zeroed out), building a preferment against it should still validate cleanly at 0%
+    /// preferment usage and never produce negative amounts.
+    func testAddPrefermentWithZeroPercentMainDoughIngredientDoesNotGoNegative() throws {
+        let flours = [flour("Bread Flour", percent: 100), flour("Rye Flour", percent: 0)]
+        let base = simpleRecipe(flours: flours)
+
+        var allocations = PrefermentTool.defaultFlourAllocations(for: base)
+        XCTAssertEqual(allocations.first { $0.name == "Rye Flour" }?.percentOfPrefermentFlour ?? -1, 0, accuracy: 0.0001)
+
+        // Build a preferment entirely from the zeroed-out flour at 0% of total - this
+        // should validate (0 <= 0) and never crash or go negative.
+        allocations = allocations.map {
+            PrefermentTool.FlourAllocation(name: $0.name, percentOfPrefermentFlour: $0.name == "Rye Flour" ? 100 : 0)
+        }
+        let preferment = PrefermentTool.buildPreferment(
+            name: "Rye Starter", flourPercentOfTotal: 0,
+            flourAllocations: allocations,
+            hydrationPercent: 100, waterName: "Water",
+            yeastPercent: nil, yeastName: nil
+        )
+        let result = try PrefermentTool.addPreferment(preferment, to: base, removingYeastNamed: nil)
+        let calculated = try Calculator.shared.calculate(recipe: result)
+
+        for ingredient in calculated.ingredients {
+            XCTAssertGreaterThanOrEqual(ingredient.weight, 0, "\(ingredient.name) went negative")
+        }
+        XCTAssertEqual(result.preferment.ingredients.first { $0.name == "Rye Flour" }?.defaultPercentage ?? -1, 100, accuracy: 0.0001)
+    }
 }

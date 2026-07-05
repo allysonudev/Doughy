@@ -75,6 +75,7 @@ struct SettingsView: View {
     @State private var selectedVolumeSystem: VolumeSystem = Settings.shared.preferredVolumeSystem()
     @State private var selectedLanguage: String = Settings.shared.preferredLanguageCode() ?? ""
     @State private var selectedPane: SettingsPane? = .preferences
+    @State private var settingsColumnVisibility: NavigationSplitViewVisibility = .all
     @State private var paneTransitionEdge: Edge = .bottom
     @State private var tempUpdateError: String?
     @State private var backupRestoreMessage: String?
@@ -136,6 +137,7 @@ struct SettingsView: View {
             Text("Fahrenheit").tag(Temperature.Measurement.fahrenheit)
             Text("Celsius").tag(Temperature.Measurement.celsius)
         }
+        .accessibilityIdentifier("temperatureUnitPicker")
         .onChange(of: selectedTemp) { old, new in
             if old != new {
                 Settings.shared.setPreferredTemp(measurement: new)
@@ -155,6 +157,7 @@ struct SettingsView: View {
             Text("Metric").tag(VolumeSystem.metric)
             Text("Imperial").tag(VolumeSystem.imperial)
         }
+        .accessibilityIdentifier("volumeUnitsPicker")
         .onChange(of: selectedVolumeSystem) { _, new in
             Settings.shared.setPreferredVolumeSystem(new)
         }
@@ -250,6 +253,7 @@ struct SettingsView: View {
         } footer: {
             Text(String(localized: "settings.backup.footer", defaultValue: "Backups include every recipe. Restoring a backup replaces your current recipe library."))
         }
+
     }
 
     @ViewBuilder
@@ -257,6 +261,7 @@ struct SettingsView: View {
         Section {
             Link("Source Code on GitHub",
                  destination: URL(string: "https://github.com/georgie-codes/Doughy")!)
+                .accessibilityIdentifier("sourceCodeLink")
             if isUSRegion {
                 Link(destination: URL(string: "https://www.feedingamerica.org/find-your-local-foodbank")!) {
                     VStack(alignment: .leading) {
@@ -266,14 +271,18 @@ struct SettingsView: View {
                             .foregroundStyle(.secondary)
                     }
                 }
+                .accessibilityIdentifier("foodBankLink")
             }
             Link("Send Feedback",
                  destination: URL(string: "mailto:doughyapp@icloud.com")!)
-        } header: {
+                .accessibilityIdentifier("sendFeedbackLink")
+        }
+        header: {
             if showHeader {
                 Text("About")
             }
-        } footer: {
+        }
+        footer: {
             Text(appVersion)
                 .frame(maxWidth: .infinity, alignment: .center)
         }
@@ -286,7 +295,7 @@ struct SettingsView: View {
 
             Section {
                 NavigationLink(String(localized: "conversions.title", defaultValue: "Ingredient Conversions")) {
-                    IngredientConversionsView()
+                    IngredientConversionsView(showTitle: true)
                 }
                 .accessibilityIdentifier("ingredientConversionsLink")
             }
@@ -298,7 +307,7 @@ struct SettingsView: View {
     }
 
     private var tabletSettings: some View {
-        NavigationSplitView {
+        NavigationSplitView(columnVisibility: $settingsColumnVisibility) {
             List(selection: selectedPaneBinding) {
                 Section {
                     ForEach(SettingsPane.allCases, id: \.self) { pane in
@@ -322,19 +331,25 @@ struct SettingsView: View {
         } detail: {
             NavigationStack {
                 ZStack {
-                    Color(.systemGroupedBackground)
-                        .ignoresSafeArea()
-
                     tabletDetail(for: selectedPane ?? .preferences)
                         .id(selectedPane ?? .preferences)
                         .transition(paneTransition)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+                // Clip only the sliding pane transition; the background sits outside the
+                // clip so it can keep extending under the home indicator.
                 .clipped()
+                .background(Color(.systemGroupedBackground).ignoresSafeArea())
+                .scrollsUnderHomeIndicator()
                 .animation(.easeInOut(duration: 0.2), value: selectedPane)
                 .toolbarBackground(Color(.systemGroupedBackground), for: .navigationBar)
                 .toolbarBackground(.visible, for: .navigationBar)
+                .toolbar(removing: .sidebarToggle)
             }
+        }
+        .onChange(of: settingsColumnVisibility) { _, visibility in
+            guard visibility != .all else { return }
+            settingsColumnVisibility = .all
         }
     }
 
@@ -347,8 +362,7 @@ struct SettingsView: View {
             }
         case .conversions:
             tabletPane(for: pane) {
-                IngredientConversionsView()
-                    .navigationTitle("")
+                IngredientConversionsView(showTitle: false)
             }
         case .library:
             tabletPane(for: pane) {

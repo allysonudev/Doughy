@@ -16,6 +16,7 @@
 		4E34E55BB18624B1D458DB94 /* CalculatorView+AdjustMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED9EA2418249092005FF991D /* CalculatorView+AdjustMode.swift */; };
 		52F643D8FAF8D0B6CE698A80 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A2C94469EA44599F0F17B73 /* OnboardingView.swift */; };
 		55BFBADF3DA19AC0A372AFF1 /* RecipeListView+TabletSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31DD51E77A0959F135C6187A /* RecipeListView+TabletSession.swift */; };
+		55C0D1E24B8A9F30D461B203 /* SafeAreaBleed.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31E6F2A88B1C40D2E5A7C914 /* SafeAreaBleed.swift */; };
 		5DFAC86A0437D1EAE00286C8 /* CreateRecipeSupportViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAC3DFB16A6CB91AE17606C0 /* CreateRecipeSupportViews.swift */; };
 		63F59D0551A094E311BCA551 /* CollectionAvatar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F99454EBC63FB7409C87ABA /* CollectionAvatar.swift */; };
 		6BC3C9EA312E5BF9A63D6BE3 /* WhatsNewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 614E010B5C07043996E736E3 /* WhatsNewView.swift */; };
@@ -109,6 +110,9 @@
 		DD0000000000000000000014 /* RecipeHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000000000000000000013 /* RecipeHistoryView.swift */; };
 		DD0000000000000000000016 /* RecipeDiffTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000000000000000000015 /* RecipeDiffTests.swift */; };
 		DD0000000000000000000018 /* RecipeHistoryUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000000000000000000017 /* RecipeHistoryUITests.swift */; };
+		AB9000000000000000000002 /* HomeScreenUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB9000000000000000000001 /* HomeScreenUITests.swift */; };
+		AB9000000000000000000004 /* SettingsUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB9000000000000000000003 /* SettingsUITests.swift */; };
+		AB9000000000000000000006 /* WelcomeUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB9000000000000000000005 /* WelcomeUITests.swift */; };
 		DD000000000000000000001B /* CoreDataSortedAccessors.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD000000000000000000001A /* CoreDataSortedAccessors.swift */; };
 		DD0000000000000000000020 /* CoreDataMigrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000000000000000000019 /* CoreDataMigrationTests.swift */; };
 		DD0000000000000000000022 /* ExtraIngredientConversion.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000000000000000000023 /* ExtraIngredientConversion.swift */; };
@@ -173,10 +177,12 @@
 		2A1FFE2CC008A39E93525152 /* CreateRecipeView+StepsIngredients.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CreateRecipeView+StepsIngredients.swift"; sourceTree = "<group>"; };
 		2DC3AB7D428FE0052F7CC23E /* CreateRecipeView+Body.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CreateRecipeView+Body.swift"; sourceTree = "<group>"; };
 		31DD51E77A0959F135C6187A /* RecipeListView+TabletSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "RecipeListView+TabletSession.swift"; sourceTree = "<group>"; };
+		31E6F2A88B1C40D2E5A7C914 /* SafeAreaBleed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafeAreaBleed.swift; sourceTree = "<group>"; };
 		36E8F59880EE98064C4AD020 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		39CC5426652CEF6C8DF863BB /* RecipeStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeStore.swift; sourceTree = "<group>"; };
 		3A2C94469EA44599F0F17B73 /* OnboardingView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		3EC77E8318EF1CFA6870B8A8 /* CollectionAppearanceStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CollectionAppearanceStore.swift; sourceTree = "<group>"; };
+		3F7CAD582FF6ACFB00F0256F /* TestCases.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = TestCases.md; sourceTree = "<group>"; };
 		3F8B769E2FE2F10A00A465ED /* RecipeExportImportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeExportImportTests.swift; sourceTree = "<group>"; };
 		3F8B76A12FE3543E00A465ED /* Doughy UI Tests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = "Doughy UI Tests.xctestplan"; sourceTree = "<group>"; };
 		3F8B76A22FE3548100A465ED /* Doughy Tests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = "Doughy Tests.xctestplan"; sourceTree = "<group>"; };
@@ -219,6 +225,7 @@
 		BB30DED92425B83E00BFD472 /* Recipe_Helper.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Recipe_Helper.xcdatamodel; sourceTree = "<group>"; };
 		BB30DED92425B83E00BFD473 /* Recipe_Helper_2.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Recipe_Helper_2.xcdatamodel; sourceTree = "<group>"; };
 		BB30DED92425B83E00BFD474 /* Recipe_Helper_3.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Recipe_Helper_3.xcdatamodel; sourceTree = "<group>"; };
+		BB30DED92425B83E00BFD475 /* Recipe_Helper_4.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Recipe_Helper_4.xcdatamodel; sourceTree = "<group>"; };
 		BB30DEDB2425B83F00BFD472 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		BB30DEDE2425B83F00BFD472 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		BB30DEE02425B83F00BFD472 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -281,6 +288,9 @@
 		DD0000000000000000000013 /* RecipeHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeHistoryView.swift; sourceTree = "<group>"; };
 		DD0000000000000000000015 /* RecipeDiffTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeDiffTests.swift; sourceTree = "<group>"; };
 		DD0000000000000000000017 /* RecipeHistoryUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeHistoryUITests.swift; sourceTree = "<group>"; };
+		AB9000000000000000000001 /* HomeScreenUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeScreenUITests.swift; sourceTree = "<group>"; };
+		AB9000000000000000000003 /* SettingsUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsUITests.swift; sourceTree = "<group>"; };
+		AB9000000000000000000005 /* WelcomeUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeUITests.swift; sourceTree = "<group>"; };
 		DD0000000000000000000019 /* CoreDataMigrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataMigrationTests.swift; sourceTree = "<group>"; };
 		DD000000000000000000001A /* CoreDataSortedAccessors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataSortedAccessors.swift; sourceTree = "<group>"; };
 		DD0000000000000000000023 /* ExtraIngredientConversion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtraIngredientConversion.swift; sourceTree = "<group>"; };
@@ -348,6 +358,7 @@
 		3F8B76A02FE3542900A465ED /* Test Plans */ = {
 			isa = PBXGroup;
 			children = (
+				3F7CAD582FF6ACFB00F0256F /* TestCases.md */,
 				3F8B76A12FE3543E00A465ED /* Doughy UI Tests.xctestplan */,
 				3F8B76A22FE3548100A465ED /* Doughy Tests.xctestplan */,
 				3F8B76A32FE354AA00A465ED /* Doughy.xctestplan */,
@@ -364,6 +375,9 @@
 				AA0000000000000000000013 /* RecipeDataIntegrityUITests.swift */,
 				AA0000000000000000000015 /* RecipeCalculatorUITests.swift */,
 				DD0000000000000000000017 /* RecipeHistoryUITests.swift */,
+				AB9000000000000000000001 /* HomeScreenUITests.swift */,
+				AB9000000000000000000003 /* SettingsUITests.swift */,
+				AB9000000000000000000005 /* WelcomeUITests.swift */,
 				FA57000000000000000000F1 /* SnapshotHelper.swift */,
 				FA57000000000000000000F3 /* ScreenshotUITests.swift */,
 				AA0000000000000000000005 /* Info.plist */,
@@ -515,6 +529,7 @@
 			children = (
 				4F3DC0F90C6416B3782E7EA1 /* RecipeListView.swift */,
 				31DD51E77A0959F135C6187A /* RecipeListView+TabletSession.swift */,
+				31E6F2A88B1C40D2E5A7C914 /* SafeAreaBleed.swift */,
 				AC478C29AFD50FC6F4F02412 /* CalculatorView.swift */,
 				7EE641052F9FD1BD3A7D55BE /* CalculatorView+RecipeMode.swift */,
 				20DE4D9F33003FFCD6D49C0A /* CalculatorView+IngredientsPeek.swift */,
@@ -800,6 +815,9 @@
 				AA0000000000000000000014 /* RecipeDataIntegrityUITests.swift in Sources */,
 				AA0000000000000000000016 /* RecipeCalculatorUITests.swift in Sources */,
 				DD0000000000000000000018 /* RecipeHistoryUITests.swift in Sources */,
+				AB9000000000000000000002 /* HomeScreenUITests.swift in Sources */,
+				AB9000000000000000000004 /* SettingsUITests.swift in Sources */,
+				AB9000000000000000000006 /* WelcomeUITests.swift in Sources */,
 				FA57000000000000000000F2 /* SnapshotHelper.swift in Sources */,
 				FA57000000000000000000F4 /* ScreenshotUITests.swift in Sources */,
 				CC38C853D65A274391F10912 /* AddPrefermentUITests.swift in Sources */,
@@ -872,6 +890,7 @@
 				73D001FFB0DEE3BBDB2BFEF3 /* RecipeStore.swift in Sources */,
 				EAB3150D4BD26C22D891FC75 /* RecipeListView.swift in Sources */,
 				55BFBADF3DA19AC0A372AFF1 /* RecipeListView+TabletSession.swift in Sources */,
+				55C0D1E24B8A9F30D461B203 /* SafeAreaBleed.swift in Sources */,
 				D9BDE5D1CDE84BD8BF854E68 /* RecipeFile.swift in Sources */,
 				BB97B68A12EC421186D6E6C8 /* RecipeShareView.swift in Sources */,
 				6F4375F7382D44E2A055CFA8 /* ImportRecipeView.swift in Sources */,
@@ -1337,8 +1356,9 @@
 				BB30DED92425B83E00BFD472 /* Recipe_Helper.xcdatamodel */,
 				BB30DED92425B83E00BFD473 /* Recipe_Helper_2.xcdatamodel */,
 				BB30DED92425B83E00BFD474 /* Recipe_Helper_3.xcdatamodel */,
+				BB30DED92425B83E00BFD475 /* Recipe_Helper_4.xcdatamodel */,
 			);
-			currentVersion = BB30DED92425B83E00BFD474 /* Recipe_Helper_3.xcdatamodel */;
+			currentVersion = BB30DED92425B83E00BFD475 /* Recipe_Helper_4.xcdatamodel */;
 			path = Doughy.xcdatamodeld;
 			sourceTree = "<group>";
 			versionGroupType = wrapper.xcdatamodel;

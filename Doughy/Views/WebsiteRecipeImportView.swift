@@ -28,7 +28,7 @@ struct WebsiteRecipeImportView: View {
         NavigationStack {
             Form {
                 Section {
-                    TextField("https://example.com/recipe", text: $urlText)
+                    TextField(String(localized: "website_import.section.url", defaultValue: "Recipe Link"), text: $urlText)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                         .keyboardType(.URL)
@@ -42,8 +42,6 @@ struct WebsiteRecipeImportView: View {
                                 .foregroundStyle(.secondary)
                         }
                     }
-                } header: {
-                    Text(String(localized: "website_import.section.url", defaultValue: "Recipe Link"))
                 } footer: {
                     Text(String(localized: "website_import.footer", defaultValue: "Doughy imports recipe data from sites that publish structured recipe details."))
                 }

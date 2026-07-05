@@ -205,16 +205,37 @@ extension RecipeScanner {
             && leadingAmountRange(in: line) == nil
     }
 
+    /// Removes secondary "plus …" asides whose amount is not part of the ingredient's
+    /// measurement, e.g. "480 g flour, plus more for dusting" or "4 cups flour, plus
+    /// 30 g for greasing the pan" — otherwise the aside's gram value can be picked up
+    /// as the ingredient's weight. Compound amounts like "1 cup plus 2 tablespoons
+    /// sugar" contain none of the aside keywords and pass through untouched.
+    static func strippedSecondaryAmounts(_ line: String) -> String {
+        line.replacingOccurrences(
+            of: #"(?i)[,;]?\s*\bplus\b[^,;]*\b(?:more|extra|dusting|greasing|kneading|rolling|sprinkling|shaping|serving|the\s+pan|the\s+bowl|work\s+surface)\b[^,;]*"#,
+            with: "",
+            options: .regularExpression)
+    }
+
     static func isSectionHeader(_ line: String) -> Bool {
-        line.range(of: #"\b(for the|to assemble|biga|poolish|levain|starter|preferment|dough|filling|glaze|frosting|ingredients?)\b"#,
-                   options: [.regularExpression, .caseInsensitive]) != nil
-            && line.range(of: #"(?:\d|[¼½¾⅓⅔⅛⅜⅝⅞])"#, options: .regularExpression) == nil
+        // Yield notes in parentheses ("For the poolish (makes 250 g)") don't make a
+        // header an ingredient line — strip them before the no-digits check so the
+        // 250 doesn't disqualify it. A measured line like "100 g poolish" still has
+        // its digits outside parentheses and stays an ingredient.
+        let withoutParentheticals = line
+            .replacingOccurrences(of: #"\([^)]*\)"#, with: "", options: .regularExpression)
+            .replacingOccurrences(of: #"\s*\([^)]*$"#, with: "", options: .regularExpression)
+        return withoutParentheticals.range(of: #"\b(for the|to assemble|biga|poolish|levain|starter|preferment|tangzhong|yudane|dough|filling|glaze|frosting|ingredients?)\b"#,
+                                           options: [.regularExpression, .caseInsensitive]) != nil
+            && withoutParentheticals.range(of: #"(?:\d|[¼½¾⅓⅔⅛⅜⅝⅞])"#, options: .regularExpression) == nil
     }
 
     static func parseIngredientLine(_ line: String, section: String) -> ParsedIngredient? {
-        let cleaned = line
-            .trimmingCharacters(in: CharacterSet(charactersIn: "•-* \t"))
-            .replacingOccurrences(of: "º", with: "°")
+        let cleaned = strippedSecondaryAmounts(
+            line
+                .trimmingCharacters(in: CharacterSet(charactersIn: "•-* \t"))
+                .replacingOccurrences(of: "º", with: "°")
+        )
         let lower = cleaned.lowercased()
 
         let weightGrams = firstAmount(in: cleaned, beforeUnitPattern: #"(?:g|grams?)"#)
@@ -233,7 +254,17 @@ extension RecipeScanner {
 
         let isUnmeasuredYeastPackage = lower.contains("yeast")
             && (lower.contains("package") || lower.contains("packet"))
-        let packageYeastGrams = isUnmeasuredYeastPackage ? 7.0 : 0
+        var packageYeastGrams = 0.0
+        if isUnmeasuredYeastPackage {
+            // "2 packages active dry yeast" — the leading amount is the package count.
+            var packageCount = 1.0
+            if let range = leadingAmountRange(in: cleaned),
+               let amount = parseAmount(String(cleaned[range]).trimmingCharacters(in: .whitespaces)),
+               amount > 0 {
+                packageCount = amount
+            }
+            packageYeastGrams = 7.0 * packageCount
+        }
         if isUnmeasuredYeastPackage && volume.unit == .count {
             volume = (0, .none)
         }
@@ -281,7 +312,9 @@ extension RecipeScanner {
 
     static func firstAmount(in text: String, beforeUnitPattern unitPattern: String) -> Double? {
         let amountPattern = #"(?:(?:\d+/\d+)|(?:\d+(?:[.,]\d+)?(?:\s+\d+/\d+|\s*[¼½¾⅓⅔⅛⅜⅝⅞])?)|[¼½¾⅓⅔⅛⅜⅝⅞])"#
-        let pattern = #"(?i)\b"# + amountPattern + #"(?:\s*(?:to|[-–—])\s*"# + amountPattern + #")?\s*"# + unitPattern + #"\b"#
+        // (?<![0-9A-Za-z]) instead of \b: a line can start with a Unicode vulgar
+        // fraction ("½ cup olive oil"), and \b never matches before a non-word char.
+        let pattern = #"(?i)(?<![0-9A-Za-z])"# + amountPattern + #"(?:\s*(?:to|[-–—])\s*"# + amountPattern + #")?\s*"# + unitPattern + #"\b"#
         guard let match = text.range(of: pattern, options: .regularExpression) else { return nil }
         return parseAmountRange(String(text[match]))
     }
@@ -293,8 +326,14 @@ extension RecipeScanner {
     }
 
     static func firstVolumeMeasurement(in text: String) -> VolumeMeasurement? {
+        // Fluid ounces are a volume, not the mass "ounce" — listed before plain ounce,
+        // though the mass pattern can't match "8 fl oz" anyway ("fl" sits between the
+        // amount and "oz", and only whitespace/hyphens are allowed there).
         let patterns: [(String, ParsedVolumeUnit)] = [
+            (#"(?:fl\.?\s*oz\.?|fluid\s+ounces?)"#, .fluidOunce),
             (#"(?:ml|milliliters?)"#, .milliliter),
+            (#"(?:dl|deciliters?|decilitres?)"#, .deciliter),
+            (#"(?:l|liters?|litres?)"#, .liter),
             (#"(?:cups?|c\.)"#, .cup),
             (#"(?:tablespoons?|tbsp\.?)"#, .tablespoon),
             (#"(?:teaspoons?|tsp\.?)"#, .teaspoon),
@@ -307,7 +346,7 @@ extension RecipeScanner {
         let measurements = patterns.compactMap { entry -> VolumeMeasurement? in
             let (unitPattern, unit) = entry
             let amountPattern = #"(?:(?:\d+/\d+)|(?:\d+(?:[.,]\d+)?(?:\s+\d+/\d+|\s*[¼½¾⅓⅔⅛⅜⅝⅞])?)|[¼½¾⅓⅔⅛⅜⅝⅞])"#
-            let pattern = #"(?i)\b"# + amountPattern + #"(?:\s*(?:to|[-–—])\s*"# + amountPattern + #")?\s*-?\s*"# + unitPattern + #"\b"#
+            let pattern = #"(?i)(?<![0-9A-Za-z])"# + amountPattern + #"(?:\s*(?:to|[-–—])\s*"# + amountPattern + #")?\s*-?\s*"# + unitPattern + #"\b"#
             guard let match = text.range(of: pattern, options: .regularExpression) else { return nil }
             let matched = String(text[match])
             guard let amount = parseAmountRange(matched) else {
@@ -324,7 +363,7 @@ extension RecipeScanner {
 
     static func firstCountMeasurement(in text: String) -> Double? {
         let amountPattern = #"(?:(?:\d+/\d+)|(?:\d+(?:[.,]\d+)?(?:\s+\d+/\d+|\s*[¼½¾⅓⅔⅛⅜⅝⅞])?)|[¼½¾⅓⅔⅛⅜⅝⅞])"#
-        let pattern = #"(?i)\b"# + amountPattern + #"(?:\s*(?:to|[-–—])\s*"# + amountPattern + #")?\s+(?:oranges?|lemons?|limes?|cloves?|(?:[a-z]+\s+)?leaves)\b"#
+        let pattern = #"(?i)(?<![0-9A-Za-z])"# + amountPattern + #"(?:\s*(?:to|[-–—])\s*"# + amountPattern + #")?\s+(?:oranges?|lemons?|limes?|cloves?|(?:[a-z]+\s+)?leaves)\b"#
         guard let match = text.range(of: pattern, options: .regularExpression) else { return nil }
         return parseAmountRange(String(text[match]))
     }
@@ -340,7 +379,7 @@ extension RecipeScanner {
     }
 
     static func parseAmount(_ raw: String) -> Double? {
-        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: ",", with: "")
+        let trimmed = normalizedDecimalSeparators(raw.trimmingCharacters(in: .whitespacesAndNewlines))
         let unicodeFractions: [Character: Double] = [
             "¼": 0.25, "½": 0.5, "¾": 0.75,
             "⅓": 1.0 / 3.0, "⅔": 2.0 / 3.0,
@@ -395,6 +434,16 @@ extension RecipeScanner {
         return numerator / denominator
     }
 
+    /// "1,000 grams" uses a thousands comma but European recipes write decimals with a
+    /// comma ("1,5 dl"). Exactly one or two digits after the comma means decimal;
+    /// anything else is treated as a thousands separator and dropped.
+    static func normalizedDecimalSeparators(_ raw: String) -> String {
+        if raw.range(of: #"^\d+,\d{1,2}$"#, options: .regularExpression) != nil {
+            return raw.replacingOccurrences(of: ",", with: ".")
+        }
+        return raw.replacingOccurrences(of: ",", with: "")
+    }
+
     static func ingredientName(from line: String) -> String {
         var working = line
             // A leading "Label:" (e.g. "Additional toppings:", "Optional:", "For the filling:")
@@ -418,16 +467,16 @@ extension RecipeScanner {
             .replacingOccurrences(of: #"(?i)\b\d+\s+(?=(?:small|medium|large|extra-large|extra large|jumbo)?\s*eggs?\b)"#,
                                   with: "",
                                   options: .regularExpression)
-            .replacingOccurrences(of: #"(?i)\b(?:(?:\d+/\d+)|(?:\d+(?:[.,]\d+)?(?:\s+\d+/\d+|\s*[¼½¾⅓⅔⅛⅜⅝⅞])?)|[¼½¾⅓⅔⅛⅜⅝⅞])\s*(?:to|[-–—])\s*(?:(?:\d+/\d+)|(?:\d+(?:[.,]\d+)?(?:\s+\d+/\d+|\s*[¼½¾⅓⅔⅛⅜⅝⅞])?)|[¼½¾⅓⅔⅛⅜⅝⅞])\s*-?\s*(?:g|grams?|ml|milliliters?|cups?|c\.|tablespoons?|tbsp\.?|teaspoons?|tsp\.?|ounces?|oz\.?|fl\s*oz|pounds?|lbs?\.?|kilograms?|kg)\b"#,
+            .replacingOccurrences(of: #"(?i)\b(?:(?:\d+/\d+)|(?:\d+(?:[.,]\d+)?(?:\s+\d+/\d+|\s*[¼½¾⅓⅔⅛⅜⅝⅞])?)|[¼½¾⅓⅔⅛⅜⅝⅞])\s*(?:to|[-–—])\s*(?:(?:\d+/\d+)|(?:\d+(?:[.,]\d+)?(?:\s+\d+/\d+|\s*[¼½¾⅓⅔⅛⅜⅝⅞])?)|[¼½¾⅓⅔⅛⅜⅝⅞])\s*-?\s*(?:g|grams?|ml|milliliters?|dl|deciliters?|decilitres?|l|liters?|litres?|cups?|c\.|tablespoons?|tbsp\.?|teaspoons?|tsp\.?|ounces?|oz\.?|fl\.?\s*oz\.?|pounds?|lbs?\.?|kilograms?|kg)\b"#,
                                   with: "",
                                   options: .regularExpression)
-            .replacingOccurrences(of: #"(?i)\b\d+(?:[.,]\d+)?(?:\s+\d+/\d+|\s*[¼½¾⅓⅔⅛⅜⅝⅞])?\s*-?\s*(?:g|grams?|ml|milliliters?|cups?|c\.|tablespoons?|tbsp\.?|teaspoons?|tsp\.?|ounces?|oz\.?|fl\s*oz|pounds?|lbs?\.?|kilograms?|kg)\b"#,
+            .replacingOccurrences(of: #"(?i)\b\d+(?:[.,]\d+)?(?:\s+\d+/\d+|\s*[¼½¾⅓⅔⅛⅜⅝⅞])?\s*-?\s*(?:g|grams?|ml|milliliters?|dl|deciliters?|decilitres?|l|liters?|litres?|cups?|c\.|tablespoons?|tbsp\.?|teaspoons?|tsp\.?|ounces?|oz\.?|fl\.?\s*oz\.?|pounds?|lbs?\.?|kilograms?|kg)\b"#,
                                   with: "",
                                   options: .regularExpression)
-            .replacingOccurrences(of: #"(?i)\b\d+/\d+\s*-?\s*(?:g|grams?|ml|milliliters?|cups?|c\.|tablespoons?|tbsp\.?|teaspoons?|tsp\.?|ounces?|oz\.?|fl\s*oz|pounds?|lbs?\.?|kilograms?|kg)\b"#,
+            .replacingOccurrences(of: #"(?i)\b\d+/\d+\s*-?\s*(?:g|grams?|ml|milliliters?|dl|deciliters?|decilitres?|l|liters?|litres?|cups?|c\.|tablespoons?|tbsp\.?|teaspoons?|tsp\.?|ounces?|oz\.?|fl\.?\s*oz\.?|pounds?|lbs?\.?|kilograms?|kg)\b"#,
                                   with: "",
                                   options: .regularExpression)
-            .replacingOccurrences(of: #"(?i)\b[¼½¾⅓⅔⅛⅜⅝⅞]\s*-?\s*(?:g|grams?|ml|milliliters?|cups?|c\.|tablespoons?|tbsp\.?|teaspoons?|tsp\.?|ounces?|oz\.?|fl\s*oz|pounds?|lbs?\.?|kilograms?|kg)\b"#,
+            .replacingOccurrences(of: #"(?i)\b[¼½¾⅓⅔⅛⅜⅝⅞]\s*-?\s*(?:g|grams?|ml|milliliters?|dl|deciliters?|decilitres?|l|liters?|litres?|cups?|c\.|tablespoons?|tbsp\.?|teaspoons?|tsp\.?|ounces?|oz\.?|fl\.?\s*oz\.?|pounds?|lbs?\.?|kilograms?|kg)\b"#,
                                   with: "",
                                   options: .regularExpression)
             .trimmingCharacters(in: .whitespacesAndNewlines)
@@ -460,12 +509,14 @@ extension RecipeScanner {
                                       with: "",
                                       options: .regularExpression)
                 .replacingOccurrences(of: #"(?i)^\s*(?:\d+/\d+|[\d/¼½¾⅓⅔⅛⅜⅝⅞%]+)\s*"#, with: "", options: .regularExpression)
-                .replacingOccurrences(of: #"(?i)^\s*(?:cups?|cup|tablespoons?|tbsp\.?|teaspoons?|tsp\.?|ounces?|oz\.?|fl\s*oz|pounds?|lbs?\.?|kilograms?|kg|package|packet)\s*/?\s*"#,
+                .replacingOccurrences(of: #"(?i)^\s*(?:cups?|cup|tablespoons?|tbsp\.?|teaspoons?|tsp\.?|ounces?|oz\.?|fl\.?\s*oz\.?|pounds?|lbs?\.?|kilograms?|kg|dl|deciliters?|decilitres?|liters?|litres?|packages?|packets?)\s*(?:of\s+)?/?\s*"#,
                                       with: "",
                                       options: .regularExpression)
                 .replacingOccurrences(of: #"(?i)\b(?:warmed|melted|softened|creamy|beaten|chopped|packed|spooned|minced|sifted|free-range|free range)\b"#, with: "", options: .regularExpression)
                 .replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
-                .trimmingCharacters(in: CharacterSet(charactersIn: " -/,\t\n"))
+                // "." included for unit-dot residue: stripping "4 fl. oz." backtracks
+                // off the final dot (the pattern ends \b), leaving ". water".
+                .trimmingCharacters(in: CharacterSet(charactersIn: " -/,.\t\n"))
         }
 
         let lower = working.lowercased()
@@ -536,6 +587,8 @@ extension RecipeScanner {
         if lower.contains("sugar") { return .granulatedSugar }
         if lower.contains("honey") { return .honey }
         if lower.contains("margarine") { return .margarine }
+        // "buttermilk" must be checked before "butter" and "milk", which are substrings of it.
+        if lower.contains("buttermilk") { return .buttermilk }
         if lower.contains("butter") { return .butter }
         if lower.contains("olive oil") { return .oliveOil }
         if lower.contains("vegetable oil") || lower.contains("neutral oil") { return .vegetableOil }
@@ -608,7 +661,7 @@ extension RecipeScanner {
     }
 
     static func isPrefermentSection(_ section: String) -> Bool {
-        section.range(of: #"\b(biga|poolish|levain|starter|preferment)\b"#,
+        section.range(of: #"\b(biga|poolish|levain|starter|preferment|tangzhong|yudane)\b"#,
                       options: [.regularExpression, .caseInsensitive]) != nil
     }
 
@@ -672,9 +725,8 @@ extension RecipeScanner {
 
         Important:
         - List EVERY ingredient separately, including those inside a preferment/poolish/\
-          biga/levain/starter section. Do not group or merge ingredients.
+          biga/levain/starter/tangzhong section. Do not group or merge ingredients.
         - If this text contains no ingredient lines, return an empty ingredients list.
-        - Do not extract instructions.
         - Do not compute or guess any percentages, totals, or unit conversions — just \
           report each ingredient's quantity exactly as given. If a gram amount is shown \
           (e.g. "(512 g)"), put it in weightGrams. If a cup/tablespoon/teaspoon amount is \
@@ -683,9 +735,14 @@ extension RecipeScanner {
           number in the text.
         - If an ingredient gives a range such as "1/2 to 1 tablespoon" or "10 to 15 \
           grams", use the midpoint for that field.
-        - Treat "1 package" or "1 packet" of active dry yeast or instant yeast as 7 \
-          grams, with volumeAmount 0 and volumeUnit none, even though the gram value is \
-          implied by the package.
+        - Ignore amounts that are only a "plus" aside — "plus more for dusting", \
+          "plus extra for the pan", "plus 30 g for greasing" — and report just the \
+          main amount (e.g. "4 cups flour, plus 30 g for dusting" -> volumeAmount 4, \
+          volumeUnit cup, weightGrams 0).
+        - Treat packages/packets of active dry yeast or instant yeast as 7 grams \
+          each — "1 package" -> weightGrams 7, "2 packages" -> weightGrams 14 — with \
+          volumeAmount 0 and volumeUnit none, even though the gram value is implied \
+          by the package.
         - Pounds, kilograms, and ounces are mass units. Put them in volumeAmount with \
           volumeUnit pound, kilogram, or ounce unless the recipe also states grams.
         - Baking soda and baking powder are separate ingredients; never drop one as a \
@@ -725,6 +782,13 @@ extension RecipeScanner {
         toppings:", stray words from OCR noise, or (rarely) a fragment of instruction text \
         that was mistakenly captured as an ingredient. Review each one and, for every index, \
         return a cleaned name and whether it's a genuine ingredient.
+
+        Rules:
+        - Only remove text that clearly is not part of the ingredient name itself.
+        - Never reword, translate, abbreviate, or expand a name; keep its spelling as-is.
+        - Keep brand and variety words that identify the ingredient — "Diamond Crystal \
+          Kosher Salt" keeps "Diamond Crystal", "bread flour" stays "bread flour".
+        - Return exactly one review per listed index.
 
         Ingredients:
         \(itemsList)

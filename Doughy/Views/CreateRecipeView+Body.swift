@@ -21,9 +21,10 @@ extension CreateRecipeView {
         coreView
             .overlay { if isScanning { scanningOverlay } }
             .overlay {
-                if let image = sourcePhotoImage, !isScanning, !usesRecipeStudio {
+                if let image = sourcePhotoImages.first, !isScanning, !usesRecipeStudio {
                     SourcePhotoPipView(
                         image: image,
+                        imageCount: sourcePhotoImages.count,
                         corner: $sourcePhotoCorner
                     ) {
                         showSourcePhotoViewer = true
@@ -31,8 +32,8 @@ extension CreateRecipeView {
                 }
             }
             .fullScreenCover(isPresented: $showSourcePhotoViewer) {
-                if let image = sourcePhotoImage {
-                    SourcePhotoViewer(image: image)
+                if !sourcePhotoImages.isEmpty {
+                    SourcePhotoViewer(images: sourcePhotoImages)
                 }
             }
             .task {
@@ -48,13 +49,42 @@ extension CreateRecipeView {
             .sheet(isPresented: $showCamera) {
                 CameraPickerView { image in
                     showCamera = false
-                    guard let image else { return }
+                    guard let image else {
+                        if cameraScanImages.isEmpty {
+                            showCameraScanOptions = false
+                        }
+                        return
+                    }
+                    cameraScanImages.append(image)
+                    showCameraScanOptions = true
+                }
+            }
+            .confirmationDialog(
+                String(localized: "create.scan.camera.pages.title", defaultValue: "Scan Pages"),
+                isPresented: $showCameraScanOptions,
+                titleVisibility: .visible
+            ) {
+                Button(String(
+                    format: String(localized: "create.scan.camera.scan_count", defaultValue: "Scan %d Photo(s)"),
+                    cameraScanImages.count
+                )) {
+                    let images = cameraScanImages
+                    cameraScanImages = []
                     #if canImport(FoundationModels)
                     if #available(iOS 26, *) {
-                        Task { await processImage(image) }
+                        Task { await processImages(images) }
                     }
                     #endif
                 }
+                Button(String(localized: "create.scan.camera.add_another", defaultValue: "Take Another Photo")) {
+                    showCamera = true
+                }
+                Button(String(localized: "action.cancel", defaultValue: "Cancel"), role: .cancel) {}
+                Button(String(localized: "create.scan.camera.discard", defaultValue: "Discard Photos"), role: .destructive) {
+                    cameraScanImages = []
+                }
+            } message: {
+                Text(String(localized: "create.scan.camera.pages.message", defaultValue: "Take photos in recipe order. Doughy will read them together."))
             }
             .sheet(isPresented: $showWebsiteImportSheet) {
                 WebsiteRecipeImportView(initialURL: websiteImportSheetInitialURL) {
@@ -151,11 +181,13 @@ extension CreateRecipeView {
         if #available(iOS 26, *) {
             createSurface
                 .photosPicker(isPresented: $showPhotoPicker,
-                               selection: $selectedPhotoItem,
+                               selection: $selectedPhotoItems,
+                               maxSelectionCount: 12,
+                               selectionBehavior: .ordered,
                                matching: .images)
-                .onChange(of: selectedPhotoItem) { _, item in
-                    guard let item else { return }
-                        Task { await processPickedPhoto(item) }
+                .onChange(of: selectedPhotoItems) { _, items in
+                    guard !items.isEmpty else { return }
+                    Task { await processPickedPhotos(items) }
                 }
         } else {
             createSurface
@@ -193,19 +225,19 @@ extension CreateRecipeView {
                     studioStartOutline
                         .frame(width: usesPortraitLayout ? 190 : 220)
 
-                    Divider()
+                    PaneDivider()
 
                     studioStartEditor(showsCompactAction: usesPortraitLayout)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
 
                     if !usesPortraitLayout {
-                        Divider()
+                        PaneDivider()
 
                         studioStartPreviewPane
                             .frame(width: 400)
                     }
                 }
-                .background(Color(.systemGroupedBackground))
+                .paneBackground(Color(.systemGroupedBackground))
             }
             .navigationTitle(String(localized: "create.title.new", defaultValue: "New Recipe"))
             .navigationBarTitleDisplayMode(.inline)
@@ -256,7 +288,7 @@ extension CreateRecipeView {
             Spacer()
         }
         .padding(18)
-        .background(Color(.systemBackground))
+        .paneBackground(Color(.systemBackground))
     }
 
     func studioStartEditor(showsCompactAction: Bool) -> some View {
@@ -329,7 +361,7 @@ extension CreateRecipeView {
     var studioStartPreviewPane: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                Text("Preview / Source")
+                Text("Starting Point")
                     .font(.headline)
 
                 VStack(alignment: .leading, spacing: 12) {
@@ -371,7 +403,7 @@ extension CreateRecipeView {
             }
             .padding(18)
         }
-        .background(Color(.secondarySystemGroupedBackground))
+        .paneBackground(Color(.secondarySystemGroupedBackground))
     }
 
     var studioStartCompactActionPane: some View {
@@ -407,7 +439,7 @@ extension CreateRecipeView {
         }
         .padding(.horizontal, 24)
         .padding(.vertical, 14)
-        .background(Color(.systemBackground))
+        .paneBackground(Color(.systemBackground))
     }
 
     var studioStartPrimaryTitle: String {
@@ -495,19 +527,20 @@ extension CreateRecipeView {
                     studioOutline(showsLandscapeHint: usesPortraitLayout)
                         .frame(width: usesPortraitLayout ? 190 : 220)
 
-                    Divider()
+                    PaneDivider()
 
                     studioEditor
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .scrollsUnderHomeIndicator()
 
-                    if !usesPortraitLayout {
-                        Divider()
+                    if !usesPortraitLayout && showsStudioSourcePane {
+                        PaneDivider()
 
                         studioPreviewPane
                             .frame(width: 400)
                     }
                 }
-                .background(Color(.systemGroupedBackground))
+                .paneBackground(Color(.systemGroupedBackground))
             }
             .navigationTitle(studioTitle)
             .navigationBarTitleDisplayMode(.inline)
@@ -560,6 +593,10 @@ extension CreateRecipeView {
         }
     }
 
+    var showsStudioSourcePane: Bool {
+        !sourcePhotoImages.isEmpty
+    }
+
     func tabletStudioUsesPortraitLayout(_ size: CGSize) -> Bool {
         size.width < size.height
     }
@@ -599,13 +636,13 @@ extension CreateRecipeView {
             Spacer()
 
             #if DOUGHY_SCAN_DIAGNOSTICS
-            let showsScanStatus = sourcePhotoImage != nil || lastScanDiagnostics != nil || !pendingNameChoices.isEmpty || !pendingUncertainIngredients.isEmpty
+            let showsScanStatus = !sourcePhotoImages.isEmpty || lastScanDiagnostics != nil || !pendingNameChoices.isEmpty || !pendingUncertainIngredients.isEmpty
             #else
-            let showsScanStatus = sourcePhotoImage != nil || !pendingNameChoices.isEmpty || !pendingUncertainIngredients.isEmpty
+            let showsScanStatus = !sourcePhotoImages.isEmpty || !pendingNameChoices.isEmpty || !pendingUncertainIngredients.isEmpty
             #endif
 
             if showsScanStatus {
-                if sourcePhotoImage != nil {
+                if !sourcePhotoImages.isEmpty {
                     Button {
                         showSourcePhotoViewer = true
                     } label: {
@@ -619,7 +656,7 @@ extension CreateRecipeView {
             }
         }
         .padding(18)
-        .background(Color(.systemBackground))
+        .paneBackground(Color(.systemBackground))
     }
 
     func studioScanStatusCard(showsLandscapeHint: Bool) -> some View {
@@ -642,12 +679,12 @@ extension CreateRecipeView {
                     .font(.subheadline)
             }
             #endif
-            if sourcePhotoImage != nil {
-                Label("Source photo attached", systemImage: "photo")
+            if !sourcePhotoImages.isEmpty {
+                Label(sourcePhotoImages.count == 1 ? "Source photo attached" : "\(sourcePhotoImages.count) source photos attached", systemImage: "photo.on.rectangle")
                     .font(.subheadline)
             }
             if showsLandscapeHint {
-                Label("Rotate to landscape to compare with the source image.", systemImage: "rotate.right")
+                Label("Rotate to landscape to compare with the source images.", systemImage: "rotate.right")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -725,12 +762,12 @@ extension CreateRecipeView {
                 Text("Preview / Source")
                     .font(.headline)
 
-                if let image = sourcePhotoImage {
+                if let image = sourcePhotoImages.first {
                     Button {
                         showSourcePhotoViewer = true
                     } label: {
                         VStack(alignment: .leading, spacing: 10) {
-                            Label("Imported Image", systemImage: "photo")
+                            Label(sourcePhotoImages.count == 1 ? "Imported Image" : "\(sourcePhotoImages.count) Imported Images", systemImage: "photo.on.rectangle")
                                 .font(.caption.weight(.semibold))
                                 .foregroundStyle(.secondary)
 
@@ -753,7 +790,7 @@ extension CreateRecipeView {
             }
             .padding(18)
         }
-        .background(Color(.secondarySystemGroupedBackground))
+        .paneBackground(Color(.secondarySystemGroupedBackground))
     }
 
     var activeFlourRows: [FlourRow] {
@@ -889,7 +926,7 @@ extension CreateRecipeView {
 
     func returnToStudioStart() {
         guard editingRecipe == nil, copyingRecipe == nil else { return }
-        if sourcePhotoImage != nil {
+        if !sourcePhotoImages.isEmpty {
             selectedStudioStartOption = .scan
         } else if inputMode == .byWeight {
             selectedStudioStartOption = .weight

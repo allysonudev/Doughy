@@ -171,4 +171,104 @@ final class RecipeCalculatorUITests: DoughyUITestCase {
         // Yeast: 1/168*1000 = 5.9523... -> 2 decimals (<10) -> 5.95
         app.assertCalculatedIngredient(name: "Yeast", weight: 5.9523809523809526, weightAccuracy: 0.01, percent: 1, percentAccuracy: 0.01)
     }
+
+    // MARK: - Copy recipe
+
+    /// Opens a recipe's calculator, copies it via `calculatorCopyButton` (behind
+    /// `calculatorActionsMenu`), saves the copy (pre-filled as "Copy of <name>" per
+    /// `CreateRecipeView.copyName`), and confirms the copy shows up in the recipe list.
+    func testCopyRecipeAppearsInList() throws {
+        createTestRecipe()
+        app.openCalculator(for: recipeName)
+
+        let menu = app.buttons["calculatorActionsMenu"]
+        XCTAssertTrue(menu.waitForExistence(timeout: 5), "Recipe actions menu not found")
+        menu.tap()
+
+        let copyButton = app.buttons["calculatorCopyButton"]
+        XCTAssertTrue(copyButton.waitForExistence(timeout: 5), "Copy button not found")
+        copyButton.tap()
+
+        // The copy sheet opens directly on the details step, pre-filled from the
+        // original recipe (same collection, "Copy of <name>").
+        let nameField = app.textFields["recipeNameField"]
+        XCTAssertTrue(nameField.waitForExistence(timeout: 5), "Copy sheet's name field not found")
+        XCTAssertEqual(nameField.value as? String, "Copy of \(recipeName)")
+
+        app.tapDetailsNext()
+        app.tapIngredientsNext()
+        app.saveRecipe()
+
+        // Saving the copy dismisses back to the calculator, not the list; return there.
+        app.navigateBack()
+
+        let copyCell = app.staticTexts["Copy of \(recipeName)"]
+        app.scrollUntilExists(copyCell)
+        XCTAssertTrue(copyCell.waitForExistence(timeout: 5), "Copied recipe should appear in the recipe list")
+    }
+
+    // MARK: - By-weight adjust
+
+    /// Mirrors `testAdjustingIngredientPercentagesRecalculatesProportions`, but for a
+    /// by-weight recipe: overriding ingredient weights in Adjust mode (via
+    /// `ingredientWeightField_N`) recalculates the results screen directly from the
+    /// overridden grams (no percentage math involved for by-weight recipes).
+    func testByWeightAdjustingIngredientWeightsRecalculatesResults() throws {
+        let name = "By Weight Adjust Loaf"
+        app.startCreateRecipe()
+        app.chooseMode(byPercent: false)
+        app.fillDetails(name: name, newCollection: "By Weight Adjust Tests")
+
+        app.fillFlour(at: 0, name: "Bread Flour", value: "500")
+        app.fillIngredient(at: 0, name: "Water", value: "350")
+        app.addIngredient()
+        app.fillIngredient(at: 1, name: "Salt", value: "10")
+
+        app.tapIngredientsNext()
+        app.saveRecipe()
+        XCTAssertTrue(app.staticTexts[name].waitForExistence(timeout: 5))
+
+        app.openCalculator(for: name)
+        app.showAdjustMode()
+
+        // Recipe ingredient order: [0] Water, [1] Salt (flour has no weight field; it's read-only in Adjust mode).
+        app.setIngredientWeight(at: 0, value: "400")
+        app.setIngredientWeight(at: 1, value: "15")
+
+        app.tapCalculate()
+
+        app.assertCalculatedIngredient(name: "Bread Flour", weight: "500g", percent: "100%")
+        app.assertCalculatedIngredient(name: "Water", weight: "400g", percent: "80%")
+        app.assertCalculatedIngredient(name: "Salt", weight: "15g", percent: "3%")
+    }
+
+    // MARK: - Unit cycling
+
+    /// Tapping a liquid ingredient's weight on the results screen cycles its displayed
+    /// unit, per `CalculatorView+UnitCycling.swift`'s `cycleUnits`/`advanceUnit`. Water
+    /// has a known density, so its weight row is tappable (`isButton` trait) and starts
+    /// in grams before cycling to a volume unit.
+    func testTappingLiquidIngredientCyclesDisplayUnit() throws {
+        createTestRecipe()
+        app.openCalculator(for: recipeName)
+        app.tapCalculate()
+        app.expandIngredients()
+
+        let weightText = app.staticTexts["ingredientWeight_Water"]
+        XCTAssertTrue(weightText.waitForExistence(timeout: 5), "Water's calculated weight not found")
+        let originalLabel = weightText.label
+        XCTAssertTrue(originalLabel.hasSuffix("g"), "Water should start displayed in grams, got \(originalLabel)")
+
+        app.cycleIngredientUnit(name: "Water")
+
+        let afterFirstTap = app.staticTexts["ingredientWeight_Water"]
+        XCTAssertTrue(afterFirstTap.waitForExistence(timeout: 5))
+        XCTAssertNotEqual(afterFirstTap.label, originalLabel, "Tapping the weight should cycle to a different unit")
+
+        // Cycle again to confirm it keeps advancing through the unit list (not stuck).
+        app.cycleIngredientUnit(name: "Water")
+        let afterSecondTap = app.staticTexts["ingredientWeight_Water"]
+        XCTAssertTrue(afterSecondTap.waitForExistence(timeout: 5))
+        XCTAssertNotEqual(afterSecondTap.label, afterFirstTap.label, "Second tap should advance to yet another unit (or wrap distinctly)")
+    }
 }

@@ -101,7 +101,8 @@ enum PrefermentTool {
             ingredients: ingredients,
             preferment: preferment,
             instructions: recipe.instructions,
-            measurementMode: recipe.measurementMode
+            measurementMode: recipe.measurementMode,
+            sourceURL: recipe.sourceURL
         )
         try RecipeBuilder.validatePrefermentRecipe(recipe: result)
         return result
@@ -114,7 +115,8 @@ enum PrefermentTool {
             defaultWeight: recipe.defaultWeight,
             ingredients: recipe.ingredients,
             instructions: recipe.instructions,
-            measurementMode: recipe.measurementMode
+            measurementMode: recipe.measurementMode,
+            sourceURL: recipe.sourceURL
         )
     }
 

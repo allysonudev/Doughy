@@ -11,6 +11,7 @@ extension CalculatorView {
     var recipeContent: some View {
         Form {
             sharedBySection
+            sourceLinkSection
             if calculatedRecipe != nil {
                 ingredientsSections(track: true)
                 instructionsSection
@@ -31,6 +32,19 @@ extension CalculatorView {
         .scrollDismissesKeyboard(.interactively)
         // Reserve room so the last rows clear the floating ingredients button when it's showing.
         .safeAreaInset(edge: .bottom) { Color.clear.frame(height: 52) }
+    }
+
+    @ViewBuilder
+    var sourceLinkSection: some View {
+        if let sourceURL = currentRecipe.sourceURL {
+            Section {
+                Link(destination: sourceURL) {
+                    Label("Original Recipe Page", systemImage: "link")
+                }
+            } footer: {
+                Text(URLComponents(url: sourceURL, resolvingAgainstBaseURL: false)?.host ?? sourceURL.absoluteString)
+            }
+        }
     }
 
     @ViewBuilder

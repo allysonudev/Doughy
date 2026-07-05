@@ -326,11 +326,11 @@ extension CreateRecipeView {
             #if DOUGHY_SCAN_DIAGNOSTICS
             if let diagnostics = lastScanDiagnostics {
                 Section {
-                    Button("Copy Scan Diagnostics") {
+                    Button("Copy Import Diagnostics") {
                         UIPasteboard.general.string = diagnostics
                     }
                 } footer: {
-                    Text("Copies the scan's OCR text and parsed ingredient data to the clipboard for debugging.")
+                    Text("Copies scan or link-import inputs, parsed ingredient data, and final draft values to the clipboard for debugging.")
                 }
             }
             #endif

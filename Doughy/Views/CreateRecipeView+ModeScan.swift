@@ -157,7 +157,7 @@ extension CreateRecipeView {
             ModeCard(
                 icon: "camera.viewfinder",
                 title: String(localized: "create.mode.scan.title", defaultValue: "Scan a Recipe"),
-                description: String(localized: "create.mode.scan.description", defaultValue: "Use Apple Intelligence to read a recipe from a photo or screenshot, entirely on-device and offline")
+                description: String(localized: "create.mode.scan.description", defaultValue: "Use Apple Intelligence to read a recipe from photos or screenshots, entirely on-device and offline")
             ) {
                 showScanOptions = true
             }

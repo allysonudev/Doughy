@@ -69,6 +69,7 @@ struct OnboardingView: View {
                             .foregroundStyle(.secondary)
                     }
                     .accessibilityLabel("Close")
+                    .accessibilityIdentifier("onboardingCloseButton")
                     .padding()
                 }
                 Spacer()
@@ -92,6 +93,7 @@ struct OnboardingView: View {
                 .padding(.horizontal)
                 .padding(.bottom, 40)
                 .accessibilityValue("Page \(currentPage + 1) of \(slides.count)")
+                .accessibilityIdentifier("onboardingNextButton")
             }
         }
     }

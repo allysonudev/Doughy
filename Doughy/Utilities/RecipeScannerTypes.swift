@@ -11,35 +11,46 @@ import FoundationModels
 
 // MARK: - Parsed recipe schema
 
+/// The parsed recipe assembled from the local regex parser and/or the model's
+/// `ParsedRecipeEssentials` output. Not itself model-generated, so it carries no
+/// `@Generable`/`@Guide` — model-facing guidance belongs on `ParsedRecipeEssentials`.
 @available(iOS 26, *)
-@Generable
 struct ParsedRecipe: Sendable {
-    @Guide(description: """
-        The recipe's title or name, exactly as it appears in the text (e.g. "Sourdough \
-        Boule", "Grandma's Rye Bread"). Use an empty string if no recipe title or name \
-        is explicitly written — do NOT invent or infer a name from the ingredients or \
-        instructions. Most recipe screenshots show only an ingredient list with no title, \
-        in which case this must be "".
-        """)
+    /// Recipe title, or "" when the source text has none.
     var name: String
     /// True when the recipe contains a preferment (poolish, biga, levain, sponge, starter, etc.).
     var hasPreferment: Bool
     /// Name of the preferment (e.g. "Poolish", "Levain"). Empty string when hasPreferment is false.
     var prefermentName: String
-    /// Every ingredient in the recipe, from both the main dough and any preferment, each with its weight in grams.
+    /// Every ingredient in the recipe, from both the main dough and any preferment.
     var ingredients: [ParsedIngredient]
-    /// Numbered recipe steps.
+    /// Recipe steps. Always empty for scans: instruction extraction is intentionally
+    /// out of scope for the scanner (ingredients only). Website imports carry their
+    /// instructions separately on `WebsiteRecipeDraft`.
     var instructions: [String]
 }
 
 @available(iOS 26, *)
 @Generable
 struct ParsedRecipeEssentials: Sendable {
-    /// Recipe name.
+    @Guide(description: """
+        The recipe's title or name, exactly as it appears in the text (e.g. "Sourdough \
+        Boule", "Grandma's Rye Bread"). Use an empty string if no recipe title or name \
+        is explicitly written — do NOT invent or infer a name from the ingredients. \
+        Many scanned photos show only an ingredient list with no title, in which case \
+        this must be "".
+        """)
     var name: String
-    /// True when the recipe contains a preferment (poolish, biga, levain, sponge, starter, etc.).
+    @Guide(description: """
+        True only when the recipe contains a preferment — a separately mixed poolish, \
+        biga, levain, sponge, starter, or tangzhong section that is added to the main \
+        dough later. False when every ingredient goes straight into one dough.
+        """)
     var hasPreferment: Bool
-    /// Name of the preferment (e.g. "Poolish", "Levain"). Empty string when hasPreferment is false.
+    @Guide(description: """
+        The preferment's name exactly as the recipe calls it (e.g. "Poolish", "Biga", \
+        "Levain"). Empty string when hasPreferment is false.
+        """)
     var prefermentName: String
     /// Every ingredient in the recipe, from both the main dough and any preferment.
     var ingredients: [ParsedIngredient]
@@ -52,6 +63,7 @@ enum ParsedVolumeUnit: String, Sendable {
     case teaspoon
     case tablespoon
     case cup
+    case fluidOunce
     case ounce
     case pound
     case kilogram
@@ -209,7 +221,12 @@ struct ParsedIngredient: Sendable {
         if no other unit is given for this ingredient. Extract this independently of \
         volumeAmount: if the recipe shows both a cup/tablespoon/teaspoon/ounce amount AND \
         a gram amount for the same ingredient, set weightGrams to the gram value exactly \
-        as written — do NOT compute or convert it from the other amount. CRITICAL: never \
+        as written — do NOT compute or convert it from the other amount. Ignore gram \
+        amounts that belong to a secondary "plus" aside such as "plus more for \
+        dusting" or "plus 30 g for greasing the pan" — those are not part of this \
+        ingredient's amount, and if the only gram amount is such an aside, weightGrams \
+        is 0 (e.g. "4 cups flour, plus 30 g for dusting" -> weightGrams: 0, \
+        volumeAmount: 4). CRITICAL: never \
         compute, estimate, or infer a gram value from a volume — if the recipe text \
         contains no "g" or "grams" for this ingredient, weightGrams MUST be exactly 0, \
         even if you can calculate an approximate weight from the volume.
@@ -233,7 +250,9 @@ struct ParsedIngredient: Sendable {
     @Guide(description: """
         The unit that volumeAmount is measured in. Use "ounce", "pound", or "kilogram" \
         for weights given in those units (e.g. "4 ounces chocolate" -> 4, ounce; "1 1/4 \
-        pounds chocolate" -> 1.25, pound — NOT a gram value). Use "milliliter" for "ml" \
+        pounds chocolate" -> 1.25, pound — NOT a gram value). Fluid ounces are a volume, \
+        never the mass "ounce": "8 fl oz milk" -> volumeAmount: 8, volumeUnit: \
+        fluidOunce. Use "milliliter" for "ml" \
         amounts. Use "deciliter" for "dl"/"deciliter"/"decilitre" amounts (common in \
         Nordic and Icelandic recipes, e.g. "2 dl mjöl" -> 2, deciliter). Use "liter" \
         for "l"/"liter"/"litre" amounts. Use "egg" when the quantity is a count of eggs, \
@@ -279,8 +298,8 @@ struct ParsedIngredient: Sendable {
     var isFlour: Bool
     @Guide(description: """
         True if this ingredient is part of a preferment (poolish, biga, levain, sponge, \
-        starter, sourdough starter, etc.) that is mixed ahead of time and added to the main \
-        dough later. False if it's mixed directly into the final/main dough.
+        starter, sourdough starter, tangzhong, etc.) that is mixed ahead of time and added \
+        to the main dough later. False if it's mixed directly into the final/main dough.
         """)
     var isPreferment: Bool
 }
@@ -397,7 +416,13 @@ struct ResolvedRecipe: Sendable {
 /// (volume-to-grams resolved) recipe, so the full pipeline can be inspected for debugging.
 @available(iOS 26, *)
 struct ScanResult: Sendable {
+    struct PageOCR: Sendable {
+        var imageIndex: Int
+        var text: String
+    }
+
     var ocrText: String
+    var pageOCR: [PageOCR]
     var rawRecipe: ParsedRecipe
     var resolvedRecipe: ResolvedRecipe
 }

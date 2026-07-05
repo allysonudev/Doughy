@@ -15,9 +15,10 @@ struct RecipeSnapshot: Codable, Equatable {
     var ingredients: [IngredientSnapshot]
     var instructions: [String]
     var preferment: PrefermentSnapshot?
+    var sourceURL: String?
 
     enum CodingKeys: String, CodingKey {
-        case defaultWeight, measurementMode, ingredients, instructions, preferment
+        case defaultWeight, measurementMode, ingredients, instructions, preferment, sourceURL
     }
 
     init(from recipe: any RecipeProtocol) {
@@ -26,6 +27,7 @@ struct RecipeSnapshot: Codable, Equatable {
         ingredients = recipe.ingredients.map(IngredientSnapshot.init)
         instructions = recipe.instructions.map(\.step)
         preferment = (recipe as? PrefermentRecipe).map { PrefermentSnapshot(from: $0.preferment) }
+        sourceURL = recipe.sourceURL?.absoluteString
     }
 
     init(from decoder: Decoder) throws {
@@ -35,6 +37,7 @@ struct RecipeSnapshot: Codable, Equatable {
         ingredients = try container.decode([IngredientSnapshot].self, forKey: .ingredients)
         instructions = try container.decode([String].self, forKey: .instructions)
         preferment = try container.decodeIfPresent(PrefermentSnapshot.self, forKey: .preferment)
+        sourceURL = try container.decodeIfPresent(String.self, forKey: .sourceURL)
     }
 
     /// Reconstructs a recipe model from this snapshot, using the given
@@ -42,16 +45,19 @@ struct RecipeSnapshot: Codable, Equatable {
     func makeRecipe(name: String, collection: String) -> any RecipeProtocol {
         let ingredientModels = ingredients.map { $0.makeIngredient() }
         let instructionModels = instructions.map { Instruction(step: $0) }
+        let sourceURL = sourceURL.flatMap(URL.init(string:))
 
         if let preferment {
             return PrefermentRecipe(name: name, collection: collection, defaultWeight: defaultWeight,
                                      ingredients: ingredientModels, preferment: preferment.makePreferment(),
                                      instructions: instructionModels,
-                                     measurementMode: measurementMode)
+                                     measurementMode: measurementMode,
+                                     sourceURL: sourceURL)
         }
         return Recipe(name: name, collection: collection, defaultWeight: defaultWeight,
                        ingredients: ingredientModels, instructions: instructionModels,
-                       measurementMode: measurementMode)
+                       measurementMode: measurementMode,
+                       sourceURL: sourceURL)
     }
 }
 

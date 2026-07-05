@@ -65,19 +65,22 @@ final class RecipeWebsiteImporterLiveCorpusTests: XCTestCase {
         let isExtra: Bool?
         let extraAmount: Double?
         let extraUnit: String?
+        let isPreferment: Bool?
 
         init(name: String,
              weightGrams: Double? = nil,
              isFlour: Bool? = nil,
              isExtra: Bool? = nil,
              extraAmount: Double? = nil,
-             extraUnit: String? = nil) {
+             extraUnit: String? = nil,
+             isPreferment: Bool? = nil) {
             self.name = name
             self.weightGrams = weightGrams
             self.isFlour = isFlour
             self.isExtra = isExtra
             self.extraAmount = extraAmount
             self.extraUnit = extraUnit
+            self.isPreferment = isPreferment
         }
     }
 
@@ -86,6 +89,22 @@ final class RecipeWebsiteImporterLiveCorpusTests: XCTestCase {
         let expectedIngredientLines: [String]
         let expectedInstructionSnippets: [String]
         let expectedResolvedIngredients: [ExpectedResolvedIngredient]
+        let expectedPrefermentName: String?
+        let expectedPrefermentIngredientCount: Int?
+
+        init(base: LiveRecipeCase,
+             expectedIngredientLines: [String],
+             expectedInstructionSnippets: [String],
+             expectedResolvedIngredients: [ExpectedResolvedIngredient],
+             expectedPrefermentName: String? = nil,
+             expectedPrefermentIngredientCount: Int? = nil) {
+            self.base = base
+            self.expectedIngredientLines = expectedIngredientLines
+            self.expectedInstructionSnippets = expectedInstructionSnippets
+            self.expectedResolvedIngredients = expectedResolvedIngredients
+            self.expectedPrefermentName = expectedPrefermentName
+            self.expectedPrefermentIngredientCount = expectedPrefermentIngredientCount
+        }
 
         func failureMessage() async -> String? {
             do {
@@ -100,6 +119,15 @@ final class RecipeWebsiteImporterLiveCorpusTests: XCTestCase {
                 }
                 if draft.instructions.count != base.expectedInstructionCount {
                     failures.append("instructions: expected \(base.expectedInstructionCount), got \(draft.instructions.count)")
+                }
+                if draft.prefermentName != expectedPrefermentName {
+                    failures.append("prefermentName: expected \(expectedPrefermentName.debugDescription), got \(draft.prefermentName.debugDescription)")
+                }
+                if let expectedPrefermentIngredientCount,
+                   draft.resolvedIngredients.filter(\.isPreferment).count != expectedPrefermentIngredientCount {
+                    failures.append(
+                        "prefermentIngredientCount: expected \(expectedPrefermentIngredientCount), got \(draft.resolvedIngredients.filter(\.isPreferment).count)"
+                    )
                 }
 
                 for expectedLine in expectedIngredientLines
@@ -138,6 +166,9 @@ final class RecipeWebsiteImporterLiveCorpusTests: XCTestCase {
                     }
                     if let extraUnit = expected.extraUnit, actual.extraUnit != extraUnit {
                         failures.append("\(expected.name): expected extraUnit \(extraUnit), got \(actual.extraUnit)")
+                    }
+                    if let isPreferment = expected.isPreferment, actual.isPreferment != isPreferment {
+                        failures.append("\(expected.name): expected isPreferment \(isPreferment), got \(actual.isPreferment)")
                     }
                 }
 
@@ -207,6 +238,33 @@ final class RecipeWebsiteImporterLiveCorpusTests: XCTestCase {
     }
 
     private static let deepRecipePages: [DeepLiveRecipeCase] = [
+        // Poolish recipe: King Arthur lists the poolish and dough as separate HTML groups
+        // (no equivalent in their JSON-LD, which is one flat list including a non-ingredient
+        // "all of the poolish" back-reference line) - this locks in that the importer
+        // recovers the grouping instead of flattening everything into one ingredient list
+        // with duplicate "All-Purpose Flour"/yeast entries (see RecipeDiff crash fix).
+        DeepLiveRecipeCase(
+            base: LiveRecipeCase(
+                url: "https://www.kingarthurbaking.com/recipes/classic-baguettes-recipe",
+                expectedName: "Classic Baguettes",
+                expectedIngredientCount: 8,
+                expectedInstructionCount: 16
+            ),
+            expectedIngredientLines: [
+                "1/2 cup (113g) water, cool",
+                "all of the poolish",
+                "2 teaspoons (12g) table salt",
+            ],
+            expectedInstructionSnippets: [
+                "To make the poolish",
+                "Bake the baguettes",
+            ],
+            expectedResolvedIngredients: [
+                ExpectedResolvedIngredient(name: "Table Salt", weightGrams: 12, isFlour: false, isExtra: false, isPreferment: false),
+            ],
+            expectedPrefermentName: "Poolish",
+            expectedPrefermentIngredientCount: 3
+        ),
         DeepLiveRecipeCase(
             base: LiveRecipeCase(
                 url: "https://www.kingarthurbaking.com/recipes/100-whole-wheat-sandwich-bread-recipe",
@@ -225,7 +283,9 @@ final class RecipeWebsiteImporterLiveCorpusTests: XCTestCase {
             expectedResolvedIngredients: [
                 ExpectedResolvedIngredient(name: "Water", weightGrams: 113, isFlour: false, isExtra: false),
                 ExpectedResolvedIngredient(name: "Table Salt", weightGrams: 9, isFlour: false, isExtra: false),
-                ExpectedResolvedIngredient(name: "King Arthur Golden Wheat Flour", weightGrams: 425, isFlour: true, isExtra: false),
+                // The "King Arthur" brand prefix is stripped from scraped ingredient names -
+                // see stripBrandingAndMarketing(from:) in RecipeWebsiteImporter.
+                ExpectedResolvedIngredient(name: "Golden Wheat Flour", weightGrams: 425, isFlour: true, isExtra: false),
             ]
         ),
         DeepLiveRecipeCase(

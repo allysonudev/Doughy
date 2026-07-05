@@ -14,9 +14,19 @@ struct CollectionAppearanceEditor: View {
     @Binding var colorKey: String?
 
     @Environment(CollectionAppearanceStore.self) private var appearanceStore
+    @Environment(\.colorScheme) private var colorScheme
     @State private var showingEmojiPicker = false
 
     private let swatchSize: CGFloat = 40
+
+    private var iconSwatchBackground: Color {
+        CollectionColorCatalog.color(for: colorKey)
+            ?? CollectionColorCatalog.derivedColor(for: collection, dark: colorScheme == .dark)
+    }
+
+    private var iconSwatchForeground: Color {
+        CollectionColorCatalog.foreground(on: iconSwatchBackground)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -74,7 +84,6 @@ struct CollectionAppearanceEditor: View {
         iconButton(key: nil) {
             Image(systemName: "textformat")
                 .font(.system(size: swatchSize * 0.4, weight: .semibold))
-                .foregroundStyle(.secondary)
         }
         ForEach(recentEmojiIcons) { icon in
             iconButton(key: icon.key) {
@@ -104,10 +113,10 @@ struct CollectionAppearanceEditor: View {
             showingEmojiPicker = true
         } label: {
             ZStack {
-                Circle().fill(Color(.secondarySystemFill))
+                Circle().fill(iconSwatchBackground)
                 Image(systemName: "magnifyingglass")
                     .font(.system(size: swatchSize * 0.38, weight: .semibold))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(iconSwatchForeground)
             }
             .frame(width: swatchSize, height: swatchSize)
         }
@@ -121,8 +130,9 @@ struct CollectionAppearanceEditor: View {
             iconKey = key
         } label: {
             ZStack {
-                Circle().fill(Color(.secondarySystemFill))
+                Circle().fill(iconSwatchBackground)
                 glyph()
+                    .foregroundStyle(iconSwatchForeground)
             }
             .frame(width: swatchSize, height: swatchSize)
             .overlay {

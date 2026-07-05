@@ -28,7 +28,10 @@ struct RecipeListView: View {
     @State var showingWhatsNew = false
     @State var selectedRecipe: RecipeWrapper?
     @State var showingTabletLibrary = false
-    @State var tabletLibraryScrollRequest: TabletLibraryScrollRequest?
+    @State var pendingTabletLibraryCollectionReveal: String?
+    @State var tabletCollectionVisibleSections: [String: TabletCollectionVisibleSection] = [:]
+    @State var appliedRecipeSearchText = ""
+    @State var isRecipeSearchFocused = false
 
     var body: some View {
         Group {
@@ -154,7 +157,6 @@ struct RecipeListView: View {
     var phoneContent: some View {
         NavigationStack(path: $path) {
             mainContent
-                .navigationTitle("Doughy")
                 .toolbar {
                     ToolbarItem(placement: .topBarLeading) {
                         NavigationLink {
@@ -172,6 +174,9 @@ struct RecipeListView: View {
                         .accessibilityLabel("Add recipe")
                     }
                 }
+                .recipeListSearch(
+                    appliedSearchText: $appliedRecipeSearchText
+                )
                 .navigationDestination(for: RecipeWrapper.self) { wrapper in
                     CalculatorView(recipe: wrapper.recipe)
                 }
@@ -188,34 +193,47 @@ struct RecipeListView: View {
                     .transition(.move(edge: .leading))
                     .zIndex(0)
             }
-            Divider()
-            Group {
-                if let wrapper = selectedRecipe ?? firstRecipeWrapper {
-                    TabletBakeSessionView(
-                        recipe: wrapper.recipe,
-                        onEdit: { editingRecipe = wrapper },
-                        onCopy: { copyingRecipe = wrapper },
-                        onShare: { sharingRecipe = wrapper },
-                        onHistory: { historyRecipe = wrapper }
-                    )
-                        .id(wrapper.id)
-                } else {
-                    ContentUnavailableView(
-                        "No Recipes",
-                        systemImage: "fork.knife",
-                        description: Text("Tap + to create your first recipe.")
-                    )
+            PaneDivider()
+            // GeometryReader accepts whatever width is left over, so the session pane can
+            // never force the HStack wider than the screen. Without it, opening the 320pt
+            // library on narrower layouts (portrait, Stage Manager) makes the HStack
+            // overflow and re-center, shoving the rail off the left edge.
+            GeometryReader { proxy in
+                Group {
+                    if let wrapper = selectedRecipe ?? firstRecipeWrapper {
+                        TabletBakeSessionView(
+                            recipe: wrapper.recipe,
+                            onEdit: { editingRecipe = wrapper },
+                            onCopy: { copyingRecipe = wrapper },
+                            onShare: { sharingRecipe = wrapper },
+                            onHistory: { historyRecipe = wrapper }
+                        )
+                            .id(wrapper.id)
+                    } else {
+                        ContentUnavailableView(
+                            "No Recipes",
+                            systemImage: "fork.knife",
+                            description: Text("Tap + to create your first recipe.")
+                        )
+                    }
                 }
+                .frame(width: proxy.size.width, height: proxy.size.height, alignment: .topLeading)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .ignoresKeyboardSafeArea(isRecipeSearchFocused)
         }
-        .background(Color(.systemGroupedBackground))
+        // Explicit: iPadOS 26 doesn't reliably auto-extend `.background(_:)` colors
+        // into the safe areas, which left a hairline of window background on screen edges.
+        .background { Color(.systemGroupedBackground).ignoresSafeArea() }
     }
 
     func checkOnboarding() {
         let args = ProcessInfo.processInfo.arguments
-        guard !args.contains("-UITesting") else { return }
 
+        // Checked before the general "-UITesting" bypass below so UI tests can opt into
+        // exercising the onboarding/what's-new screens explicitly, while every other
+        // -UITesting launch keeps skipping onboarding entirely (fresh in-memory store,
+        // no unrelated fullScreenCover/sheet in the way of other UI tests).
         if args.contains("-ForceNewUserOnboarding") {
             showingNewUserOnboarding = true
             return
@@ -225,10 +243,15 @@ struct RecipeListView: View {
             return
         }
 
+        guard !args.contains("-UITesting") else { return }
+
         guard let current = UIApplication.appVersion else { return }
+        // Hydrated from iCloud at Settings.shared init when local storage is missing (e.g.
+        // after an uninstall/reinstall), so a returning user on the same iCloud account
+        // isn't shown the full onboarding flow again.
         let seen = UserDefaults.standard.string(forKey: Settings.lastOnboardingVersionKey)
 
-        defer { UserDefaults.standard.set(current, forKey: Settings.lastOnboardingVersionKey) }
+        defer { Settings.shared.setLastOnboardingVersion(current) }
 
         if seen == nil {
             if store.isNewInstall {
@@ -334,10 +357,23 @@ struct RecipeListView: View {
 
     func showTabletLibrary(for collectionName: String? = nil) {
         if let collectionName {
-            tabletLibraryScrollRequest = TabletLibraryScrollRequest(collectionName: collectionName)
+            pendingTabletLibraryCollectionReveal = collectionName
         }
         withAnimation(.snappy) {
             showingTabletLibrary = true
+        }
+    }
+
+    func handleTabletCollectionTap(_ collection: RecipeCollection) {
+        if showingTabletLibrary {
+            if activeTabletCollectionName != collection.name, let recipe = collection.recipes.first {
+                select(recipe: recipe)
+            }
+            withAnimation(.snappy) {
+                showingTabletLibrary = false
+            }
+        } else {
+            showTabletLibrary(for: collection.name)
         }
     }
 
@@ -349,19 +385,51 @@ struct RecipeListView: View {
                     systemImage: "fork.knife",
                     description: Text("Tap + to create your first recipe.")
                 )
+            } else if isFilteringRecipes && filteredRecipeSections.isEmpty {
+                ContentUnavailableView(
+                    "No Results",
+                    systemImage: "magnifyingglass",
+                    description: Text("No recipes match \"\(trimmedRecipeSearchText)\".")
+                )
             } else {
-                recipeList
+                recipeList(filteredRecipeSections)
             }
         }
     }
 
-    var recipeList: some View {
+    var trimmedRecipeSearchText: String {
+        appliedRecipeSearchText
+    }
+
+    var isFilteringRecipes: Bool {
+        !trimmedRecipeSearchText.isEmpty
+    }
+
+    var filteredRecipeSections: [RecipeListSection] {
+        let searchText = trimmedRecipeSearchText
+        return store.collections.compactMap { collection -> RecipeListSection? in
+            let recipes: [any RecipeProtocol]
+            if !searchText.isEmpty {
+                recipes = collection.recipes.filter { recipe in
+                    recipe.name.localizedCaseInsensitiveContains(searchText)
+                }
+            } else {
+                recipes = collection.recipes
+            }
+
+            guard !recipes.isEmpty else { return nil }
+            return RecipeListSection(collection: collection, recipes: recipes)
+        }
+    }
+
+    func recipeList(_ sections: [RecipeListSection]) -> some View {
         List {
-            ForEach(store.collections, id: \.name) { collection in
+            ForEach(sections) { section in
+                let collection = section.collection
                 let isCollapsed = collapsedCollections.contains(collection.name)
                 Section {
-                    if !isCollapsed {
-                        ForEach(collection.recipes, id: \.name) { recipe in
+                    if !isCollapsed || isFilteringRecipes {
+                        ForEach(section.recipes, id: \.name) { recipe in
                             NavigationLink(value: RecipeWrapper(recipe: recipe)) {
                                 Text(recipe.name)
                             }
@@ -417,6 +485,10 @@ struct RecipeListView: View {
                                 }
                             }
                         }
+                        .onMove { offsets, target in
+                            store.moveRecipes(in: collection.name, fromOffsets: offsets, toOffset: target)
+                        }
+                        .moveDisabled(isFilteringRecipes)
                     }
                 } header: {
                     Button {
@@ -443,24 +515,29 @@ struct RecipeListView: View {
                     .accessibilityHint(isCollapsed ? "Expand" : "Collapse")
                 }
             }
+            searchOverlayListSpacer
         }
+    }
+
+    var searchOverlayListSpacer: some View {
+        Color.clear
+            .frame(height: recipeSearchOverlayReservedHeight)
+            .listRowInsets(EdgeInsets())
+            .listRowSeparator(.hidden)
+            .listRowBackground(Color.clear)
+            .accessibilityHidden(true)
+    }
+
+    var recipeSearchOverlayReservedHeight: CGFloat {
+        72
+    }
+
+    var tabletRailCollectionIconSize: CGFloat {
+        54
     }
 
     var tabletRail: some View {
         VStack(spacing: 18) {
-            Button {
-                withAnimation(.snappy) {
-                    showingTabletLibrary.toggle()
-                }
-            } label: {
-                Image(systemName: "sidebar.left")
-                    .font(.title3)
-                    .frame(width: 46, height: 46)
-            }
-            .buttonStyle(.bordered)
-            .tabletIconButtonChrome()
-            .accessibilityLabel("Recipe library")
-
             Button {
                 presentCreateRecipe()
             } label: {
@@ -482,12 +559,12 @@ struct RecipeListView: View {
                     }
                     .padding(.vertical, 2)
                 }
+                .scrollContentBackground(.hidden)
+                .background(Color.clear)
                 .frame(maxHeight: .infinity)
             } else {
                 Spacer()
             }
-
-            Spacer()
 
             Button {
                 showingSettings = true
@@ -502,7 +579,10 @@ struct RecipeListView: View {
         }
         .padding(.vertical, 18)
         .frame(width: 78)
-        .railGlassSurface()
+        .paneBackground {
+            Color.clear
+                .railGlassSurface()
+        }
     }
 
     func tabletCollectionButton(for collection: RecipeCollection) -> some View {
@@ -510,19 +590,15 @@ struct RecipeListView: View {
         let label = DefaultLocalization.collectionName(collection.name)
 
         return Button {
-            showTabletLibrary(for: collection.name)
+            handleTabletCollectionTap(collection)
         } label: {
-            ZStack {
-                Color.clear
-                    .tabletCircularGlassSurface()
-                CollectionAvatar(collection: collection.name, size: 42)
-            }
-            .frame(width: 54, height: 54)
-            .overlay {
-                Circle()
-                    .strokeBorder(Color.accentColor, lineWidth: 3)
-                    .opacity(isActive ? 1 : 0)
-            }
+            CollectionAvatar(collection: collection.name, size: tabletRailCollectionIconSize)
+                .frame(width: tabletRailCollectionIconSize, height: tabletRailCollectionIconSize)
+                .overlay {
+                    Circle()
+                        .strokeBorder(Color.accentColor, lineWidth: 3)
+                        .opacity(isActive ? 1 : 0)
+                }
         }
         .buttonStyle(.plain)
         .accessibilityLabel(label)
@@ -530,83 +606,176 @@ struct RecipeListView: View {
     }
 
     var tabletRecipeList: some View {
-        ScrollViewReader { proxy in
-            List {
-                ForEach(store.collections, id: \.name) { collection in
-                    Section {
-                        ForEach(collection.recipes, id: \.name) { recipe in
-                            Button {
-                                select(recipe: recipe)
-                                withAnimation(.snappy) {
-                                    showingTabletLibrary = false
-                                }
-                            } label: {
-                                HStack {
-                                    Text(recipe.name)
-                                        .foregroundStyle(.primary)
-                                    Spacer()
-                                    if selectedRecipe?.recipe.name == recipe.name,
-                                       selectedRecipe?.recipe.collection == recipe.collection {
-                                        Image(systemName: "checkmark")
-                                            .foregroundStyle(.tint)
+        GeometryReader { geometry in
+            ScrollViewReader { proxy in
+                List {
+                    if isFilteringRecipes && filteredRecipeSections.isEmpty {
+                        ContentUnavailableView(
+                            "No Results",
+                            systemImage: "magnifyingglass",
+                            description: Text("No recipes match \"\(trimmedRecipeSearchText)\".")
+                        )
+                        .listRowBackground(Color.clear)
+                    } else {
+                        ForEach(filteredRecipeSections) { section in
+                            let collection = section.collection
+                            Section {
+                                ForEach(section.recipes, id: \.name) { recipe in
+                                    let isSelected = isSelected(recipe)
+                                    Button {
+                                        select(recipe: recipe)
+                                        withAnimation(.snappy) {
+                                            showingTabletLibrary = false
+                                        }
+                                    } label: {
+                                        tabletRecipeRow(recipe, isSelected: isSelected)
+                                    }
+                                    .background {
+                                        GeometryReader { rowGeometry in
+                                            Color.clear.preference(
+                                                key: TabletCollectionVisibleSectionPreferenceKey.self,
+                                                value: [
+                                                    collection.name: .init(
+                                                        header: nil,
+                                                        rows: [
+                                                            recipe.name: rowGeometry.frame(
+                                                                in: .named(TabletRecipeListCoordinateSpace.name)
+                                                            ),
+                                                        ],
+                                                        expectedRowCount: section.recipes.count
+                                                    ),
+                                                ]
+                                            )
+                                        }
+                                    }
+                                    .selectedRecipeListRow(isSelected)
+                                    .accessibilityAddTraits(isSelected ? .isSelected : [])
+                                    .swipeActions(edge: .trailing) {
+                                        Button("Delete", role: .destructive) {
+                                            do {
+                                                try store.delete(recipe: recipe)
+                                            } catch {
+                                                deletionError = String(
+                                                    format: String(localized: "recipe_list.delete_failed", defaultValue: "Could not delete \"%@\"."),
+                                                    recipe.name
+                                                )
+                                            }
+                                        }
+                                    }
+                                    .contextMenu {
+                                        Button {
+                                            sharingRecipe = RecipeWrapper(recipe: recipe)
+                                        } label: {
+                                            Label("Share", systemImage: "square.and.arrow.up")
+                                        }
+                                        Button {
+                                            copyingRecipe = RecipeWrapper(recipe: recipe)
+                                        } label: {
+                                            Label("Copy", systemImage: "doc.on.doc")
+                                        }
+                                        Button {
+                                            editingRecipe = RecipeWrapper(recipe: recipe)
+                                        } label: {
+                                            Label("Edit", systemImage: "pencil")
+                                        }
                                     }
                                 }
-                            }
-                            .swipeActions(edge: .trailing) {
-                                Button("Delete", role: .destructive) {
-                                    do {
-                                        try store.delete(recipe: recipe)
-                                    } catch {
-                                        deletionError = String(
-                                            format: String(localized: "recipe_list.delete_failed", defaultValue: "Could not delete \"%@\"."),
-                                            recipe.name
+                                .onMove { offsets, target in
+                                    store.moveRecipes(in: collection.name, fromOffsets: offsets, toOffset: target)
+                                }
+                                .moveDisabled(isFilteringRecipes)
+                            } header: {
+                                HStack(spacing: 8) {
+                                    CollectionAvatar(collection: collection.name, size: 22)
+                                    Text(DefaultLocalization.collectionName(collection.name))
+                                }
+                                .id(collection.name)
+                                .background {
+                                    GeometryReader { headerGeometry in
+                                        Color.clear.preference(
+                                            key: TabletCollectionVisibleSectionPreferenceKey.self,
+                                            value: [
+                                                collection.name: .init(
+                                                    header: headerGeometry.frame(
+                                                        in: .named(TabletRecipeListCoordinateSpace.name)
+                                                    ),
+                                                    rows: [:],
+                                                    expectedRowCount: section.recipes.count
+                                                ),
+                                            ]
                                         )
                                     }
                                 }
                             }
-                            .contextMenu {
-                                Button {
-                                    sharingRecipe = RecipeWrapper(recipe: recipe)
-                                } label: {
-                                    Label("Share", systemImage: "square.and.arrow.up")
-                                }
-                                Button {
-                                    copyingRecipe = RecipeWrapper(recipe: recipe)
-                                } label: {
-                                    Label("Copy", systemImage: "doc.on.doc")
-                                }
-                                Button {
-                                    editingRecipe = RecipeWrapper(recipe: recipe)
-                                } label: {
-                                    Label("Edit", systemImage: "pencil")
-                                }
-                            }
                         }
-                    } header: {
-                        HStack(spacing: 8) {
-                            CollectionAvatar(collection: collection.name, size: 22)
-                            Text(DefaultLocalization.collectionName(collection.name))
-                        }
-                        .id(collection.name)
                     }
+                    searchOverlayListSpacer
+                }
+                .listStyle(.sidebar)
+                .contentMargins(.top, 10, for: .scrollContent)
+                .scrollContentBackground(.hidden)
+                .coordinateSpace(name: TabletRecipeListCoordinateSpace.name)
+                .paneBackground {
+                    Color.clear
+                        .tabletSidebarGlassSurface()
+                }
+                .statusBarCover(height: geometry.safeAreaInsets.top)
+                .onPreferenceChange(TabletCollectionVisibleSectionPreferenceKey.self) { sections in
+                    tabletCollectionVisibleSections = sections
+                    revealPendingTabletLibraryCollectionIfNeeded(
+                        using: proxy,
+                        in: geometry,
+                        visibleSections: sections
+                    )
                 }
             }
-            .listStyle(.sidebar)
-            .scrollContentBackground(.hidden)
-            .background {
-                Color.clear
-                    .tabletSidebarGlassSurface()
-            }
-            .onAppear {
-                guard let request = tabletLibraryScrollRequest else { return }
-                proxy.scrollTo(request.collectionName, anchor: .top)
-            }
-            .onChange(of: tabletLibraryScrollRequest) { _, request in
-                guard let request else { return }
-                withAnimation(.snappy) {
-                    proxy.scrollTo(request.collectionName, anchor: .top)
-                }
-            }
+        }
+        .tabletRecipeListSearch(
+            appliedSearchText: $appliedRecipeSearchText,
+            isSearchFocused: $isRecipeSearchFocused
+        )
+    }
+
+    func isSelected(_ recipe: any RecipeProtocol) -> Bool {
+        selectedRecipe?.recipe.name == recipe.name &&
+        selectedRecipe?.recipe.collection == recipe.collection
+    }
+
+    func revealPendingTabletLibraryCollectionIfNeeded(
+        using proxy: ScrollViewProxy,
+        in geometry: GeometryProxy,
+        visibleSections: [String: TabletCollectionVisibleSection]
+    ) {
+        guard let collectionName = pendingTabletLibraryCollectionReveal else { return }
+        guard !isTabletCollectionFullyVisible(collectionName, in: geometry, visibleSections: visibleSections) else {
+            pendingTabletLibraryCollectionReveal = nil
+            return
+        }
+
+        pendingTabletLibraryCollectionReveal = nil
+        withAnimation(.snappy) {
+            proxy.scrollTo(collectionName, anchor: UnitPoint(x: 0.5, y: 0.12))
+        }
+    }
+
+    func isTabletCollectionFullyVisible(
+        _ collectionName: String,
+        in geometry: GeometryProxy,
+        visibleSections: [String: TabletCollectionVisibleSection]
+    ) -> Bool {
+        guard let section = visibleSections[collectionName],
+              section.isComplete,
+              let frame = section.frame else { return false }
+        let topVisibleY = geometry.safeAreaInsets.top
+        let bottomVisibleY = geometry.size.height - recipeSearchOverlayReservedHeight
+        return frame.minY >= topVisibleY - 0.5 && frame.maxY <= bottomVisibleY + 0.5
+    }
+
+    func tabletRecipeRow(_ recipe: any RecipeProtocol, isSelected: Bool) -> some View {
+        HStack {
+            Text(recipe.name)
+                .foregroundStyle(isSelected ? Color.white : Color.primary)
+            Spacer()
         }
     }
 }
@@ -670,6 +839,50 @@ extension View {
             tint: Color(.systemBackground).opacity(0.18)
         )
     }
+
+    func recipeListSearch(appliedSearchText: Binding<String>) -> some View {
+        modifier(RecipeListSearchModifier(
+            appliedSearchText: appliedSearchText,
+            isSearchFocused: .constant(false)
+        ))
+    }
+
+    func tabletRecipeListSearch(
+        appliedSearchText: Binding<String>,
+        isSearchFocused: Binding<Bool>
+    ) -> some View {
+        modifier(RecipeListSearchModifier(
+            appliedSearchText: appliedSearchText,
+            isSearchFocused: isSearchFocused
+        ))
+    }
+
+    @ViewBuilder
+    func ignoresKeyboardSafeArea(_ isIgnored: Bool) -> some View {
+        if isIgnored {
+            ignoresSafeArea(.keyboard, edges: .bottom)
+        } else {
+            self
+        }
+    }
+
+    func statusBarCover(height: CGFloat) -> some View {
+        overlay(alignment: .top) {
+            Color(.systemGroupedBackground)
+                .frame(height: height)
+                .ignoresSafeArea(.container, edges: .top)
+                .allowsHitTesting(false)
+        }
+    }
+
+    @ViewBuilder
+    func selectedRecipeListRow(_ isSelected: Bool) -> some View {
+        if isSelected {
+            listRowBackground(Color.accentColor)
+        } else {
+            self
+        }
+    }
 }
 
 
@@ -685,4 +898,132 @@ struct RecipeWrapper: Identifiable, Hashable {
 
     static func == (lhs: RecipeWrapper, rhs: RecipeWrapper) -> Bool { lhs.id == rhs.id }
     func hash(into hasher: inout Hasher) { hasher.combine(id) }
+}
+
+struct RecipeListSection: Identifiable {
+    let collection: RecipeCollection
+    let recipes: [any RecipeProtocol]
+
+    var id: String { collection.name }
+}
+
+private enum TabletRecipeListCoordinateSpace {
+    static let name = "tabletRecipeList"
+}
+
+struct TabletCollectionVisibleSection: Equatable {
+    var header: CGRect?
+    var rows: [String: CGRect]
+    var expectedRowCount: Int
+
+    var isComplete: Bool {
+        header != nil && rows.count == expectedRowCount
+    }
+
+    var frame: CGRect? {
+        ([header].compactMap(\.self) + rows.values).reduce(nil) { result, frame in
+            result?.union(frame) ?? frame
+        }
+    }
+
+    func merged(with section: TabletCollectionVisibleSection) -> TabletCollectionVisibleSection {
+        var mergedRows = rows
+        mergedRows.merge(section.rows, uniquingKeysWith: { _, new in new })
+        return TabletCollectionVisibleSection(
+            header: section.header ?? header,
+            rows: mergedRows,
+            expectedRowCount: max(expectedRowCount, section.expectedRowCount)
+        )
+    }
+}
+
+struct TabletCollectionVisibleSectionPreferenceKey: PreferenceKey {
+    static var defaultValue: [String: TabletCollectionVisibleSection] = [:]
+
+    static func reduce(
+        value: inout [String: TabletCollectionVisibleSection],
+        nextValue: () -> [String: TabletCollectionVisibleSection]
+    ) {
+        value.merge(nextValue(), uniquingKeysWith: { current, new in
+            current.merged(with: new)
+        })
+    }
+}
+
+private struct RecipeListSearchModifier: ViewModifier {
+    @Binding var appliedSearchText: String
+    @Binding var isSearchFocused: Bool
+    @FocusState private var searchFieldFocused: Bool
+    @State private var searchText = ""
+
+    func body(content: Content) -> some View {
+        content
+            .overlay(alignment: .bottom) {
+                bottomSearchBar
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 10)
+            }
+            .task(id: searchText) {
+                await applySearchTextAfterTypingPause(searchText)
+            }
+            .onChange(of: searchFieldFocused) { _, isFocused in
+                isSearchFocused = isFocused
+            }
+            .onDisappear {
+                isSearchFocused = false
+            }
+    }
+
+    private var bottomSearchBar: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "magnifyingglass")
+                .foregroundStyle(.secondary)
+                .accessibilityHidden(true)
+
+            TextField("Search recipes", text: $searchText)
+                .focused($searchFieldFocused)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .submitLabel(.search)
+                .accessibilityIdentifier("recipeSearchField")
+
+            if !searchText.isEmpty {
+                Button {
+                    searchText = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Clear search")
+            }
+        }
+        .padding(.horizontal, 16)
+        .frame(height: 48)
+        .background {
+            Color.clear.liquidGlassSurface(
+                in: RoundedRectangle(cornerRadius: 24, style: .continuous),
+                tint: Color(.systemBackground).opacity(0.18),
+                interactive: true
+            )
+        }
+        .overlay {
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .strokeBorder(Color.primary.opacity(0.08), lineWidth: 0.5)
+        }
+        .shadow(color: Color.black.opacity(0.16), radius: 18, y: 8)
+    }
+
+    @MainActor
+    private func applySearchTextAfterTypingPause(_ rawSearchText: String) async {
+        let trimmedSearchText = rawSearchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmedSearchText.isEmpty {
+            appliedSearchText = ""
+            return
+        }
+
+        try? await Task.sleep(for: .milliseconds(180))
+        guard !Task.isCancelled else { return }
+        appliedSearchText = trimmedSearchText
+    }
 }

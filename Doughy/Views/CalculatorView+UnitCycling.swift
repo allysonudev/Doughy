@@ -33,13 +33,14 @@ extension CalculatorView {
             let primary = systemPrimary(for: category, system: system)
             let systemUnits: [DensityUnit]
             switch system {
-            case .imperial: systemUnits = [.cup, .tablespoon, .teaspoon]
+            case .imperial: systemUnits = [.cup, .fluidOunce, .tablespoon, .teaspoon]
             case .metric:   systemUnits = [.deciliter, .liter, .milliliter]
             }
             // Primary is always shown; remaining system units are filtered to practical ranges.
             let volumeUnits: [DensityUnit] = [primary] + systemUnits.filter { $0 != primary }
             let secondaryLimits: [DensityUnit: (min: Double, max: Double)] = [
-                .cup: (0.0625, 20), .tablespoon: (0.0625, 32), .teaspoon: (0.0625, 48),
+                .cup: (0.0625, 20), .fluidOunce: (0.25, 40),
+                .tablespoon: (0.0625, 32), .teaspoon: (0.0625, 48),
                 .deciliter: (0.5, 50), .liter: (0.05, 10), .milliliter: (5, 1000),
             ]
             for unit in volumeUnits {

@@ -170,6 +170,22 @@ final class DoughyFileRoundTripTests: XCTestCase {
         XCTAssertEqual(imported.collectionAppearance?.colorKey, "deepOrange")
     }
 
+    func testExportImportPreservesRecipeSourceURL() throws {
+        let sourceURL = URL(string: "https://example.com/focaccia")!
+        let recipe = Recipe(name: recipeName, collection: collection, defaultWeight: defaultWeight,
+                            ingredients: [Ingredient(name: flour, isFlour: true, defaultPercentage: 100, temperature: nil)],
+                            instructions: [instruction1],
+                            sourceURL: sourceURL)
+        let payload = RecipeFile.payload(from: recipe, author: user_name)
+
+        let data = try JSONEncoder().encode(payload)
+        let imported = try JSONDecoder().decode(RecipeFilePayload.self, from: data)
+        let importedRecipe = RecipeFile.toRecipe(imported.recipe, collection: imported.recipe.collection)
+
+        XCTAssertEqual(imported.recipe.sourceURL, sourceURL.absoluteString)
+        XCTAssertEqual(importedRecipe.sourceURL, sourceURL)
+    }
+
     func testEmptyAppearanceIsTreatedAsNoneAndOmittedFromJSON() throws {
         // An empty appearance (no icon, no color) should not be written, and an icon-only
         // appearance should omit the absent color key (encodeIfPresent on optionals).
@@ -207,6 +223,91 @@ final class DoughyFileRoundTripTests: XCTestCase {
         XCTAssertEqual(imported.recipe.collection, "Legacy")
     }
 
+    // MARK: - Corrupted / non-recipe .doughy input
+
+    func testMalformedJSONThrowsRatherThanCrashing() {
+        let malformed = Data("{ this is not valid json ".utf8)
+        XCTAssertThrowsError(try JSONDecoder().decode(RecipeFilePayload.self, from: malformed))
+    }
+
+    func testEmptyDataThrowsRatherThanCrashing() {
+        XCTAssertThrowsError(try JSONDecoder().decode(RecipeFilePayload.self, from: Data()))
+    }
+
+    func testValidJSONWithWrongSchemaThrows() {
+        // Well-formed JSON, but it's not a recipe document at all (missing every
+        // required key) - should fail decoding, not silently produce a garbage payload.
+        let wrongSchema = Data("""
+        { "hello": "world", "count": 42 }
+        """.utf8)
+        XCTAssertThrowsError(try JSONDecoder().decode(RecipeFilePayload.self, from: wrongSchema))
+    }
+
+    func testValidRecipeJSONMissingRequiredFieldThrows() {
+        // Has the right shape but the recipe is missing `defaultWeight`, a required field.
+        let missingField = Data("""
+        {
+          "version": 2,
+          "recipe": {
+            "name": "Broken Recipe",
+            "collection": "Legacy",
+            "ingredients": [
+              { "name": "Bread Flour", "isFlour": true, "defaultPercentage": 100 }
+            ],
+            "instructions": ["Mix"]
+          }
+        }
+        """.utf8)
+        XCTAssertThrowsError(try JSONDecoder().decode(RecipeFilePayload.self, from: missingField))
+    }
+
+    func testRecipeFileLoadReturnsNilForCorruptedFileInsteadOfCrashing() throws {
+        // RecipeFile.load is the app's actual import entry point for a .doughy document
+        // URL - it swallows decode failures and returns nil rather than throwing/crashing.
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+            .appendingPathExtension("doughy")
+        try Data("not json at all".utf8).write(to: url)
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        XCTAssertNil(RecipeFile.load(from: url))
+    }
+
+    func testRecipeFileLoadReturnsNilForEmptyFile() throws {
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+            .appendingPathExtension("doughy")
+        try Data().write(to: url)
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        XCTAssertNil(RecipeFile.load(from: url))
+    }
+
+    // MARK: - Importing a duplicate-named recipe
+
+    /// Importing a `.doughy` file whose recipe name/collection already exists in the
+    /// library is the same code path as saving a new recipe with a colliding name:
+    /// `RecipeWriter.writeRecipe` (which `RecipeStore.save` delegates to) throws
+    /// `recipeExistsDuringWrite` rather than silently renaming or replacing.
+    func testImportingDuplicateNamedRecipeThrowsRecipeExistsError() throws {
+        try RecipeWriter.shared.replaceLibrary(with: [])
+        defer { try? RecipeWriter.shared.replaceLibrary(with: []) }
+
+        let payload = RecipeFile.payload(from: simpleRecipe(), author: user_name)
+        let recipe = RecipeFile.toRecipe(payload.recipe, collection: payload.recipe.collection)
+
+        try RecipeWriter.shared.writeRecipe(recipe: recipe)
+
+        // Importing the exact same name/collection again should throw rather than
+        // silently overwrite or duplicate.
+        XCTAssertThrowsError(try RecipeWriter.shared.writeRecipe(recipe: recipe)) { error in
+            guard case RecipeWritingError.recipeExistsDuringWrite = error else {
+                return XCTFail("Expected recipeExistsDuringWrite, got \(error)")
+            }
+        }
+        XCTAssertEqual(RecipeReader.shared.getRecipes(collection: payload.recipe.collection).count, 1)
+    }
+
     func testLibraryBackupRoundTripsCollectionAppearances() throws {
         let appearances = [
             "Pizza": CollectionAppearance(iconKey: "pizza", colorKey: "deepOrange"),
@@ -221,6 +322,23 @@ final class DoughyFileRoundTripTests: XCTestCase {
         let imported = try decoder.decode(RecipeLibraryBackup.self, from: try encoder.encode(backup))
 
         XCTAssertEqual(imported.collections, appearances)
+    }
+
+    func testLibraryBackupPreservesRecipeSourceURL() throws {
+        let sourceURL = URL(string: "https://example.com/focaccia")!
+        let recipe = Recipe(name: recipeName, collection: collection, defaultWeight: defaultWeight,
+                            ingredients: [Ingredient(name: flour, isFlour: true, defaultPercentage: 100, temperature: nil)],
+                            instructions: [instruction1],
+                            sourceURL: sourceURL)
+        let backup = RecipeLibraryBackupFile.backup(from: [recipe])
+
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let imported = try decoder.decode(RecipeLibraryBackup.self, from: try encoder.encode(backup))
+
+        XCTAssertEqual(imported.recipes.first?.recipe.sourceURL, sourceURL.absoluteString)
     }
 
     func testLibraryBackupRoundTripsUserState() throws {
@@ -243,7 +361,8 @@ final class DoughyFileRoundTripTests: XCTestCase {
             recipes: RecipeStore.BackupData(
                 recentRecipeShortcuts: [RecentRecipeShortcut(collection: "Pizza", name: "New York Pizza")],
                 lastRecipeAddedCollection: "Pizza",
-                recentlyDeletedRecipes: nil
+                recentlyDeletedRecipes: nil,
+                recipeOrder: RecipeOrder(collections: ["Pizza": ["New York Pizza", "Margherita"]])
             )
         )
         let backup = RecipeLibraryBackupFile.backup(from: [simpleRecipe()], userState: userState)
@@ -375,6 +494,46 @@ final class DoughyFileRoundTripTests: XCTestCase {
         XCTAssertEqual(reinstalled.gramsPerEgg(for: .large), 52)
         XCTAssertEqual(reinstalled.defaultEggSize(), .jumbo)
         XCTAssertTrue(reinstalled.hiddenCategories().contains(.cakeFlour))
+    }
+
+    func testIngredientDensityStoreResetAllToDefaultsRestoresEveryDefault() throws {
+        let suiteName = "IngredientDensityStoreTests-\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        let cloudStore = TestCollectionAppearanceKeyValueStore()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let store = IngredientDensityStore(userDefaults: defaults, cloudStore: cloudStore)
+
+        // Change several values/units/egg weights away from their defaults.
+        let defaultBreadFlourGramsPerCup = store.gramsPerCup(for: .breadFlour)
+        let defaultBreadFlourDisplayUnit = store.displayUnit(for: .breadFlour)
+        let defaultLargeEggGrams = store.gramsPerEgg(for: .large)
+        let defaultEggSize = store.defaultEggSize()
+
+        store.setGramsPerCup(999, for: .breadFlour)
+        store.setDisplayUnit(.deciliter, for: .breadFlour)
+        store.setGramsPerEgg(12, for: .large)
+        store.setDefaultEggSize(.jumbo)
+        store.hide(category: .cakeFlour)
+
+        XCTAssertTrue(store.isCustomized(.breadFlour))
+        XCTAssertTrue(store.isCustomized(.large))
+        XCTAssertTrue(store.hiddenCategories().contains(.cakeFlour))
+        XCTAssertNotEqual(store.defaultEggSize(), defaultEggSize)
+
+        store.resetAllToDefaults()
+
+        // Every customization is gone: values fall back to their hard-coded defaults.
+        XCTAssertFalse(store.isCustomized(.breadFlour))
+        XCTAssertFalse(store.isCustomized(.large))
+        XCTAssertEqual(store.gramsPerCup(for: .breadFlour), defaultBreadFlourGramsPerCup)
+        XCTAssertEqual(store.displayUnit(for: .breadFlour), defaultBreadFlourDisplayUnit)
+        XCTAssertEqual(store.gramsPerEgg(for: .large), defaultLargeEggGrams)
+        XCTAssertEqual(store.defaultEggSize(), defaultEggSize)
+        XCTAssertTrue(store.hiddenCategories().isEmpty)
+
+        // backupData() reports nothing left to back up once everything is default again.
+        XCTAssertNil(store.backupData())
     }
 }
 

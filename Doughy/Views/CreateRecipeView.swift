@@ -39,9 +39,11 @@ struct CreateRecipeView: View {
     @State var showScanOptions = false
     @State var showPhotoPicker = false
     @State var showCamera = false
+    @State var showCameraScanOptions = false
     @State var showWebsiteImportSheet = false
     @State var websiteImportSheetInitialURL: URL?
-    @State var selectedPhotoItem: PhotosPickerItem?
+    @State var selectedPhotoItems: [PhotosPickerItem] = []
+    @State var cameraScanImages: [UIImage] = []
     @State var isScanning = false
     @State var scanError: String?
     #if DOUGHY_SCAN_DIAGNOSTICS
@@ -49,7 +51,7 @@ struct CreateRecipeView: View {
     #endif
     @State var detectedRecipeLanguage: String? = nil
     @State var didOpenInitialScanOptions = false
-    @State var sourcePhotoImage: UIImage?
+    @State var sourcePhotoImages: [UIImage] = []
     @State var sourcePhotoCorner: SourcePhotoCorner = .bottomLeading
     @State var showSourcePhotoViewer = false
     @State var didOpenInitialWebsiteImport = false
@@ -64,6 +66,7 @@ struct CreateRecipeView: View {
     @State var didLoadCollectionAppearance = false
     @State var defaultWeight: Double? = nil
     @State var containsPreferment = false
+    @State var sourceURL: URL?
 
     // Ingredients
     @State var flours: [FlourRow] = [FlourRow()]
@@ -148,6 +151,7 @@ struct CreateRecipeView: View {
         _recipeName = State(initialValue: recipeName)
         _collectionName = State(initialValue: recipe.collection)
         _defaultWeight = State(initialValue: recipe.defaultWeight)
+        _sourceURL = State(initialValue: recipe.sourceURL)
         _instructions = State(initialValue: recipe.instructions.map { InstructionRow(text: $0.step) })
 
         let flourRows = recipe.ingredients.filter(\.isFlour)
@@ -241,6 +245,7 @@ struct CreateRecipeView: View {
             newCollectionText: "",
             defaultWeight: recipe.defaultWeight,
             containsPreferment: hasPreferment,
+            sourceURL: recipe.sourceURL?.absoluteString,
             flours: finalFlours,
             ingredients: finalIngredients,
             extraIngredients: extraRows,
@@ -286,6 +291,7 @@ struct CreateRecipeView: View {
             newCollectionText: newCollectionText,
             defaultWeight: defaultWeight,
             containsPreferment: containsPreferment,
+            sourceURL: sourceURL?.absoluteString,
             flours: flours,
             ingredients: ingredients,
             extraIngredients: extraIngredients,

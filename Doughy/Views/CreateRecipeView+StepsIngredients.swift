@@ -164,7 +164,7 @@ extension CreateRecipeView {
     var extraIngredientUnits: [String] {
         switch Settings.shared.preferredVolumeSystem() {
         case .metric:   return ["milliliter", "deciliter", "liter", "count"]
-        case .imperial: return ["teaspoon", "tablespoon", "cup", "ounce", "count"]
+        case .imperial: return ["teaspoon", "tablespoon", "cup", "fluidOunce", "ounce", "count"]
         }
     }
 

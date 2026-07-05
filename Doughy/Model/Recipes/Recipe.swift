@@ -21,6 +21,7 @@ protocol RecipeProtocol {
     var ingredients: [Ingredient] { get }
     var instructions: [Instruction] { get }
     var measurementMode: RecipeMeasurementMode { get }
+    var sourceURL: URL? { get }
     
     func containsVariableTemps() -> Bool
 }
@@ -33,17 +34,20 @@ class Recipe: NSObject, RecipeProtocol {
     let ingredients: [Ingredient]
     let instructions: [Instruction]
     let measurementMode: RecipeMeasurementMode
+    let sourceURL: URL?
     
     init(name: String, collection: String,
          defaultWeight: Double, ingredients: [Ingredient],
          instructions: [Instruction],
-         measurementMode: RecipeMeasurementMode = .percent) {
+         measurementMode: RecipeMeasurementMode = .percent,
+         sourceURL: URL? = nil) {
         self.name = name
         self.collection = collection
         self.defaultWeight = defaultWeight
         self.ingredients = ingredients
         self.instructions = instructions
         self.measurementMode = measurementMode
+        self.sourceURL = sourceURL
     }
     
     func containsVariableTemps() -> Bool {
@@ -67,11 +71,13 @@ class PrefermentRecipe: NSObject, RecipeProtocol {
     let ingredients: [Ingredient]
     let instructions: [Instruction]
     let measurementMode: RecipeMeasurementMode
+    let sourceURL: URL?
     
     init(name: String, collection: String,
          defaultWeight: Double, ingredients: [Ingredient],
          preferment: Preferment, instructions: [Instruction],
-         measurementMode: RecipeMeasurementMode = .percent) {
+         measurementMode: RecipeMeasurementMode = .percent,
+         sourceURL: URL? = nil) {
         self.name = name
         self.collection = collection
         self.defaultWeight = defaultWeight
@@ -79,6 +85,7 @@ class PrefermentRecipe: NSObject, RecipeProtocol {
         self.preferment = preferment
         self.instructions = instructions
         self.measurementMode = measurementMode
+        self.sourceURL = sourceURL
     }
     
     func containsVariableTemps() -> Bool {

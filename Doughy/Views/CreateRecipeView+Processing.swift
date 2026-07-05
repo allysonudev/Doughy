@@ -32,12 +32,13 @@ extension CreateRecipeView {
         pendingConversions = []
         activeConversion = nil
         conversionSheetData = nil
-        #if DOUGHY_SCAN_DIAGNOSTICS
-        lastScanDiagnostics = nil
-        #endif
-        sourcePhotoImage = nil
+        sourcePhotoImages = []
+        sourceURL = draft.sourceURL
 
-        let weightedIngredients = draft.resolvedIngredients
+        let mainResolved = draft.resolvedIngredients.filter { !$0.isPreferment }
+        let prefResolved = draft.resolvedIngredients.filter(\.isPreferment)
+
+        let weightedIngredients = mainResolved
             .filter { !$0.isExtra && $0.weightGrams > 0 }
         let totalFlourWeight = weightedIngredients
             .filter(\.isFlour)
@@ -54,13 +55,43 @@ extension CreateRecipeView {
 
         let resolvedLines = Set(draft.resolvedIngredients.map(\.originalLine))
         let unresolvedRows = draft.ingredientLines
-            .filter { !resolvedLines.contains($0) }
+            .filter { !resolvedLines.contains($0) && !draft.ignoredIngredientLines.contains($0) }
             .map { IngredientRow(name: $0, value: nil) }
         importedIngredients.append(contentsOf: unresolvedRows)
         ingredients = importedIngredients.isEmpty ? [IngredientRow()] : importedIngredients
 
-        lastTotalFlourWeight = totalFlourWeight
-        lastTotalPrefFlourWeight = 0
+        // `flours`/`ingredients` above hold only the main dough's *additional* amounts
+        // (matching how sites like King Arthur list a preferment's ingredients separately
+        // from what the dough step adds on top); the preferment's own amounts go in
+        // prefermentFlours/prefermentIngredientRows, and combinedFlours/combinedIngredients
+        // (used by buildRecipe()) add the two together for the recipe-wide baker's percentages.
+        let prefWeightedIngredients = prefResolved.filter { !$0.isExtra && $0.weightGrams > 0 }
+        let totalPrefFlourWeight = prefWeightedIngredients
+            .filter(\.isFlour)
+            .reduce(0) { $0 + $1.weightGrams }
+
+        if let name = draft.prefermentName, totalPrefFlourWeight > 0 {
+            containsPreferment = true
+            prefermentName = name
+
+            let prefFlourRows = prefWeightedIngredients
+                .filter(\.isFlour)
+                .map { FlourRow(name: $0.name, value: $0.weightGrams) }
+            prefermentFlours = prefFlourRows.isEmpty ? [FlourRow()] : prefFlourRows
+
+            let prefIngRows = prefWeightedIngredients
+                .filter { !$0.isFlour }
+                .map { IngredientRow(name: $0.name, value: $0.weightGrams) }
+            prefermentIngredientRows = prefIngRows.isEmpty ? [IngredientRow()] : prefIngRows
+
+            let combinedFlourWeight = combinedFlours.compactMap(\.value).reduce(0, +)
+            prefermentFlourPercent = combinedFlourWeight > 0 ? (totalPrefFlourWeight / combinedFlourWeight * 100) : nil
+
+            syncMainDoughFromPreferment()
+        }
+
+        lastTotalFlourWeight = totalFlourWeight + totalPrefFlourWeight
+        lastTotalPrefFlourWeight = totalPrefFlourWeight
         extraIngredients = []
         pendingConversions = []
         for extra in draft.resolvedIngredients where extra.isExtra && extra.extraAmount > 0 {
@@ -69,16 +100,30 @@ extension CreateRecipeView {
                 extraIngredients.append(ExtraIngredientRow(name: extra.name,
                                                            amount: extra.extraAmount,
                                                            unit: extra.extraUnit,
-                                                           isPreferment: false))
+                                                           isPreferment: extra.isPreferment))
             } else {
                 pendingConversions.append(PendingConversion(name: extra.name,
                                                             amount: extra.extraAmount,
                                                             unit: extra.extraUnit,
-                                                            isPreferment: false))
+                                                            isPreferment: extra.isPreferment))
             }
         }
 
         instructions = draft.instructions.map { InstructionRow(text: $0) }
+
+        #if DOUGHY_SCAN_DIAGNOSTICS
+        lastScanDiagnostics = makeWebsiteImportDiagnostics(
+            draft: draft,
+            defaultWeightGrams: defaultWeight,
+            flours: flours.map { .init(name: $0.name, percent: $0.value ?? 0) },
+            ingredients: ingredients.map { .init(name: $0.name, percent: $0.value ?? 0) },
+            extras: draft.resolvedIngredients.filter(\.isExtra).map {
+                .init(name: $0.name, amount: $0.extraAmount, unit: $0.extraUnit, isPreferment: $0.isPreferment)
+            },
+            preferment: nil
+        )
+        #endif
+
         navPath = [.details]
         scheduleNextScanPrompt(after: 0.4)
     }
@@ -87,21 +132,25 @@ extension CreateRecipeView {
 
     #if canImport(FoundationModels)
     @available(iOS 26, *)
-    func processPickedPhoto(_ item: PhotosPickerItem) async {
+    func processPickedPhotos(_ items: [PhotosPickerItem]) async {
         isScanning = true
         defer {
             isScanning = false
-            selectedPhotoItem = nil
+            selectedPhotoItems = []
         }
         do {
-            guard let data = try await item.loadTransferable(type: Data.self),
-                  let image = UIImage(data: data) else {
+            var images: [UIImage] = []
+            for item in items {
+                if let data = try await item.loadTransferable(type: Data.self),
+                   let image = UIImage(data: data) {
+                    images.append(image)
+                }
+            }
+            guard !images.isEmpty else {
                 scanError = String(localized: "scan.error.load_selected_image", defaultValue: "Could not load the selected image.")
                 return
             }
-            sourcePhotoImage = image
-            let result = try await RecipeScanner.shared.scan(image: image)
-            try applyParsed(result)
+            try await scanAndApply(images)
         } catch {
             scanError = error.localizedDescription
         }
@@ -109,15 +158,30 @@ extension CreateRecipeView {
 
     @available(iOS 26, *)
     func processImage(_ image: UIImage) async {
+        await processImages([image])
+    }
+
+    @available(iOS 26, *)
+    func processImages(_ images: [UIImage]) async {
         isScanning = true
-        sourcePhotoImage = image
         defer { isScanning = false }
         do {
-            let result = try await RecipeScanner.shared.scan(image: image)
-            try applyParsed(result)
+            try await scanAndApply(images)
         } catch {
             scanError = error.localizedDescription
         }
+    }
+
+    @available(iOS 26, *)
+    func scanAndApply(_ images: [UIImage]) async throws {
+        guard !images.isEmpty else {
+            scanError = String(localized: "scan.error.load_selected_image", defaultValue: "Could not load the selected image.")
+            return
+        }
+        sourcePhotoImages = images
+        sourceURL = nil
+        let result = try await RecipeScanner.shared.scan(images: images)
+        try applyParsed(result)
     }
 
     /// Returns the localized display name for a scanned ingredient when its category is a
@@ -380,7 +444,13 @@ extension CreateRecipeView {
                                             isExtra: $0.isExtra)
         }
         let diagnostics = ScanDiagnostics(
+            sourceKind: "image",
+            sourceURL: nil,
+            structuredRecipeJSON: nil,
             ocrText: result.ocrText,
+            pageOCR: result.pageOCR.map { .init(imageIndex: $0.imageIndex, text: $0.text) },
+            websiteIngredientLines: nil,
+            websiteInstructions: nil,
             rawIngredients: rawIngredients,
             resolvedIngredients: resolvedIngredients,
             finalRecipe: .init(name: result.resolvedRecipe.name,
@@ -392,7 +462,58 @@ extension CreateRecipeView {
         )
         return diagnostics.jsonString()
     }
+
     #endif
+    #endif
+
+    #if DOUGHY_SCAN_DIAGNOSTICS
+    func makeWebsiteImportDiagnostics(draft: WebsiteRecipeDraft,
+                                      defaultWeightGrams: Double?,
+                                      flours: [ScanDiagnostics.DiagFinalRecipe.DiagPercent],
+                                      ingredients: [ScanDiagnostics.DiagFinalRecipe.DiagPercent],
+                                      extras: [ScanDiagnostics.DiagFinalRecipe.DiagExtra],
+                                      preferment: ScanDiagnostics.DiagFinalRecipe.DiagPreferment?) -> String {
+        let rawIngredients = draft.ingredientLines.map {
+            ScanDiagnostics.DiagIngredient(name: $0,
+                                           alternativeName: nil,
+                                           category: "website",
+                                           weightGrams: 0,
+                                           volumeAmount: 0,
+                                           volumeUnit: "",
+                                           isFlour: false,
+                                           isPreferment: false,
+                                           isExtra: false)
+        }
+        let resolvedIngredients = draft.resolvedIngredients.map {
+            ScanDiagnostics.DiagIngredient(name: $0.name,
+                                           alternativeName: nil,
+                                           category: "website",
+                                           weightGrams: $0.weightGrams,
+                                           volumeAmount: $0.extraAmount,
+                                           volumeUnit: $0.extraUnit,
+                                           isFlour: $0.isFlour,
+                                           isPreferment: $0.isPreferment,
+                                           isExtra: $0.isExtra)
+        }
+        let diagnostics = ScanDiagnostics(
+            sourceKind: "website",
+            sourceURL: draft.sourceURL.absoluteString,
+            structuredRecipeJSON: draft.structuredRecipeJSON,
+            ocrText: "",
+            pageOCR: nil,
+            websiteIngredientLines: draft.ingredientLines,
+            websiteInstructions: draft.instructions,
+            rawIngredients: rawIngredients,
+            resolvedIngredients: resolvedIngredients,
+            finalRecipe: .init(name: draft.name,
+                                defaultWeightGrams: defaultWeightGrams,
+                                flours: flours,
+                                ingredients: ingredients,
+                                extraIngredients: extras,
+                                preferment: preferment)
+        )
+        return diagnostics.jsonString()
+    }
     #endif
 
     /// Handles the user's response to an "unknown ingredient" conversion prompt: either
@@ -537,6 +658,7 @@ extension CreateRecipeView {
         builder.collection = effectiveCollection.trimmingCharacters(in: .whitespaces)
         builder.instructions = instructions.map { Instruction(step: $0.text) }
         builder.containsPreferment = containsPreferment
+        builder.sourceURL = sourceURL
         builder.measurementMode = inputMode == .byWeight ? .weight : .percent
         builder.mainDoughBuilder = MainDoughBuilder()
 

@@ -218,6 +218,7 @@ struct IngredientNameField: View {
                             .buttonStyle(.bordered)
                             .controlSize(.small)
                             .tint(.secondary)
+                            .accessibilityIdentifier("suggestionChip_\(name)")
                         }
                     }
                     .padding(.vertical, 2)
@@ -409,6 +410,7 @@ struct DraftSnapshot: Equatable {
     var newCollectionText = ""
     var defaultWeight: Double? = nil
     var containsPreferment = false
+    var sourceURL: String?
     var flours: [FlourRow] = [FlourRow()]
     var ingredients: [IngredientRow] = [IngredientRow()]
     var extraIngredients: [ExtraIngredientRow] = []
@@ -426,7 +428,13 @@ struct DraftSnapshot: Equatable {
 /// and improving the scan prompt/category mappings.
 #if DOUGHY_SCAN_DIAGNOSTICS
 struct ScanDiagnostics: Codable {
+    var sourceKind: String?
+    var sourceURL: String?
+    var structuredRecipeJSON: String?
     var ocrText: String
+    var pageOCR: [DiagPageOCR]?
+    var websiteIngredientLines: [String]?
+    var websiteInstructions: [String]?
     var rawIngredients: [DiagIngredient]
     var resolvedIngredients: [DiagIngredient]
     var finalRecipe: DiagFinalRecipe
@@ -441,6 +449,11 @@ struct ScanDiagnostics: Codable {
         var isFlour: Bool
         var isPreferment: Bool
         var isExtra: Bool
+    }
+
+    struct DiagPageOCR: Codable {
+        var imageIndex: Int
+        var text: String
     }
 
     struct DiagFinalRecipe: Codable {

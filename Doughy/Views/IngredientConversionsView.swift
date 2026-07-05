@@ -14,6 +14,8 @@ struct IngredientConversionsView: View {
     private let eggFieldWidth: CGFloat = 64
     private let eggResetButtonWidth: CGFloat = 28
 
+    let showTitle: Bool
+
     @State private var values: [IngredientCategory: Double] = [:]
     @State private var displayUnits: [IngredientCategory: DensityUnit] = [:]
     @State private var eggValues: [EggSize: [EggPart: Double]] = [:]
@@ -79,7 +81,7 @@ struct IngredientConversionsView: View {
                 Text(String(localized: "conversions.footer", defaultValue: "Doughy uses these values to convert cup, tablespoon, and teaspoon measurements to grams when scanning recipes. Adjust them if your results consistently run heavy or light - ingredient density varies with humidity, brand, and how it's measured."))
             }
         }
-        .navigationTitle(String(localized: "conversions.title", defaultValue: "Ingredient Conversions"))
+        .navigationTitle(showTitle ? String(localized: "conversions.title", defaultValue: "Ingredient Conversions") : "")
         .onAppear {
             loadValues()
             customEntries = conversionStore.allEntries()
@@ -350,7 +352,7 @@ private struct AddConversionSheet: View {
     private var units: [String] {
         switch Settings.shared.preferredVolumeSystem() {
         case .metric:   return ["milliliter", "deciliter", "liter", "ounce"]
-        case .imperial: return ["teaspoon", "tablespoon", "cup", "ounce", "milliliter"]
+        case .imperial: return ["teaspoon", "tablespoon", "cup", "fluidOunce", "ounce", "milliliter"]
         }
     }
 

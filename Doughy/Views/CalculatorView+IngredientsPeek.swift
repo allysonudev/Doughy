@@ -22,6 +22,16 @@ extension CalculatorView {
         .accessibilityIdentifier("ingredientsPeekBar")
     }
 
+    /// A floating, fully-rounded pill while idle - so its corners sit clear of the device's
+    /// rounded screen corners instead of squaring off right where the screen curves away -
+    /// that grows into a top-rounded, edge-to-edge bar seamlessly connecting to
+    /// `expandedIngredientsPanel` above it once tapped open.
+    var ingredientsPeekBarShape: AnyShape {
+        ingredientsExpanded
+            ? AnyShape(UnevenRoundedRectangle(topLeadingRadius: 0, topTrailingRadius: 0))
+            : AnyShape(Capsule())
+    }
+
     var ingredientsPeekBar: some View {
         Button {
             if ingredientsExpanded {
@@ -47,26 +57,26 @@ extension CalculatorView {
             .padding(.horizontal, 20)
             .frame(height: ingredientsPeekBarHeight)
             .frame(maxWidth: .infinity)
-            .contentShape(Rectangle())
+            .contentShape(ingredientsPeekBarShape)
         }
         .buttonStyle(.plain)
         .background {
-            let shape = UnevenRoundedRectangle(
-                topLeadingRadius: ingredientsExpanded ? 0 : 16,
-                topTrailingRadius: ingredientsExpanded ? 0 : 16
-            )
             Color.clear
                 .liquidGlassSurface(
-                    in: shape,
+                    in: ingredientsPeekBarShape,
                     tint: Color(.systemBackground).opacity(0.18),
                     interactive: true
                 )
         }
         .overlay(alignment: .top) {
-            Divider()
+            if ingredientsExpanded {
+                Divider()
+            }
         }
         .foregroundStyle(.primary)
         .shadow(color: .black.opacity(ingredientsExpanded ? 0.12 : 0.08), radius: ingredientsExpanded ? 10 : 8, y: -4)
+        .padding(.horizontal, ingredientsExpanded ? 0 : 16)
+        .padding(.bottom, ingredientsExpanded ? 0 : 8)
     }
 
     var expandedIngredientsPanel: some View {

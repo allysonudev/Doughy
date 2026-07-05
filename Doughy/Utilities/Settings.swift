@@ -291,6 +291,15 @@ extension Settings {
            let prefersCelsius = cloudStore?.object(forKey: preferredTempKey) as? Bool {
             userDefaults.set(prefersCelsius, forKey: preferredTempKey)
         }
+        // Unlike the prefs above, a missing local value here doesn't mean "use a default" -
+        // it's the difference between "never onboarded" and "onboarded before, but this
+        // install's local storage was wiped" (e.g. an uninstall/reinstall). Recovering it
+        // from iCloud lets a reinstall on the same account skip onboarding instead of
+        // re-showing the full welcome flow to a returning user.
+        if userDefaults.string(forKey: Settings.lastOnboardingVersionKey) == nil,
+           let version = cloudStore?.string(forKey: Settings.lastOnboardingVersionKey) {
+            userDefaults.set(version, forKey: Settings.lastOnboardingVersionKey)
+        }
 
         if let code = userDefaults.string(forKey: Settings.preferredLanguageKey) {
             cloudStore?.set(code, forKey: Settings.preferredLanguageKey)
@@ -300,6 +309,9 @@ extension Settings {
         }
         if let prefersCelsius = userDefaults.object(forKey: preferredTempKey) as? Bool {
             cloudStore?.set(prefersCelsius, forKey: preferredTempKey)
+        }
+        if let version = userDefaults.string(forKey: Settings.lastOnboardingVersionKey) {
+            cloudStore?.set(version, forKey: Settings.lastOnboardingVersionKey)
         }
         _ = cloudStore?.synchronize()
     }
@@ -312,5 +324,14 @@ extension Settings {
     /// `RecipeStore()` in SceneDelegate) to detect a genuine first install.
     static func isFirstInstall() -> Bool {
         !UserDefaults.standard.bool(forKey: hasInitializedDefaultsKey)
+    }
+
+    /// The app version the user last saw onboarding/what's-new for - hydrated from iCloud
+    /// at init (see `hydrateUserPreferencesFromCloud`) so a reinstall on the same iCloud
+    /// account is recognized as "seen before" rather than a brand new install.
+    func setLastOnboardingVersion(_ version: String) {
+        userDefaults.set(version, forKey: Settings.lastOnboardingVersionKey)
+        cloudStore?.set(version, forKey: Settings.lastOnboardingVersionKey)
+        _ = cloudStore?.synchronize()
     }
 }

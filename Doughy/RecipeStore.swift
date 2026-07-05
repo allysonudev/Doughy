@@ -12,6 +12,16 @@ struct RecentRecipeShortcut: Codable, Equatable {
     let name: String
 }
 
+struct RecipeOrder: Codable, Equatable {
+    var collections: [String: [String]]
+
+    static let empty = RecipeOrder(collections: [:])
+
+    var isEmpty: Bool {
+        collections.values.allSatisfy(\.isEmpty)
+    }
+}
+
 struct DeletedRecipe: Identifiable, Codable, Equatable {
     let id: UUID
     let deletedAt: Date
@@ -42,6 +52,7 @@ class RecipeStore {
     private let recentlyDeletedStore = RecentlyDeletedRecipeStore.shared
     private let recentRecipeShortcutsKey = "recentRecipeShortcuts"
     private let lastRecipeAddedCollectionKey = "lastRecipeAddedCollection"
+    private let recipeOrderKey = "recipeOrderByCollection"
     private let cloudStore: DoughyKeyValueStore? = NSUbiquitousKeyValueStore.default
     private let maxRecentRecipeShortcuts = 3
     private var remoteChangeObserver: NSObjectProtocol?
@@ -50,11 +61,13 @@ class RecipeStore {
         let recentRecipeShortcuts: [RecentRecipeShortcut]?
         let lastRecipeAddedCollection: String?
         let recentlyDeletedRecipes: [DeletedRecipe]?
+        let recipeOrder: RecipeOrder?
 
         var isEmpty: Bool {
             (recentRecipeShortcuts?.isEmpty ?? true) &&
             lastRecipeAddedCollection == nil &&
-            (recentlyDeletedRecipes?.isEmpty ?? true)
+            (recentlyDeletedRecipes?.isEmpty ?? true) &&
+            (recipeOrder?.isEmpty ?? true)
         }
     }
 
@@ -79,7 +92,7 @@ class RecipeStore {
     }
 
     func refresh() {
-        collections = Settings.shared.refreshRecipes()
+        collections = applySavedRecipeOrder(to: Settings.shared.refreshRecipes())
         deletedRecipes = recentlyDeletedStore.items()
     }
 
@@ -108,6 +121,7 @@ class RecipeStore {
     func delete(recipe: any RecipeProtocol) throws {
         try recentlyDeletedStore.archive(recipe: recipe)
         try writer.deleteRecipe(recipe: recipe)
+        removeRecipeFromSavedOrder(collection: recipe.collection, name: recipe.name)
         refresh()
         removeRecentRecipeShortcut(collection: recipe.collection, name: recipe.name)
     }
@@ -142,6 +156,7 @@ class RecipeStore {
         if recordsAddedCollection {
             recordRecipeAdded(to: recipe.collection)
         }
+        appendRecipeToSavedOrderIfNeeded(recipe)
     }
 
     func exportLibraryBackup(appearances: [String: CollectionAppearance] = [:]) throws -> URL {
@@ -175,9 +190,18 @@ class RecipeStore {
 
     func update(recipe: any RecipeProtocol, existingName: String, existingCollection: String) throws {
         try writer.updateRecipe(recipe: recipe, existingName: existingName, existingCollection: existingCollection)
+        updateSavedOrderForRecipeChange(recipe: recipe, existingName: existingName, existingCollection: existingCollection)
         refresh()
         removeRecentRecipeShortcut(collection: existingCollection, name: existingName)
         recordOpened(recipe: recipe)
+    }
+
+    func moveRecipes(in collectionName: String, fromOffsets: IndexSet, toOffset: Int) {
+        guard let collection = collections.first(where: { $0.name == collectionName }) else { return }
+        let recipes = reordered(collection.recipes, fromOffsets: fromOffsets, toOffset: toOffset)
+        collection.recipes = recipes
+        saveRecipeOrder(for: collectionName, names: recipes.map(\.name))
+        collections = collections
     }
 
     func recordOpened(recipe: any RecipeProtocol) {
@@ -277,7 +301,8 @@ class RecipeStore {
         let data = BackupData(
             recentRecipeShortcuts: loadRecentRecipeShortcuts().nilIfEmpty,
             lastRecipeAddedCollection: UserDefaults.standard.string(forKey: lastRecipeAddedCollectionKey),
-            recentlyDeletedRecipes: recentlyDeletedStore.items().nilIfEmpty
+            recentlyDeletedRecipes: recentlyDeletedStore.items().nilIfEmpty,
+            recipeOrder: loadRecipeOrder().isEmpty ? nil : loadRecipeOrder()
         )
         return data.isEmpty ? nil : data
     }
@@ -293,6 +318,7 @@ class RecipeStore {
             cloudStore?.removeObject(forKey: lastRecipeAddedCollectionKey)
         }
         recentlyDeletedStore.restore(data.recentlyDeletedRecipes ?? [])
+        saveRecipeOrder(data.recipeOrder ?? .empty)
         _ = cloudStore?.synchronize()
         refresh()
     }
@@ -317,6 +343,127 @@ class RecipeStore {
             cloudStore?.set(localCollection, forKey: lastRecipeAddedCollectionKey)
             _ = cloudStore?.synchronize()
         }
+        let mergedOrder = mergedRecipeOrder(local: loadRecipeOrder(), cloud: loadCloudRecipeOrder())
+        saveRecipeOrder(mergedOrder)
+    }
+
+    private func applySavedRecipeOrder(to collections: [RecipeCollection]) -> [RecipeCollection] {
+        let order = loadRecipeOrder().collections
+        for collection in collections {
+            guard let savedNames = order[collection.name], !savedNames.isEmpty else { continue }
+            let savedIndex = Dictionary(uniqueKeysWithValues: savedNames.enumerated().map { ($0.element, $0.offset) })
+            collection.recipes.sort { lhs, rhs in
+                switch (savedIndex[lhs.name], savedIndex[rhs.name]) {
+                case let (left?, right?):
+                    return left < right
+                case (_?, nil):
+                    return true
+                case (nil, _?):
+                    return false
+                case (nil, nil):
+                    return lhs.name.localizedCaseInsensitiveCompare(rhs.name) == .orderedAscending
+                }
+            }
+        }
+        return collections
+    }
+
+    private func reordered(_ recipes: [RecipeProtocol], fromOffsets: IndexSet, toOffset: Int) -> [RecipeProtocol] {
+        let validOffsets = fromOffsets.filter { recipes.indices.contains($0) }.sorted()
+        guard !validOffsets.isEmpty else { return recipes }
+
+        let moving = validOffsets.map { recipes[$0] }
+        var result = recipes
+        for offset in validOffsets.reversed() {
+            result.remove(at: offset)
+        }
+
+        let removedBeforeTarget = validOffsets.filter { $0 < toOffset }.count
+        let insertionIndex = min(max(toOffset - removedBeforeTarget, 0), result.count)
+        result.insert(contentsOf: moving, at: insertionIndex)
+        return result
+    }
+
+    private func appendRecipeToSavedOrderIfNeeded(_ recipe: any RecipeProtocol) {
+        var order = loadRecipeOrder()
+        guard order.collections[recipe.collection] != nil else { return }
+        if order.collections[recipe.collection]?.contains(recipe.name) == false {
+            order.collections[recipe.collection]?.append(recipe.name)
+            saveRecipeOrder(order)
+        }
+    }
+
+    private func removeRecipeFromSavedOrder(collection: String, name: String) {
+        var order = loadRecipeOrder()
+        guard order.collections[collection]?.contains(name) == true else { return }
+        order.collections[collection]?.removeAll { $0 == name }
+        saveRecipeOrder(order)
+    }
+
+    private func updateSavedOrderForRecipeChange(recipe: any RecipeProtocol, existingName: String, existingCollection: String) {
+        var order = loadRecipeOrder()
+        guard order.collections[existingCollection] != nil || order.collections[recipe.collection] != nil else { return }
+
+        if existingCollection == recipe.collection {
+            if let index = order.collections[existingCollection]?.firstIndex(of: existingName) {
+                order.collections[existingCollection]?[index] = recipe.name
+            }
+        } else {
+            order.collections[existingCollection]?.removeAll { $0 == existingName }
+            var destination = order.collections[recipe.collection] ?? []
+            if !destination.contains(recipe.name) {
+                destination.append(recipe.name)
+            }
+            order.collections[recipe.collection] = destination
+        }
+        saveRecipeOrder(order)
+    }
+
+    private func saveRecipeOrder(for collection: String, names: [String]) {
+        var order = loadRecipeOrder()
+        order.collections[collection] = names
+        saveRecipeOrder(order)
+    }
+
+    private func loadRecipeOrder() -> RecipeOrder {
+        guard let data = UserDefaults.standard.data(forKey: recipeOrderKey),
+              let order = try? JSONDecoder().decode(RecipeOrder.self, from: data) else {
+            return .empty
+        }
+        return order
+    }
+
+    private func loadCloudRecipeOrder() -> RecipeOrder {
+        guard let data = cloudStore?.data(forKey: recipeOrderKey),
+              let order = try? JSONDecoder().decode(RecipeOrder.self, from: data) else {
+            return .empty
+        }
+        return order
+    }
+
+    private func saveRecipeOrder(_ order: RecipeOrder) {
+        if order.isEmpty {
+            UserDefaults.standard.removeObject(forKey: recipeOrderKey)
+            cloudStore?.removeObject(forKey: recipeOrderKey)
+            _ = cloudStore?.synchronize()
+            return
+        }
+        guard let data = try? JSONEncoder().encode(order) else { return }
+        UserDefaults.standard.set(data, forKey: recipeOrderKey)
+        cloudStore?.set(data, forKey: recipeOrderKey)
+        _ = cloudStore?.synchronize()
+    }
+
+    private func mergedRecipeOrder(local: RecipeOrder, cloud: RecipeOrder) -> RecipeOrder {
+        var merged = cloud.collections
+        for (collection, localNames) in local.collections {
+            var names = merged[collection] ?? []
+            for name in localNames where !names.contains(name) {
+                names.append(name)
+            }
+            merged[collection] = names
+        }
+        return RecipeOrder(collections: merged)
     }
 }
 

@@ -178,6 +178,26 @@ extension XCUIApplication {
         field.replaceNumericValue(value, app: self)
     }
 
+    /// Sets the override weight for the ingredient at `index` (its position in the
+    /// recipe's ingredient list). Only present for by-weight recipes in Adjust mode.
+    func setIngredientWeight(at index: Int, value: String) {
+        showAdjustMode()
+        let field = textFields["ingredientWeightField_\(index)"]
+        XCTAssertTrue(field.waitForExistence(timeout: 5), "Ingredient weight field \(index) not found")
+        scrollToElement(field)
+        field.replaceNumericValue(value, app: self)
+    }
+
+    /// Taps the results-screen weight/percent label for the named ingredient to cycle
+    /// its displayed unit (grams -> primary volume unit -> ... -> grams). Only works
+    /// for ingredients with a known density/volume conversion.
+    func cycleIngredientUnit(name: String) {
+        expandIngredients()
+        let weightText = staticTexts["ingredientWeight_\(name)"]
+        XCTAssertTrue(weightText.waitForExistence(timeout: 5), "Calculated weight for \(name) not found")
+        weightText.tap()
+    }
+
     func tapCalculate() {
         showRecipeMode()
     }
@@ -289,6 +309,26 @@ extension XCUIApplication {
         tapDetailsNext()
     }
 
+    /// Opens the (new-recipe) collection picker and selects `name` from the list of
+    /// existing collections. The default SwiftUI `Picker` inside a `Form` pushes a
+    /// selection screen whose rows may surface as buttons or static text depending on
+    /// platform/style, so this checks both.
+    func selectExistingCollection(_ name: String) {
+        let picker = buttons["collectionPicker"]
+        XCTAssertTrue(picker.waitForExistence(timeout: 5), "Collection picker not found")
+        scrollToElement(picker)
+        picker.tap()
+
+        let buttonOption = buttons[name].firstMatch
+        if buttonOption.waitForExistence(timeout: 3) {
+            buttonOption.tap()
+            return
+        }
+        let textOption = staticTexts[name].firstMatch
+        XCTAssertTrue(textOption.waitForExistence(timeout: 5), "Existing collection option \"\(name)\" not found in picker")
+        textOption.tap()
+    }
+
     func tapDetailsNext() {
         let next = buttons["detailsNextButton"]
         XCTAssertTrue(next.waitForExistence(timeout: 5), "Details Next button not found")
@@ -389,6 +429,14 @@ extension XCUIApplication {
         let valueField = textFields["ingredientValueField_\(index)"]
         XCTAssertTrue(valueField.waitForExistence(timeout: 5), "Ingredient value field \(index) not found. \(message)")
         XCTAssertEqual(valueField.value as? String, value, "Ingredient \(index) value mismatch. \(message)")
+    }
+
+    /// Taps a suggestion chip with the given ingredient name, which must currently be
+    /// visible below a focused flour/ingredient name field.
+    func tapSuggestionChip(named name: String) {
+        let chip = buttons["suggestionChip_\(name)"]
+        XCTAssertTrue(chip.waitForExistence(timeout: 5), "Suggestion chip \"\(name)\" not found")
+        chip.tap()
     }
 
     func tapIngredientsNext() {

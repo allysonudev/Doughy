@@ -41,6 +41,7 @@ enum IngredientCategoryGroup: String, CaseIterable, Identifiable {
 enum DensityUnit: String, CaseIterable, Identifiable {
     case cup
     case deciliter
+    case fluidOunce
     case liter
     case milliliter
     case tablespoon
@@ -53,6 +54,7 @@ enum DensityUnit: String, CaseIterable, Identifiable {
     var unitsPerCup: Double {
         switch self {
         case .cup:        return 1
+        case .fluidOunce: return 8
         case .tablespoon: return 16
         case .teaspoon:   return 48
         case .milliliter: return UnitConversion.millilitersPerUSCup
@@ -64,6 +66,7 @@ enum DensityUnit: String, CaseIterable, Identifiable {
     var label: String {
         switch self {
         case .cup:        return "g/cup"
+        case .fluidOunce: return "g/fl oz"
         case .tablespoon: return "g/tbsp"
         case .teaspoon:   return "g/tsp"
         case .milliliter: return "g/ml"
@@ -75,6 +78,7 @@ enum DensityUnit: String, CaseIterable, Identifiable {
     var localizedLabel: String {
         switch self {
         case .cup:        return String(localized: "density.unit.cup",        defaultValue: "g/cup")
+        case .fluidOunce: return String(localized: "density.unit.fluid_ounce", defaultValue: "g/fl oz")
         case .tablespoon: return String(localized: "density.unit.tablespoon",  defaultValue: "g/tbsp")
         case .teaspoon:   return String(localized: "density.unit.teaspoon",    defaultValue: "g/tsp")
         case .milliliter: return String(localized: "density.unit.milliliter",  defaultValue: "g/ml")
@@ -89,14 +93,15 @@ enum DensityUnit: String, CaseIterable, Identifiable {
         switch system {
         case .imperial:
             switch natural {
-            case .cup, .tablespoon, .teaspoon: return natural
-            case .deciliter, .liter:           return .cup
-            case .milliliter:                  return .teaspoon
+            case .cup, .fluidOunce, .tablespoon, .teaspoon: return natural
+            case .deciliter, .liter:                        return .cup
+            case .milliliter:                               return .teaspoon
             }
         case .metric:
             switch natural {
             case .deciliter, .liter, .milliliter: return natural
             case .cup:                            return .deciliter
+            case .fluidOunce:                     return .milliliter
             case .tablespoon, .teaspoon:          return .milliliter
             }
         }

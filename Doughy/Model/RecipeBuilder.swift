@@ -29,6 +29,11 @@ class RecipeBuilder: NSObject {
             isModified = true
         }
     }
+    var sourceURL: URL? {
+        didSet {
+            isModified = true
+        }
+    }
     var measurementMode: RecipeMeasurementMode = .percent
     var instructions: [Instruction]? {
         didSet {
@@ -47,6 +52,7 @@ class RecipeBuilder: NSObject {
         self.existingCollection = recipe.collection
         self.collection = recipe.collection
         self.defaultWeight = recipe.defaultWeight
+        self.sourceURL = recipe.sourceURL
         self.measurementMode = recipe.measurementMode
         self.instructions = recipe.instructions
         if recipe is PrefermentRecipe {
@@ -103,7 +109,8 @@ class RecipeBuilder: NSObject {
             let result = PrefermentRecipe(name: name, collection: collection,
                                     defaultWeight: defaultWeight, ingredients: ingredients,
                                     preferment: preferment, instructions: instructions,
-                                    measurementMode: measurementMode)
+                                    measurementMode: measurementMode,
+                                    sourceURL: sourceURL)
             try Self.validatePrefermentRecipe(recipe: result)
             return result
         }
@@ -111,7 +118,8 @@ class RecipeBuilder: NSObject {
         return Recipe(name: name, collection: collection,
                       defaultWeight: defaultWeight, ingredients: ingredients,
                       instructions: instructions,
-                      measurementMode: measurementMode)
+                      measurementMode: measurementMode,
+                      sourceURL: sourceURL)
     }
     
     /// Shared with `PrefermentTool` (the Adjust tab's add/remove-preferment feature) so both

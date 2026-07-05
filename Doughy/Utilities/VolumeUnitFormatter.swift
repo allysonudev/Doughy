@@ -11,7 +11,7 @@ enum VolumeUnitFormatter {
     static func label(unit: String, amount: Double) -> String {
         let plural = abs(amount - 1) > 0.0001
         switch unit {
-        case "teaspoon", "tablespoon", "cup", "ounce":
+        case "teaspoon", "tablespoon", "cup", "ounce", "fluidOunce":
             return plural ? pickerLabel(unit: unit).lowercased() : singularLabel(unit: unit)
         case "milliliter": return String(localized: "unit.volume.milliliter", defaultValue: "ml")
         case "deciliter":  return String(localized: "unit.volume.deciliter", defaultValue: "dl")
@@ -35,6 +35,7 @@ enum VolumeUnitFormatter {
         case "tablespoon": return String(localized: "unit.volume.tablespoon", defaultValue: "Tablespoons")
         case "cup":        return String(localized: "unit.volume.cup", defaultValue: "Cups")
         case "ounce":      return String(localized: "unit.volume.ounce", defaultValue: "Ounces")
+        case "fluidOunce": return String(localized: "unit.volume.fluid_ounce", defaultValue: "Fluid Ounces")
         case "milliliter": return String(localized: "unit.volume.milliliter", defaultValue: "ml")
         case "deciliter":  return String(localized: "unit.volume.deciliter", defaultValue: "dl")
         case "liter":      return String(localized: "unit.volume.liter", defaultValue: "l")
@@ -50,6 +51,7 @@ enum VolumeUnitFormatter {
         case "tablespoon": return String(localized: "unit.volume.tablespoon.one", defaultValue: "tablespoon")
         case "cup":        return String(localized: "unit.volume.cup.one", defaultValue: "cup")
         case "ounce":      return String(localized: "unit.volume.ounce.one", defaultValue: "ounce")
+        case "fluidOunce": return String(localized: "unit.volume.fluid_ounce.one", defaultValue: "fluid ounce")
         default:           return pickerLabel(unit: unit)
         }
     }

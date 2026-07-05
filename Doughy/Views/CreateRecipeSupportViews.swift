@@ -107,6 +107,7 @@ struct OptionalAccessibilityIdentifier: ViewModifier {
 
 struct SourcePhotoPipView: View {
     let image: UIImage
+    let imageCount: Int
     @Binding var corner: SourcePhotoCorner
     let action: () -> Void
 
@@ -130,9 +131,22 @@ struct SourcePhotoPipView: View {
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
                         .stroke(.white.opacity(0.85), lineWidth: 2)
                 }
+                .overlay(alignment: .topTrailing) {
+                    if imageCount > 1 {
+                        Text("\(imageCount)")
+                            .font(.caption2.weight(.bold))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 7)
+                            .padding(.vertical, 4)
+                            .background(.black.opacity(0.72), in: Capsule())
+                            .padding(6)
+                    }
+                }
                 .shadow(color: .black.opacity(0.28), radius: 12, x: 0, y: 6)
                 .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                .accessibilityLabel(String(localized: "source_photo.open", defaultValue: "Open source photo"))
+                .accessibilityLabel(imageCount == 1
+                                    ? String(localized: "source_photo.open", defaultValue: "Open source photo")
+                                    : String(format: String(localized: "source_photo.open_multiple", defaultValue: "Open %d source photos"), imageCount))
                 .accessibilityAddTraits(.isButton)
                 .position(currentPosition(in: proxy))
                 .offset(dragOffset)
@@ -319,15 +333,39 @@ struct SourcePhotoPipView: View {
 }
 
 struct SourcePhotoViewer: View {
-    let image: UIImage
+    let images: [UIImage]
     @Environment(\.dismiss) var dismiss
+    @State var selectedImageIndex = 0
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
             Color.black.ignoresSafeArea()
 
-            SourcePhotoLiveTextView(image: image)
-                .ignoresSafeArea()
+            TabView(selection: $selectedImageIndex) {
+                ForEach(images.indices, id: \.self) { index in
+                    SourcePhotoLiveTextView(image: images[index])
+                        .ignoresSafeArea()
+                        .tag(index)
+                }
+            }
+            .tabViewStyle(.page(indexDisplayMode: images.count > 1 ? .automatic : .never))
+            .ignoresSafeArea()
+
+            if images.count > 1 {
+                Text("\(selectedImageIndex + 1) / \(images.count)")
+                    .font(.callout.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 7)
+                    .background(.black.opacity(0.58), in: Capsule())
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.top, 18)
+                    .accessibilityLabel(String(
+                        format: String(localized: "source_photo.page_count", defaultValue: "Source photo %d of %d"),
+                        selectedImageIndex + 1,
+                        images.count
+                    ))
+            }
 
             Button {
                 dismiss()
@@ -524,4 +562,3 @@ struct CameraPickerView: UIViewControllerRepresentable {
         }
     }
 }
-
