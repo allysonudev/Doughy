@@ -64,8 +64,8 @@ extension CreateRecipeView {
                 isPresented: $showCameraScanOptions,
                 titleVisibility: .visible
             ) {
-                Button(String(
-                    format: String(localized: "create.scan.camera.scan_count", defaultValue: "Scan %d Photo(s)"),
+                Button(String.localizedStringWithFormat(
+                    String(localized: "create.scan.camera.scan_count", defaultValue: "Scan %d Photo(s)"),
                     cameraScanImages.count
                 )) {
                     let images = cameraScanImages

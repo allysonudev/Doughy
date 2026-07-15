@@ -41,6 +41,9 @@ struct CollectionAppearanceEditor: View {
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
+            .accessibilityElement(children: .ignore)
+            .accessibilityIdentifier("collectionAppearancePreviewAvatar")
+            .accessibilityLabel(previewAccessibilityLabel)
 
             picker(title: String(localized: "collection.appearance.icon", defaultValue: "Icon")) {
                 iconChoices
@@ -59,6 +62,12 @@ struct CollectionAppearanceEditor: View {
             }
             .presentationDetents([.height(320)])
         }
+    }
+
+    /// Describes the live preview avatar's current icon/color for UI testing, since the
+    /// avatar itself renders as an accessibility-hidden decorative image.
+    var previewAccessibilityLabel: String {
+        "icon:\(iconKey ?? "none"), color:\(colorKey ?? "none")"
     }
 
     @ViewBuilder
@@ -140,6 +149,7 @@ struct CollectionAppearanceEditor: View {
             }
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier("collectionIconOption_\(key ?? "none")")
         .accessibilityLabel(iconAccessibilityLabel(key))
         .accessibilityAddTraits(iconKey == key ? .isSelected : [])
     }
@@ -180,6 +190,7 @@ struct CollectionAppearanceEditor: View {
             }
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier("collectionColorOption_\(key ?? "none")")
         .accessibilityLabel(colorAccessibilityLabel(key))
         .accessibilityAddTraits(colorKey == key ? .isSelected : [])
     }

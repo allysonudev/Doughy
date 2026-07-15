@@ -271,4 +271,62 @@ final class RecipeCalculatorUITests: DoughyUITestCase {
         XCTAssertTrue(afterSecondTap.waitForExistence(timeout: 5))
         XCTAssertNotEqual(afterSecondTap.label, afterFirstTap.label, "Second tap should advance to yet another unit (or wrap distinctly)")
     }
+
+    /// Mirrors `testTappingLiquidIngredientCyclesDisplayUnit`, but for a non-liquid ingredient
+    /// with a known density conversion. "Bread Flour" resolves to `IngredientCategory.breadFlour`
+    /// via `ExtraIngredientConversion.ingredientCategory(forName:)`
+    /// (`ExtraIngredientConversion.swift`), so its results-screen weight should also cycle
+    /// from grams to a volume unit (e.g. cups) per `CalculatorView+UnitCycling.swift`.
+    func testTappingKnownDryIngredientCyclesDisplayUnit() throws {
+        createTestRecipe()
+        app.openCalculator(for: recipeName)
+        app.tapCalculate()
+        app.expandIngredients()
+
+        let weightText = app.staticTexts["ingredientWeight_Bread Flour"]
+        XCTAssertTrue(weightText.waitForExistence(timeout: 5), "Bread Flour's calculated weight not found")
+        let originalLabel = weightText.label
+        XCTAssertTrue(originalLabel.hasSuffix("g"), "Bread Flour should start displayed in grams, got \(originalLabel)")
+
+        app.cycleIngredientUnit(name: "Bread Flour")
+
+        let afterFirstTap = app.staticTexts["ingredientWeight_Bread Flour"]
+        XCTAssertTrue(afterFirstTap.waitForExistence(timeout: 5))
+        XCTAssertNotEqual(afterFirstTap.label, originalLabel, "Tapping the weight should cycle Bread Flour to a volume unit")
+    }
+
+    /// Ingredients with no known density/volume conversion (per `cycleUnits(for:grams:)` in
+    /// `CalculatorView+UnitCycling.swift`) don't get the `.isButton` trait and their
+    /// `onTapGesture` guards on `units != nil`, so tapping the weight label is a no-op. Plain
+    /// "Yeast" (with no qualifier like "instant"/"active dry"/"fresh") doesn't match any
+    /// keyword in `ExtraIngredientConversion.ingredientCategory(forName:)`, making it a good
+    /// stand-in for an "unknown ingredient" here.
+    func testTappingUnknownIngredientDoesNotCycleDisplayUnit() throws {
+        app.startCreateRecipe()
+        app.chooseMode(byPercent: true)
+
+        let name = "Unknown Conversion Loaf"
+        app.fillDetails(name: name, newCollection: "Calculator Tests", defaultWeight: "1500")
+        app.fillFlour(at: 0, name: "Bread Flour", value: "100")
+        app.fillIngredient(at: 0, name: "Water", value: "40")
+        app.addIngredient()
+        app.fillIngredient(at: 1, name: "Yeast", value: "1")
+        app.tapIngredientsNext()
+        app.saveRecipe()
+        XCTAssertTrue(app.staticTexts[name].waitForExistence(timeout: 5))
+
+        app.openCalculator(for: name)
+        app.tapCalculate()
+        app.expandIngredients()
+
+        let weightText = app.staticTexts["ingredientWeight_Yeast"]
+        XCTAssertTrue(weightText.waitForExistence(timeout: 5), "Yeast's calculated weight not found")
+        let originalLabel = weightText.label
+
+        weightText.tap()
+
+        let afterTap = app.staticTexts["ingredientWeight_Yeast"]
+        XCTAssertTrue(afterTap.waitForExistence(timeout: 5))
+        XCTAssertEqual(afterTap.label, originalLabel, "Tapping an unknown ingredient's weight should not change its displayed unit")
+    }
 }

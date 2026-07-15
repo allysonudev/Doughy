@@ -1,21 +1,24 @@
 # Test Automation Coverage Analysis
 
-Maps every case in [TestCases.md](TestCases.md) against the existing automated suites and
-classifies what can be automated. As of this analysis the project has:
+Maps every case in [TestCases.md](TestCases.md) against the automated suites and classifies
+what can be automated. Originally written 2026-07-04; updated 2026-07-05 after two rounds of
+gap-closure (see "Gap-closure history" at the bottom). The project now has:
 
-- **Unit tests** (`Doughy Tests`, 12 files, ~150 test methods): recipe math, preferment tool,
-  scanner parsing/resolution (54 tests), website importer (+ live corpus), export/import,
-  snapshots/diffs/overrides, settings, Core Data migration.
-- **UI tests** (`Doughy UI Tests`, 7 files, ~31 test methods): recipe creation (both modes,
-  preferments, multi-flour), calculator math on screen, edit flows, data integrity round-trips,
-  history, plus screenshot automation. `UITestSupport.swift` provides a rich helper layer over
-  stable accessibility identifiers.
+- **Unit tests** (`Doughy Tests`, 12 files, ~165 test methods): recipe math, preferment tool
+  (incl. percentage edge cases), scanner parsing/resolution, website importer (+ live corpus),
+  export/import (incl. corrupted-file and duplicate-name handling), snapshots/diffs/overrides,
+  settings, density-store reset, Core Data migration.
+- **UI tests** (`Doughy UI Tests`, 10 files, ~65 test methods): recipe creation (both modes,
+  preferments, multi-flour, error paths, chips, temps, instructions), calculator math and
+  overrides, unit cycling, edit flows, data integrity, history, home screen, settings +
+  ingredient conversions, collection appearance, welcome/what's-new, plus screenshots.
+  `UITestSupport.swift` provides a helper layer over stable accessibility identifiers.
 
 Legend:
-- ✅ **Covered** — already automated
-- 🟡 **Partial** — core logic automated (usually unit level), UI flow or an edge is not
-- ⚪ **Gap** — automatable with current infrastructure, not yet written
-- ❌ **Manual** — not practically automatable (system UI, cross-device, camera/LLM, Siri)
+- ✅ **Covered** — automated
+- 🟡 **Partial** — core logic automated, a UI flow or edge is not
+- ❌ **Manual** — not practically automatable (system UI, cross-device, camera/LLM, Siri);
+  these are collected in the "Manual Testing Required" section of TestCases.md
 
 ## Creating Recipes
 
@@ -23,177 +26,174 @@ Legend:
 
 | Case | Status | Notes |
 |---|---|---|
-| New collection | ✅ | All creation UI tests use `fillDetails` with a new collection |
-| Existing collection | ⚪ | No test picks an existing collection from `collectionPicker` |
-| Short name | ⚪ | Trivial UI variant |
-| Existing name (error) | ⚪ | Duplicate-name save error never exercised |
-| With/Without preferment | ✅ | `RecipeCreationUITests` covers both, in both modes |
-| Single/multiple flours | ✅ | `testCreateRecipeBy{Percent,Weight}MultipleFloursAndIngredients` |
-| Duplicate ingredient names | ⚪ | Also listed under Preview; not exercised anywhere |
-| Suggestion chips | ⚪ | No test taps a chip or asserts chips appear |
-| With temps | 🟡 | Unit: temp math + diffs covered; UI: `ingredientTempField_N` never touched |
+| New collection | ✅ | All creation UI tests |
+| Existing collection | ✅ | `testCreateRecipeIntoExistingCollection` |
+| Short name | ✅ | `testCreateRecipeWithShortNameSaves` (no min length; non-empty trimmed name required) |
+| Existing name (error) | ✅ | `testSavingRecipeWithExistingNameShowsError` ("Save Error" alert) |
+| With/Without preferment | ✅ | Both modes |
+| Single/multiple flours | ✅ | Both modes |
+| Duplicate ingredient names | ✅ | `testCreateRecipeWithDuplicateIngredientNamesSavesBothEntries` (no dedup by design) |
+| Suggestion chips | ✅ | `testSuggestionChipFillsIngredientNameAndTypedNameAlsoWorks` |
+| With temps | ✅ | `testIngredientTemperatureSurvivesToCalculator` + diff/math unit tests |
 
 ### By Weight extras
 
 | Case | Status | Notes |
 |---|---|---|
-| Known volume ingredient → weight hint | ✅ | `testVolumeIngredientShowsWeightConversionOption` + resolver unit tests |
-| Unknown volume ingredient → no hint | 🟡 | Unit-level covered (`testUnknownConversionPromptSkipsCountUnits`); UI negative case absent |
-| Egg/whites/yolks count → weight hint | 🟡 | Resolver unit tests cover conversion; UI hint flow untested |
-| Fluid-ounce extra ingredient displays correctly | 🟡 | Unit: `testFluidOuncesParseAsFluidOunceVolume`, shared-constant test; UI display untested |
+| Known volume ingredient → weight hint | ✅ | UI + resolver unit tests |
+| Unknown volume ingredient → no hint | 🟡 | Unit-level covered; UI negative case not written |
+| Egg/whites/yolks count → weight hint | 🟡 | Resolver unit tests; UI hint flow not written |
+| Fluid-ounce extra ingredient displays correctly | 🟡 | Unit-covered; UI display not written |
 
 ### Preferment
 
 | Case | Status | Notes |
 |---|---|---|
-| No matching ingredients in main dough | 🟡 | `testCanAddPrefermentRequiresFlourWaterAndYeast` covers gating; creation-flow variant untested |
+| No matching ingredients in main dough | ✅ | `testCanAddPrefermentRequiresFlourWaterAndYeast` |
 | All matches | ✅ | Poolish/sourdough/biga unit tests |
-| Weird percentages that don't add up | ⚪ | Only hydration-exceeds-water is tested; over/under-100%, zero, negative untested |
-| Matching ingredients at 0g weight | ⚪ | Unit-testable in `PrefermentToolTests` |
+| Weird percentages that don't add up | ✅ | 0%/negative/>100%/yeast-overconsumption edge tests |
+| Matching ingredients at 0g weight | ✅ | `testAddPrefermentWithZeroPercentMainDoughIngredientDoesNotGoNegative` |
 
 ### Import recipe link
 
 | Case | Status | Notes |
 |---|---|---|
-| King Arthur branding cleanup | ✅ | `testStripsBrandAndMarketingPrefixFromIngredientName` + live corpus |
-| NYT Cooking (subscription) | ❌ | Requires account/paywall session |
+| King Arthur branding cleanup | ✅ | Unit + live corpus |
+| NYT Cooking (subscription) | ❌ | Paywall/account |
 | YouTuber sites / sallysbakingaddiction | ✅ | Live corpus (100 URLs) |
-| Sites from unit tests | ✅ | That *is* the corpus |
-| Mess with ingredient names/amounts | 🟡 | Fixture-based unit tests cover many mutations; fuzzing could expand |
+| Sites from unit tests | ✅ | The corpus |
+| Mess with ingredient names/amounts | 🟡 | Fixture-based unit tests |
 | Poolish/preferment recipe | ✅ | Preferment-detection unit tests |
-| In-app import UI flow | ⚪ | `websiteRecipeURLField` exists; no UI test drives it (would need a stub/local fixture to avoid network) |
+| In-app import UI flow | 🟡 | Not UI-tested (would need a network stub) |
 
 ### Recipe scanner
 
 | Case | Status | Notes |
 |---|---|---|
-| Camera / photo-library imports (all variants) | ❌ | Camera, PhotosUI picker, and live LLM calls — manual |
-| Volume→weight hints, auto-convert, cleanup | ✅ | 54 parser/resolver unit tests incl. sample corpus |
-| Recipe set chooses correct title | ⚪ | Title-selection logic is unit-testable if exposed; verify in `RecipeScannerTypes`/`RecipeScanner` |
+| Camera / photo-library imports | ❌ | Camera, PhotosUI, live LLM |
+| Volume→weight hints, auto-convert, cleanup | ✅ | Parser/resolver unit tests + sample corpus |
+| Recipe set chooses correct title | ❌ | Title selection inlined in live-LLM pipeline; needs a refactor to unit-test |
 
 ### Instructions
 
 | Case | Status | Notes |
 |---|---|---|
-| Move instructions around | ⚪ | Drag-reorder in XCUITest is possible but flaky; attempt, fall back to manual |
-| Add/delete instructions | ⚪ | Straightforward UI test |
-| Whitespace-only instructions | ⚪ | Should assert trim/reject behavior |
+| Move instructions around | ✅ | `testMoveInstructionToPositionReordersAndPersists` via the context menu's "Move to position…" sheet (drag handles not exercised) |
+| Add/delete instructions | ✅ | Add/delete + persistence |
+| Whitespace-only instructions | ✅ | Add Step stays disabled for whitespace-only input |
 
 ### Preview
 
 | Case | Status | Notes |
 |---|---|---|
-| Preview updates after going back | 🟡 | `RecipeDataIntegrityUITests` round-trips edits; explicit preview-refresh assert absent |
-| Duplicate recipe name save error | ⚪ | Gap (same as "Existing name" above) |
-| Save with duplicate ingredients | ⚪ | Gap |
+| Preview updates after going back | 🟡 | Data-integrity round-trips cover it indirectly |
+| Duplicate recipe name save error | ✅ | See "Existing name" above |
+| Save with duplicate ingredients | ✅ | See duplicate-ingredients above |
 
 ### Collection appearance
 
 | Case | Status | Notes |
 |---|---|---|
-| Pick built-in icon / color | ⚪ | Editor has identifiers (`collectionUseEmojiButton`, `collectionEmojiField`); no UI test |
-| Custom emoji via system picker | ❌ | System emoji keyboard isn't scriptable; `collectionEmojiField` typing is a partial proxy |
-| Unset → first-letter avatar fallback | ⚪ | UI-assertable |
-| Edit propagates everywhere | 🟡 | Export/import + store round-trips unit-tested; list/preview UI propagation untested |
+| Pick built-in icon | ✅ | `testPickingBuiltInIconShowsOnHomeScreenHeader` |
+| Pick color | ✅ | `testPickingColorAppliesSelectionInEditorAndOnHomeScreen` |
+| Custom emoji via system picker | ❌ | System emoji keyboard isn't scriptable |
+| Unset → first-letter avatar fallback | ✅ | `testLeavingIconAndColorUnsetFallsBackToDefaultAvatar` |
+| Edit propagates everywhere | ✅ | Home Screen via `testEditingExistingCollectionAppearanceUpdatesHomeScreen`; share/import previews via export/import unit tests |
 
 ## Home Screen
 
 | Case | Status | Notes |
 |---|---|---|
-| Delete recipe | ⚪ | Swipe-delete easily automatable |
-| Delete last recipe in collection / in library | ⚪ | Assert collection disappears / empty state |
-| Edit from swipe | ✅ | `editRecipe(named:)` used by edit suites |
-| Share from swipe / hold menu | 🟡 | Can assert share sheet presents; can't complete the send (system UI) |
-| Delete / edit from hold (context) menu | ⚪ | Context menus are scriptable via `press(forDuration:)` |
+| Delete recipe / last in collection / last in library | ✅ | `HomeScreenUITests` |
+| Edit from swipe / hold menu | ✅ | `HomeScreenUITests` + edit suites |
+| Share from swipe / hold menu | 🟡 | Sheet presentation automated; completing the send is manual |
 
 ## Sharing & Importing Recipes
 
 | Case | Status | Notes |
 |---|---|---|
-| Share with/without "From" name and note | 🟡 | `.doughy` payload round-trips unit-tested incl. metadata; share-sheet composition manual |
-| Send via Messages/Mail/AirDrop/Files | ❌ | Cross-app system UI |
-| Receive from AirDrop/Mail/Messages/Files | ❌ | Cross-app; the *handling* code is unit-tested via import round-trips |
-| Import when name/collection already exists | ⚪ | Unit-testable against the import path |
-| Corrupted / non-recipe .doughy file | ⚪ | Unit-testable: malformed JSON, wrong schema, empty file |
-| "Shared by X" banner + collapse state | ⚪/❌ | UI-testable only if a shared recipe can be seeded via launch argument; otherwise manual |
-| Share extension (Safari → Doughy) | ❌ | Extension UI runs out-of-process; keep manual (extension's parsing logic is shared, unit-covered) |
+| Share with/without "From" name and note | 🟡 | Payload round-trips unit-tested; visual composition manual |
+| Send/receive via Messages/Mail/AirDrop/Files | ❌ | Cross-app system UI |
+| Import when name/collection already exists | ✅ | `testImportingDuplicateNamedRecipeThrowsRecipeExistsError` (behavior: throws) |
+| Corrupted / non-recipe .doughy file | ✅ | Malformed/empty/wrong-schema decode tests + `RecipeFile.load` returning nil |
+| "Shared by X" banner + collapse state | ❌ | Needs cross-app import to trigger |
+| Share extension | ❌ | Out-of-process; parsing logic shared and unit-covered |
 
 ## Settings
 
 | Case | Status | Notes |
 |---|---|---|
-| Temp / volume toggles | 🟡 | `SettingsTests` cover persistence + region fallback; UI toggle flow untested |
-| Change conversion values/units → conversions follow | 🟡 | Store + resolver unit-tested; UI edit flow untested (`gramsPerCupField_*`, `unitMenu_*`) |
-| Add ingredient to a section | ⚪ | UI gap (also the standing feature TODO) |
-| New ingredient appears in chips / bake session | ⚪ | UI gap |
-| Delete ingredient → no toggles, no chips | ⚪ | UI gap |
-| Egg size default + egg weights | 🟡 | Resolver unit tests cover egg math; UI (`defaultEggSizePicker`, `eggGramsField_*`) untested |
-| Fluid-ounce conversion shows g/fl oz in unit menu | 🟡 | Unit conversion covered; menu contents untested |
-| Reset all to defaults (after changing everything) | ⚪ | Unit-testable on the stores + UI smoke via `resetAllConversionsButton` |
-| Restore recently deleted / delete all / empty hint | ⚪ | `recentlyDeletedLink` exists; no tests |
-| Backup & restore big library | 🟡 | `testLibraryBackupRoundTrips*` cover the document; Files-picker UI flow manual |
-| Links at bottom work | ⚪ | Existence/hittable assert only (can't verify Safari) |
-| iCloud sync across two devices | ❌ | Two-device; cloud-mirror store logic already unit-tested (`*RestoresFromCloudAfterReinstall`) |
-| Region/locale drives units | 🟡 | `testVolumeSystemFallsBackToRegionDefaultWhenUnset`; full locale-format sweep manual or locale-injected unit tests |
+| Temp / volume toggles | ✅ | `SettingsTests` persistence + `SettingsUITests` pickers |
+| Change conversion values/units | ✅ | Persistence + unit-menu UI tests |
+| Add ingredient to a section | ✅ | `testAddCustomIngredientAppearsAndPersistsAfterReopening` |
+| New ingredient in suggestion chips | ✅ | `testAddCustomIngredientAppearsAsSuggestionChipInCreateFlow` |
+| New ingredient in bake session + toggle | ✅ | `testAddCustomIngredientCyclesToConfiguredUnitInBakeSession` |
+| Delete ingredient → no toggles, no chips | ✅ | `testDeletingCustomIngredientRemovesChipAndStopsCycling` |
+| Egg size default + egg weights | ✅ | Pickers/fields UI + resolver unit tests |
+| Fluid-ounce conversion shows g/fl oz | ✅ | `testFluidOunceConversionAppearsInUnitMenu` |
+| Reset all to defaults | ✅ | Store unit test + `testResetAllToDefaultsRestoresChangedValues` |
+| Recently deleted: restore / delete all / empty hint | ✅ | `SettingsUITests` |
+| Backup & restore big library | 🟡 | Document round-trip unit-tested; Files-picker flow manual |
+| Links at bottom | ✅ | Existence/hittable asserts |
+| iCloud sync across two devices | ❌ | Two-device; cloud-mirror store logic unit-tested |
+| Region/locale drives units | 🟡 | Region-fallback unit test; full locale sweep manual |
 
 ## Bake Session
 
 | Case | Status | Notes |
 |---|---|---|
-| Toggle ingredient amounts | ⚪ | UI gap |
-| Tap amount to cycle units, fl oz in cycle | 🟡 | Conversion unit-tested; cycling UI untested |
-| fl oz import converts via density | ✅ | `testFluidOuncesResolveAsVolumeNotMass` + scanner tests |
-| Ingredient peek bar: tap to reveal | ✅ | `expandIngredients()` exercised by every calculator test |
-| Peek bar drag physics (resist/dismiss) | ❌ | Gesture-physics assertions too flaky |
-| Adjust: add preferment | ✅ | `AddPrefermentUITests` + `CalculatorOverridesTests` |
-| Adjust: remove preferment | 🟡 | Unit-covered (`testApplyingPrefermentRemovedDropsExistingPreferment`); UI remove untested |
-| Tweak doughs / ball weight / byPercent percentages | ✅ | `RecipeCalculatorUITests` |
-| Tweak all weights in byWeight | 🟡 | Unit-covered; UI variant untested |
-| Copy recipe → dismiss shows new recipe | ⚪ | `calculatorCopyButton` exists; no test |
-| Edit → dismiss reflects changes | ✅ | `RecipeEditUITests` + `RecipeDataIntegrityUITests` |
-| iPad: tweak + Set as Default + propagation | 🟡 | iPhone flow covered (`testSetAsDefaultFromCalculatorOverride`); needs an iPad destination run + multi-pane assert |
+| Toggle ingredient amounts | ✅ | Dry + liquid cycling tests, plus unknown-ingredient negative case |
+| Fl oz in the unit cycle | ✅ | `testTappingLiquidIngredientCyclesDisplayUnit` |
+| fl oz import converts via density | ✅ | Importer/scanner unit tests |
+| Peek bar: tap to reveal | ✅ | `expandIngredients()` everywhere |
+| Peek bar drag physics | ❌ | Gesture physics too flaky |
+| Adjust: add/remove preferment | ✅ | Add + remove UI tests, override unit tests |
+| Tweak doughs / weights / percentages (both modes) | ✅ | `RecipeCalculatorUITests` |
+| Copy recipe | ✅ | `testCopyRecipeAppearsInList` |
+| Edit → dismiss reflects changes | ✅ | Edit + data-integrity suites |
+| Set as Default | ✅/❌ | Flow automated on iPhone; iPad multi-pane propagation manual |
 
 ## History
 
-All five cases ✅ — `RecipeHistoryUITests` covers notes, mixed list, restore (with
-current-state-saved-first), delete, and the empty state.
+All ✅ — `RecipeHistoryUITests`.
 
 ## Siri, Shortcuts & Quick Actions
 
-All ❌ — Siri and the Shortcuts app cannot be driven by XCUITest, and Home Screen quick
-actions via Springboard automation are too fragile to keep green. Intent handler logic could
-be unit-tested if refactored behind a testable seam (future work).
+All ❌ — not drivable by XCUITest. Intent handler logic could be unit-tested behind a seam
+(future work).
 
 ## Welcome
 
 | Case | Status | Notes |
 |---|---|---|
-| First install shows welcome | ⚪ | Automatable with a launch argument that clears `lastOnboardingVersion` |
-| Update over 1.0 shows What's New | 🟡 | Version bookkeeping unit-tested (`testLastOnboardingVersionRoundTrips`); UI variant needs a launch argument seeding an old version |
+| First install shows welcome | ✅ | `-ForceNewUserOnboarding` launch flag |
+| Update over 1.0 shows What's New | ✅/❌ | Screen automated via `-ForceWhatsNew`; a real upgrade install (with data migration) stays manual, though migration itself is unit-tested |
 
 ## Summary
 
 | | Count (approx.) |
 |---|---|
-| Already automated (✅) | ~30 cases |
-| Partially automated (🟡) | ~25 cases |
-| Automatable gaps (⚪) | ~35 cases |
-| Manual only (❌) | ~15 cases |
+| Automated (✅) | ~75 cases |
+| Partially automated (🟡) | ~12 cases |
+| Manual only (❌) | ~18 cases |
 
-The manual-only core: anything crossing the app sandbox (share sheet delivery, AirDrop/Mail/
-Messages, share extension, Files picker), two-device iCloud sync, camera/photo + live LLM
-scanning, Siri/Shortcuts, and gesture physics. Everything else is reachable with the existing
-accessibility-identifier + `UITestSupport` infrastructure or plain unit tests.
+Manual-only core: anything crossing the app sandbox (share delivery, AirDrop/Mail/Messages,
+share extension, Files picker), two-device iCloud sync, camera/photo + live LLM scanning,
+scanner title selection (pending refactor), Siri/Shortcuts, gesture physics, system emoji
+keyboard, and iPad multi-pane propagation.
 
-## Gap-closure work packages
+## Gap-closure history
 
-1. **Unit-test gaps** (existing files only, no pbxproj changes):
-   preferment weird-percentage/0g edge cases, corrupted `.doughy` handling, import-with-
-   existing-name, scanner recipe-set title selection, reset-all-conversions store behavior.
-2. **UI tests in existing files** (no pbxproj changes):
-   creation edge cases (existing collection, duplicate names, chips, temps), instructions
-   add/delete/whitespace, preview error paths, byWeight adjust tweaks, unit cycling,
-   ingredient toggle, copy recipe, remove preferment.
-3. **New UI test files** (single owner for `project.pbxproj` edits):
-   `HomeScreenUITests`, `SettingsUITests` (conversions/recently deleted/links),
-   `WelcomeUITests` (launch-argument seeded).
+**Round 1 (2026-07-04):** ~41 tests. Unit: preferment percentage/0g edge cases, corrupted
+`.doughy`, duplicate-name import, density-store reset. UI (existing suites): existing
+collection, duplicate-name error, duplicate ingredients, chips, temps, instructions
+add/delete/whitespace, copy recipe, by-weight adjust, liquid unit cycling, remove preferment.
+New suites: `HomeScreenUITests`, `SettingsUITests`, `WelcomeUITests` (+ launch-flag reorder in
+`RecipeListView.checkOnboarding` so `-ForceNewUserOnboarding`/`-ForceWhatsNew` work under
+`-UITesting`).
+
+**Round 2 (2026-07-05):** ~13 tests. Short name, instruction reorder (via "Move to position…"
+sheet), dry/unknown ingredient cycling, the full add/delete custom-ingredient conversion
+cluster incl. g/fl oz, and the new `CollectionAppearanceUITests` (icon, color, fallback
+avatar, edit propagation — asserted via an additive `accessibilityValue` on the collection
+header, preserving the label-derived identifiers `HomeScreenUITests` relies on).

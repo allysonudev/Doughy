@@ -474,4 +474,96 @@ final class RecipeCreationUITests: DoughyUITestCase {
         app.saveRecipe()
         XCTAssertTrue(app.staticTexts["Instructions Loaf"].waitForExistence(timeout: 5))
     }
+
+    /// `CreateRecipeView+StepsPreferment.swift`'s instruction rows expose a "Move to
+    /// position…" context-menu action (`MoveStepSheet` in `CreateRecipeTypes.swift`) that
+    /// reorders via numeric entry rather than a drag gesture. A real press-and-drag on
+    /// SwiftUI's `onMove` reorder handles is flaky/undriveable in XCUITest, so this test
+    /// exercises the app's actual (non-drag) reorder affordance instead and confirms the
+    /// new order persists to the saved recipe's instructions.
+    func testMoveInstructionToPositionReordersAndPersists() throws {
+        app.startCreateRecipe()
+        app.chooseMode(byPercent: true)
+        app.fillDetails(name: "Reorder Instructions Loaf", newCollection: "Reorder Instructions Tests", defaultWeight: "1000")
+        app.fillFlour(at: 0, name: "Bread Flour", value: "100")
+        app.fillIngredient(at: 0, name: "Water", value: "70")
+        app.tapIngredientsNext()
+
+        let stepField = app.textFields["Step description"]
+        XCTAssertTrue(stepField.waitForExistence(timeout: 5), "Step description field not found")
+        let addStepButton = app.buttons["Add Step"]
+        XCTAssertTrue(addStepButton.waitForExistence(timeout: 5))
+
+        stepField.enterText("Mix flour and water", app: app)
+        addStepButton.tap()
+        XCTAssertTrue(app.staticTexts["Mix flour and water"].waitForExistence(timeout: 5))
+
+        stepField.clearAndType("Rest for 30 minutes", app: app)
+        addStepButton.tap()
+        XCTAssertTrue(app.staticTexts["Rest for 30 minutes"].waitForExistence(timeout: 5))
+
+        stepField.clearAndType("Bake at 450F", app: app)
+        addStepButton.tap()
+        XCTAssertTrue(app.staticTexts["Bake at 450F"].waitForExistence(timeout: 5))
+
+        // Starting order: 1. Mix flour and water, 2. Rest for 30 minutes, 3. Bake at 450F.
+        // Move the last step ("Bake at 450F") to position 1.
+        app.moveInstruction(containing: "Bake at 450F", toPosition: 1)
+
+        // New order should be: 1. Bake at 450F, 2. Mix flour and water, 3. Rest for 30 minutes.
+        let firstNumber = app.staticTexts["1."]
+        XCTAssertTrue(firstNumber.waitForExistence(timeout: 5))
+        // Verify ordering via each row's position rather than relying on label text alone:
+        // the numbered prefixes are reused across rows, so compare frame positions of the
+        // instruction text elements themselves.
+        let bakeText = app.staticTexts["Bake at 450F"]
+        let mixText = app.staticTexts["Mix flour and water"]
+        let restText = app.staticTexts["Rest for 30 minutes"]
+        XCTAssertTrue(bakeText.waitForExistence(timeout: 5))
+        XCTAssertTrue(mixText.waitForExistence(timeout: 5))
+        XCTAssertTrue(restText.waitForExistence(timeout: 5))
+        XCTAssertLessThan(bakeText.frame.minY, mixText.frame.minY, "Bake step should now be listed before Mix step")
+        XCTAssertLessThan(mixText.frame.minY, restText.frame.minY, "Mix step should now be listed before Rest step")
+
+        app.saveRecipe()
+        XCTAssertTrue(app.staticTexts["Reorder Instructions Loaf"].waitForExistence(timeout: 5))
+
+        // Re-enter edit mode and confirm the new order was actually persisted (not just
+        // reflected transiently in view state before save).
+        app.editRecipe(named: "Reorder Instructions Loaf")
+        app.tapDetailsNext()
+        app.tapIngredientsNext()
+
+        let bakeTextAfterReopen = app.staticTexts["Bake at 450F"]
+        let mixTextAfterReopen = app.staticTexts["Mix flour and water"]
+        let restTextAfterReopen = app.staticTexts["Rest for 30 minutes"]
+        XCTAssertTrue(bakeTextAfterReopen.waitForExistence(timeout: 5))
+        XCTAssertTrue(mixTextAfterReopen.waitForExistence(timeout: 5))
+        XCTAssertTrue(restTextAfterReopen.waitForExistence(timeout: 5))
+        XCTAssertLessThan(bakeTextAfterReopen.frame.minY, mixTextAfterReopen.frame.minY, "Persisted order should still show Bake before Mix")
+        XCTAssertLessThan(mixTextAfterReopen.frame.minY, restTextAfterReopen.frame.minY, "Persisted order should still show Mix before Rest")
+
+        app.saveRecipe()
+    }
+
+    // MARK: - Short name
+
+    /// `detailsReady` (`CreateRecipeView+StepsIngredients.swift`) only requires the trimmed
+    /// recipe name to be non-empty - there's no minimum length - so a 1-character name should
+    /// save and list normally like any other recipe.
+    func testCreateRecipeWithShortNameSaves() throws {
+        app.startCreateRecipe()
+        app.chooseMode(byPercent: true)
+
+        app.fillDetails(name: "A", newCollection: "Short Name Tests", defaultWeight: "1000")
+
+        app.fillFlour(at: 0, name: "Bread Flour", value: "100")
+        app.fillIngredient(at: 0, name: "Water", value: "70")
+        app.tapIngredientsNext()
+
+        app.saveRecipe()
+
+        let cell = app.staticTexts["A"]
+        XCTAssertTrue(cell.waitForExistence(timeout: 5), "Recipe with a 1-character name should save and appear in the recipe list")
+    }
 }

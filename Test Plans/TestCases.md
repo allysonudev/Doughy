@@ -3,13 +3,11 @@
 
 ## Manual Testing Required
 
-Top priority for hand testing. Two tiers: cases that can never be automated, and cases
-that could be but aren't yet. Everything below this section has automated coverage (unit
-and/or UI); see [AutomationCoverage.md](AutomationCoverage.md) for the case-by-case mapping.
+Top priority for hand testing — these cases cannot be automated (system UI, cross-device,
+camera/LLM, Siri). Everything below this section has automated coverage (unit and/or UI);
+see [AutomationCoverage.md](AutomationCoverage.md) for the case-by-case mapping.
 
-### Cannot be automated
-
-#### Recipe scanner (end-to-end with real photos + LLM)
+### Recipe scanner (end-to-end with real photos + LLM)
 - Import single image with just ingredients
   - Try photo version from book
 - Import single image with ingredients and leaks of instructions
@@ -19,13 +17,13 @@ and/or UI); see [AutomationCoverage.md](AutomationCoverage.md) for the case-by-c
 - Recipe set should choose correct title (title selection is inlined in the live-LLM
   pipeline; needs a small refactor to become unit-testable)
 
-#### Import recipe link
+### Import recipe link
 - NYT Cooking which might require subscription
 
-#### Collection Appearance
+### Collection Appearance
 - Pick a custom emoji via the emoji picker (system emoji keyboard isn't scriptable)
 
-#### Sharing & Importing
+### Sharing & Importing
 - Confirm the share sheet lets you send the .doughy file via Messages/Mail/AirDrop/Save to Files
 - Share from swipe / hold menu: actually complete a send (sheet presentation is automated)
 - Open a shared .doughy file from AirDrop
@@ -39,7 +37,7 @@ and/or UI); see [AutomationCoverage.md](AutomationCoverage.md) for the case-by-c
 - Share Extension: share a non-recipe URL and confirm a helpful error/cancel path
 - Share Extension: cancel out of the share extension before it opens the app
 
-#### Settings
+### Settings
 - Backup and restore a big library and verify everything is back (Files picker flow;
   the backup document round-trip itself is unit-tested)
 - iCloud sync: change settings/ingredient conversions/collection appearance/deleted recipes
@@ -47,14 +45,14 @@ and/or UI); see [AutomationCoverage.md](AutomationCoverage.md) for the case-by-c
 - Change the device region/locale and confirm temperature and weight units/number formatting
   follow the region automatically, not just the manual toggle
 
-#### Bake Session
+### Bake Session
 - Ingredient peek bar gesture physics: swipe around — ingredients should behave the same as
   normal; drag up is resisted, drag down resets close to normal or dismisses halfway down;
   tap away dismisses (tap-to-reveal is automated)
 - (iPad) Tweak a session, tap "Set as Default", and verify *other open views/panes* reflect
   the new default (the flow itself is automated on iPhone)
 
-#### Siri, Shortcuts & Quick Actions
+### Siri, Shortcuts & Quick Actions
 - Siri: "Scan recipe in Doughy" with a recipe photo.
 - Siri: "Share [recipe] in Doughy" with and without specifying a recipient.
 - Siri: "Open [recipe] in Doughy".
@@ -62,41 +60,16 @@ and/or UI); see [AutomationCoverage.md](AutomationCoverage.md) for the case-by-c
 - Long-press the app icon on the Home Screen and use the Scan Recipe quick action.
 - Long-press the app icon and use the Open Recipe quick action (from a recently opened recipe).
 
-#### Welcome
+### Welcome
 - Real upgrade install: put a 1.0 build on device, update on top of it, and confirm the
   What's New screen and data migration (the screen logic is automated via launch flags;
   Core Data migration is unit-tested)
-
-### Not yet automated (test by hand until covered)
-
-#### Creating recipes
-- Short name (trivial UI variant, never written)
-- Move instructions around (drag-to-reorder in XCUITest is flaky; skipped deliberately)
-
-#### Collection Appearance
-- Pick a built-in icon for a new collection
-- Pick a color
-- Leave icon/color unset and confirm it falls back to a first-letter avatar with a
-  name-derived color
-- Edit the appearance on an existing collection and confirm it updates everywhere
-  (Home Screen list, share/import previews) — store/export round-trips are unit-tested,
-  the UI propagation is not
-
-#### Settings — ingredient conversions
-- Add an ingredient to a section (feature TODO)
-- Test a new ingredient showing up in suggestion chip
-- Test a new ingredient showing up in bake session and toggle
-- Delete an ingredient and: toggles no longer happen; no longer in suggestion chips
-- Add a conversion measured in fluid ounces and confirm the g/fl oz unit shows in the
-  unit menu (depends on add-ingredient)
-
-#### Bake Session
-- Toggle ingredient amounts
 
 ## Creating recipes
 ### By Percentage
 - New collection
 - Existing collection
+- Short name
 - Existing name
 - With/Without preferment
 - Single flour/multiple flours
@@ -107,6 +80,7 @@ and/or UI); see [AutomationCoverage.md](AutomationCoverage.md) for the case-by-c
 ### By Weight
 - New collection
 - Existing collection
+- Short name
 - Existing name
 - With/Without preferment
 - Single flour/multiple flours
@@ -135,6 +109,8 @@ and/or UI); see [AutomationCoverage.md](AutomationCoverage.md) for the case-by-c
 - Ingredients which need cleanup
 
 ### Instructions
+- Move instructions around (covered via the context menu's "Move to position…" sheet; the
+  drag-reorder handles themselves aren't exercised)
 - Add/delete instructions
 - Instructions with just spaces
 
@@ -142,6 +118,13 @@ and/or UI); see [AutomationCoverage.md](AutomationCoverage.md) for the case-by-c
 - Updates when you go back and change things.
 - Save recipe with the same name as existing one gives error.
 - Save recipe with duplicate ingredients.
+
+### Collection Appearance
+- Pick a built-in icon for a new collection
+- Pick a color
+- Leave icon/color unset and confirm it falls back to a first-letter avatar with a name-derived color
+- Edit the appearance on an existing collection and confirm it updates on the Home Screen list
+  (share/import preview propagation is covered by export/import unit tests)
 
 ## Home Screen
 Delete recipe
@@ -170,6 +153,13 @@ Share recipe from hold menu (sheet presentation)
 - Ingredient conversions
   - change values for ingredients and test volume to weight conversions
   - Change units and test volume to weight conversions
+  - Add an ingredient to a section
+  - Test a new ingredient showing up in suggestion chip
+  - Test a new ingredient showing up in bake session and toggle.
+  - Delete an ingredient and:
+    - Test that toggles no longer happen
+    - Ingredients no longer show up in suggestion chips
+  - Add a conversion measured in fluid ounces and confirm the g/fl oz unit shows in the unit menu.
   - Test changing default egg size and add an egg to see it converts correctly.
   - Change egg weights and create new recipe.
   - Reset all to defaults returns every single item to where it should be. Test by changing everything to 1.
@@ -179,6 +169,7 @@ Share recipe from hold menu (sheet presentation)
 - Links at bottom should work.
 
 ## Bake Session
+- Toggle ingredient amounts (known-conversion ingredients cycle units on tap; unknown ingredients don't).
 - Tap a liquid ingredient's amount to cycle units and confirm fluid ounces appears in the cycle (imperial volume setting).
 - Scan or link-import a recipe with fluid ounce amounts (e.g. 8 fl oz milk) and confirm it converts through density, not mass ounces.
 - Scroll down to see ingredient bar

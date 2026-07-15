@@ -377,6 +377,13 @@ struct RecipeListView: View {
         }
     }
 
+    /// Describes a collection's resolved icon/color for UI testing, since `CollectionAvatar`
+    /// itself renders as an accessibility-hidden decorative image.
+    func collectionAvatarDescription(for collectionName: String) -> String {
+        let appearance = appearanceStore.appearance(for: collectionName)
+        return "icon:\(appearance.iconKey ?? "none"), color:\(appearance.colorKey ?? "none")"
+    }
+
     var mainContent: some View {
         Group {
             if store.collections.isEmpty {
@@ -513,6 +520,12 @@ struct RecipeListView: View {
                     }
                     .buttonStyle(.plain)
                     .accessibilityHint(isCollapsed ? "Expand" : "Collapse")
+                    // `CollectionAvatar` itself is accessibility-hidden (decorative), so its resolved
+                    // icon/color is exposed here as an accessibility *value* on the header button
+                    // instead - this is additive and doesn't disturb the button's identifier/label
+                    // (still the collection name, per HomeScreenUITests's `app.buttons["Bagels"]`
+                    // lookups) that other tests rely on.
+                    .accessibilityValue(collectionAvatarDescription(for: collection.name))
                 }
             }
             searchOverlayListSpacer

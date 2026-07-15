@@ -254,15 +254,18 @@ struct MoveStepSheet: View {
                 .keyboardType(.numberPad)
                 .textFieldStyle(.roundedBorder)
                 .focused($isFocused)
+                .accessibilityIdentifier("moveStepPositionField")
             HStack {
                 Spacer()
                 Button(String(localized: "action.cancel", defaultValue: "Cancel")) { onDismiss() }
+                    .accessibilityIdentifier("moveStepCancelButton")
                 Button(String(localized: "create.instructions.move_step.action", defaultValue: "Move")) {
                     if isValid, let t = target { onMove(t) }
                     onDismiss()
                 }
                 .buttonStyle(.borderedProminent)
                 .disabled(!isValid)
+                .accessibilityIdentifier("moveStepConfirmButton")
             }
         }
         .padding(24)

@@ -45,6 +45,7 @@
 		AB1000000000000000000008 /* RecipeWebsiteImporterLiveCorpusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB1000000000000000000007 /* RecipeWebsiteImporterLiveCorpusTests.swift */; };
 		AB2000000000000000000001 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB2000000000000000000011 /* ShareViewController.swift */; };
 		AB2000000000000000000002 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = F0A1B2C3D4E5F60718293A4B /* Localizable.strings */; };
+		AB2000000000000000000004 /* Localizable.stringsdict in Resources */ = {isa = PBXBuildFile; fileRef = F0SD0000000000000000VG01 /* Localizable.stringsdict */; };
 		AB2000000000000000000003 /* Doughy Share Extension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = AB2000000000000000000013 /* Doughy Share Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		B9C877616BE2E2A95E6E4ECF /* CollectionAppearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0D27627EC2B6667EE22997D /* CollectionAppearance.swift */; };
 		BB06F1732425F5F0001A03AD /* ObjectFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB06F1722425F5F0001A03AD /* ObjectFactory.swift */; };
@@ -111,6 +112,7 @@
 		DD0000000000000000000016 /* RecipeDiffTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000000000000000000015 /* RecipeDiffTests.swift */; };
 		DD0000000000000000000018 /* RecipeHistoryUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000000000000000000017 /* RecipeHistoryUITests.swift */; };
 		AB9000000000000000000002 /* HomeScreenUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB9000000000000000000001 /* HomeScreenUITests.swift */; };
+		AB9000000000000000000008 /* CollectionAppearanceUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB9000000000000000000007 /* CollectionAppearanceUITests.swift */; };
 		AB9000000000000000000004 /* SettingsUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB9000000000000000000003 /* SettingsUITests.swift */; };
 		AB9000000000000000000006 /* WelcomeUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB9000000000000000000005 /* WelcomeUITests.swift */; };
 		DD000000000000000000001B /* CoreDataSortedAccessors.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD000000000000000000001A /* CoreDataSortedAccessors.swift */; };
@@ -123,6 +125,7 @@
 		EE00000000000000000001 /* RecipeScannerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE00000000000000000002 /* RecipeScannerTests.swift */; };
 		EE00000000000000000003 /* Recipes in Resources */ = {isa = PBXBuildFile; fileRef = EE00000000000000000004 /* Recipes */; };
 		F0A1B2C3D4E5F60718293A4C /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = F0A1B2C3D4E5F60718293A4B /* Localizable.strings */; };
+		F0A1B2C3D4E5F60718293A4D /* Localizable.stringsdict in Resources */ = {isa = PBXBuildFile; fileRef = F0SD0000000000000000VG01 /* Localizable.stringsdict */; };
 		F5A129C79DE04E909FE7D50F /* RecipeScannerTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB8F0349E42D42B6AC12C824 /* RecipeScannerTypes.swift */; };
 		FA57000000000000000000F2 /* SnapshotHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA57000000000000000000F1 /* SnapshotHelper.swift */; };
 		FA57000000000000000000F4 /* ScreenshotUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA57000000000000000000F3 /* ScreenshotUITests.swift */; };
@@ -289,6 +292,7 @@
 		DD0000000000000000000015 /* RecipeDiffTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeDiffTests.swift; sourceTree = "<group>"; };
 		DD0000000000000000000017 /* RecipeHistoryUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeHistoryUITests.swift; sourceTree = "<group>"; };
 		AB9000000000000000000001 /* HomeScreenUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeScreenUITests.swift; sourceTree = "<group>"; };
+		AB9000000000000000000007 /* CollectionAppearanceUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionAppearanceUITests.swift; sourceTree = "<group>"; };
 		AB9000000000000000000003 /* SettingsUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsUITests.swift; sourceTree = "<group>"; };
 		AB9000000000000000000005 /* WelcomeUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeUITests.swift; sourceTree = "<group>"; };
 		DD0000000000000000000019 /* CoreDataMigrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataMigrationTests.swift; sourceTree = "<group>"; };
@@ -315,6 +319,12 @@
 		F0LOC00000000000000000E /* da */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = da; path = da.lproj/Localizable.strings; sourceTree = "<group>"; };
 		F0LOC00000000000000000F /* ar */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ar; path = ar.lproj/Localizable.strings; sourceTree = "<group>"; };
 		F0LOC000000000000000010 /* hi */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = hi; path = hi.lproj/Localizable.strings; sourceTree = "<group>"; };
+		F0SD00000000000000000001 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = en; path = en.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
+		F0SD00000000000000000002 /* en-CA */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = "en-CA"; path = "en-CA.lproj/Localizable.stringsdict"; sourceTree = "<group>"; };
+		F0SD00000000000000000003 /* en-GB */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = "en-GB"; path = "en-GB.lproj/Localizable.stringsdict"; sourceTree = "<group>"; };
+		F0SD00000000000000000004 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = es; path = es.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
+		F0SD00000000000000000005 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = fr; path = fr.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
+		F0SD00000000000000000006 /* pt-BR */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = "pt-BR"; path = "pt-BR.lproj/Localizable.stringsdict"; sourceTree = "<group>"; };
 		F312F1D82B577F4D6CF1FEE6 /* CollectionAppearanceEditor.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CollectionAppearanceEditor.swift; sourceTree = "<group>"; };
 		FA57000000000000000000F1 /* SnapshotHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnapshotHelper.swift; sourceTree = "<group>"; };
 		FA57000000000000000000F3 /* ScreenshotUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotUITests.swift; sourceTree = "<group>"; };
@@ -376,6 +386,7 @@
 				AA0000000000000000000015 /* RecipeCalculatorUITests.swift */,
 				DD0000000000000000000017 /* RecipeHistoryUITests.swift */,
 				AB9000000000000000000001 /* HomeScreenUITests.swift */,
+				AB9000000000000000000007 /* CollectionAppearanceUITests.swift */,
 				AB9000000000000000000003 /* SettingsUITests.swift */,
 				AB9000000000000000000005 /* WelcomeUITests.swift */,
 				FA57000000000000000000F1 /* SnapshotHelper.swift */,
@@ -431,6 +442,7 @@
 				39CC5426652CEF6C8DF863BB /* RecipeStore.swift */,
 				BB30DEDB2425B83F00BFD472 /* Assets.xcassets */,
 				F0A1B2C3D4E5F60718293A4B /* Localizable.strings */,
+				F0SD0000000000000000VG01 /* Localizable.stringsdict */,
 				BB30DEDD2425B83F00BFD472 /* LaunchScreen.storyboard */,
 				BB30DEE02425B83F00BFD472 /* Info.plist */,
 				8D5DEA7121902BEE05D59CD2 /* Doughy.entitlements */,
@@ -748,6 +760,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				AB2000000000000000000002 /* Localizable.strings in Resources */,
+				AB2000000000000000000004 /* Localizable.stringsdict in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -758,6 +771,7 @@
 				BB30DEDF2425B83F00BFD472 /* LaunchScreen.storyboard in Resources */,
 				BB30DEDC2425B83F00BFD472 /* Assets.xcassets in Resources */,
 				F0A1B2C3D4E5F60718293A4C /* Localizable.strings in Resources */,
+				F0A1B2C3D4E5F60718293A4D /* Localizable.stringsdict in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -816,6 +830,7 @@
 				AA0000000000000000000016 /* RecipeCalculatorUITests.swift in Sources */,
 				DD0000000000000000000018 /* RecipeHistoryUITests.swift in Sources */,
 				AB9000000000000000000002 /* HomeScreenUITests.swift in Sources */,
+				AB9000000000000000000008 /* CollectionAppearanceUITests.swift in Sources */,
 				AB9000000000000000000004 /* SettingsUITests.swift in Sources */,
 				AB9000000000000000000006 /* WelcomeUITests.swift in Sources */,
 				FA57000000000000000000F2 /* SnapshotHelper.swift in Sources */,
@@ -999,6 +1014,19 @@
 				F0LOC000000000000000010 /* hi */,
 			);
 			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+		F0SD0000000000000000VG01 /* Localizable.stringsdict */ = {
+			isa = PBXVariantGroup;
+			children = (
+				F0SD00000000000000000001 /* en */,
+				F0SD00000000000000000002 /* en-CA */,
+				F0SD00000000000000000003 /* en-GB */,
+				F0SD00000000000000000004 /* es */,
+				F0SD00000000000000000005 /* fr */,
+				F0SD00000000000000000006 /* pt-BR */,
+			);
+			name = Localizable.stringsdict;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */

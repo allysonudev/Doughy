@@ -246,7 +246,7 @@ extension CreateRecipeView {
                                 .keyboardType(.decimalPad)
                                 .frame(width: 70)
                                 .accessibilityIdentifier("flourValueField_\(index)")
-                                .accessibilityLabel("\(flours[index].name.isEmpty ? "Flour" : flours[index].name), \(isPercent ? "percentage" : "grams")")
+                                .accessibilityLabel("\(flours[index].name.isEmpty ? String(localized: "create.flour_label", defaultValue: "Flour") : flours[index].name), \(isPercent ? String(localized: "accessibility.percentage", defaultValue: "percentage") : String(localized: "accessibility.grams", defaultValue: "grams"))")
                                 .focused($focusedValueRowID, equals: flours[index].id)
                             Text(isPercent ? "%" : String(localized: "unit.grams.short", defaultValue: "g")).foregroundStyle(.secondary)
                         }
@@ -321,7 +321,7 @@ extension CreateRecipeView {
                                     .keyboardType(.decimalPad)
                                     .frame(width: 70)
                                     .accessibilityIdentifier("ingredientValueField_\(index)")
-                                    .accessibilityLabel("\(ingredients[index].name.isEmpty ? "Ingredient" : ingredients[index].name), \(isPercent ? "percentage" : "grams")")
+                                    .accessibilityLabel("\(ingredients[index].name.isEmpty ? String(localized: "create.ingredient_label", defaultValue: "Ingredient") : ingredients[index].name), \(isPercent ? String(localized: "accessibility.percentage", defaultValue: "percentage") : String(localized: "accessibility.grams", defaultValue: "grams"))")
                                     .focused($focusedValueRowID, equals: ingredients[index].id)
                                 Text(isPercent ? "%" : String(localized: "unit.grams.short", defaultValue: "g")).foregroundStyle(.secondary)
                             }

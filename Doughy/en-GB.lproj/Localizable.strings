@@ -108,6 +108,7 @@
 /* Explicit app-code strings */
 "action.discard" = "Discard";
 "action.keep_editing" = "Keep Editing";
+"action.close" = "Close";
 "action.ok" = "OK";
 "alert.discard_changes.message" = "Your changes will be lost";
 "alert.discard_changes.title" = "Discard changes?";
@@ -419,3 +420,5 @@
 "share_extension.opening" = "Opening Doughy…";
 "share_extension.no_url" = "Doughy couldn’t find a recipe URL to import.";
 "share_extension.open_failed" = "Doughy couldn’t open the import flow. Try opening Doughy and using Import from Link.";
+
+"source_photo.open" = "Open source photo";

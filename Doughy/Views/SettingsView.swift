@@ -321,15 +321,7 @@ struct SettingsView: View {
             .toolbar {
                 if showsCloseButton {
                     ToolbarItem(placement: .topBarLeading) {
-                        if #available(iOS 26.0, *) {
-                            Button("Close", systemImage: "xmark") {
-                                dismiss()
-                            }.glassEffect()
-                        } else {
-                            Button("Close", systemImage: "xmark") {
-                                dismiss()
-                            }
-                        }
+                        settingsCloseButton
                     }
                 }
             }
@@ -357,6 +349,28 @@ struct SettingsView: View {
             guard visibility != .all else { return }
             settingsColumnVisibility = .all
         }
+    }
+
+    private var settingsCloseButton: some View {
+        Button {
+            dismiss()
+        } label: {
+            Image(systemName: "xmark")
+                .font(.system(size: 20, weight: .semibold))
+                .foregroundStyle(.primary)
+                .frame(width: 44, height: 44)
+                .contentShape(Circle())
+                .background {
+                    Color.clear.liquidGlassSurface(
+                        in: Circle(),
+                        tint: Color(.systemBackground).opacity(0.18),
+                        interactive: true
+                    )
+                }
+        }
+        .buttonStyle(.plain)
+        .hoverEffectDisabled()
+        .accessibilityLabel(String(localized: "action.close", defaultValue: "Close"))
     }
 
     @ViewBuilder

@@ -477,6 +477,31 @@ extension XCUIApplication {
         next.tap()
     }
 
+    /// Long-presses the instruction row whose text is `text` to open its context menu, taps
+    /// "Move to position…", enters `position` (1-based) into the resulting sheet, and confirms.
+    /// This exercises `MoveStepSheet` (`CreateRecipeTypes.swift`) - a numeric-entry reorder
+    /// affordance, rather than an actual drag gesture, which is undriveable/flaky in XCUITest.
+    func moveInstruction(containing text: String, toPosition position: Int) {
+        let row = staticTexts[text]
+        XCTAssertTrue(row.waitForExistence(timeout: 5), "Instruction \"\(text)\" not found")
+        row.press(forDuration: 1.0)
+
+        let moveButton = buttons["Move to position…"]
+        XCTAssertTrue(moveButton.waitForExistence(timeout: 5), "\"Move to position…\" option not found in instruction context menu")
+        moveButton.tap()
+
+        let field = textFields["moveStepPositionField"]
+        XCTAssertTrue(field.waitForExistence(timeout: 5), "Move step position field not found")
+        field.tap()
+        waitForKeyboardFocus()
+        field.typeText("\(position)")
+
+        let confirmButton = buttons["moveStepConfirmButton"]
+        XCTAssertTrue(confirmButton.waitForExistence(timeout: 5), "Move step confirm button not found")
+        confirmButton.tap()
+        waitForUITransition()
+    }
+
     // MARK: - Discard confirmation
 
     /// Dismisses the "discard unsaved changes" confirmation without discarding.

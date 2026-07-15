@@ -48,6 +48,7 @@ struct IngredientConversionsView: View {
                     } label: {
                         Label(String(localized: "action.add_ingredient", defaultValue: "Add Ingredient"), systemImage: "plus.circle")
                     }
+                    .accessibilityIdentifier("addIngredientButton_\(group.rawValue)")
                 }
                 if group == .salts {
                     eggsSection
@@ -99,14 +100,17 @@ struct IngredientConversionsView: View {
     private func customEntryRow(_ entry: IngredientConversionStore.ConversionEntry) -> some View {
         HStack {
             Text(entry.name.capitalized)
+                .accessibilityIdentifier("customIngredientRow_\(entry.name)")
             Spacer()
             TextField("", value: customEntryBinding(for: entry), format: .number.precision(.fractionLength(0...2)))
                 .multilineTextAlignment(.trailing)
                 .keyboardType(.decimalPad)
                 .frame(width: 70)
+                .accessibilityIdentifier("customIngredientGramsField_\(entry.name)")
                 .accessibilityLabel("\(entry.name.capitalized), grams per \(entry.unit)")
             Text(shortUnitLabel(for: entry.unit))
                 .foregroundStyle(.secondary)
+                .accessibilityIdentifier("customIngredientUnitLabel_\(entry.name)")
         }
         .swipeActions(edge: .trailing) {
             Button("Delete", role: .destructive) {
@@ -367,6 +371,7 @@ private struct AddConversionSheet: View {
                     TextField(String(localized: "create.name", defaultValue: "Name"), text: $name)
                         .autocorrectionDisabled()
                         .focused($isNameFocused)
+                        .accessibilityIdentifier("addIngredientNameField")
                 }
                 Section {
                     Picker(String(localized: "conversions.unit", defaultValue: "Unit"), selection: $unit) {
@@ -374,6 +379,7 @@ private struct AddConversionSheet: View {
                             Text(VolumeUnitFormatter.pickerLabel(unit: u)).tag(u)
                         }
                     }
+                    .accessibilityIdentifier("addIngredientUnitPicker")
                     HStack {
                         Text(String(format: String(localized: "conversions.grams_per_unit", defaultValue: "Grams per %@"), VolumeUnitFormatter.pickerLabel(unit: unit)))
                         Spacer()
@@ -381,6 +387,7 @@ private struct AddConversionSheet: View {
                             .multilineTextAlignment(.trailing)
                             .keyboardType(.decimalPad)
                             .frame(width: 70)
+                            .accessibilityIdentifier("addIngredientGramsField")
                         Text(String(localized: "unit.grams.short", defaultValue: "g")).foregroundStyle(.secondary)
                     }
                 } header: {
@@ -403,6 +410,7 @@ private struct AddConversionSheet: View {
                         }
                     }
                     .disabled(!isValid)
+                    .accessibilityIdentifier("addIngredientSaveButton")
                 }
             }
             .onAppear { isNameFocused = true }

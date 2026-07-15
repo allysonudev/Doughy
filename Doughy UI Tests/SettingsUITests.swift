@@ -196,6 +196,200 @@ final class SettingsUITests: DoughyUITestCase {
         XCTAssertEqual(resetEggField.value as? String, defaultEggValue, "Large egg value should return to its default after reset")
     }
 
+    // MARK: - Custom ingredient conversions (Add Ingredient)
+
+    /// Opens the "Add Ingredient" sheet for the given category group and saves a new
+    /// custom ingredient with the given unit and grams-per-unit value. Assumes Settings
+    /// > Ingredient Conversions is already open.
+    private func addCustomIngredient(name: String, groupIdentifier: String, unitLabel: String? = nil, grams: String) {
+        let addButton = app.buttons["addIngredientButton_\(groupIdentifier)"]
+        app.scrollToElement(addButton)
+        XCTAssertTrue(addButton.waitForExistence(timeout: 5), "Add Ingredient button for \"\(groupIdentifier)\" not found")
+        addButton.tap()
+
+        let nameField = app.textFields["addIngredientNameField"]
+        XCTAssertTrue(nameField.waitForExistence(timeout: 5), "Add-ingredient name field not found")
+        nameField.enterText(name, app: app)
+
+        if let unitLabel {
+            let unitPicker = app.buttons["addIngredientUnitPicker"]
+            XCTAssertTrue(unitPicker.waitForExistence(timeout: 5), "Add-ingredient unit picker not found")
+            unitPicker.tap()
+            let option = app.buttons[unitLabel]
+            XCTAssertTrue(option.waitForExistence(timeout: 5), "Unit option \"\(unitLabel)\" not found")
+            option.tap()
+        }
+
+        let gramsField = app.textFields["addIngredientGramsField"]
+        XCTAssertTrue(gramsField.waitForExistence(timeout: 5), "Add-ingredient grams field not found")
+        gramsField.replaceNumericValue(grams, app: app)
+        app.navigationBars.firstMatch.tap() // dismiss keyboard so the value commits
+
+        let saveButton = app.buttons["addIngredientSaveButton"]
+        XCTAssertTrue(saveButton.waitForExistence(timeout: 5), "Add-ingredient Save button not found")
+        saveButton.tap()
+        app.waitForUITransition()
+    }
+
+    func testAddCustomIngredientAppearsAndPersistsAfterReopening() throws {
+        openSettings()
+        openIngredientConversions()
+
+        addCustomIngredient(name: "Rosemary Leaves", groupIdentifier: "Other", unitLabel: "Tablespoons", grams: "4.5")
+
+        let row = app.staticTexts["customIngredientRow_Rosemary Leaves"]
+        XCTAssertTrue(row.waitForExistence(timeout: 5), "Custom ingredient should appear in the conversions list")
+
+        app.navigateBack()
+        app.waitForUITransition()
+        openIngredientConversions()
+
+        let reopenedRow = app.staticTexts["customIngredientRow_Rosemary Leaves"]
+        app.scrollToElement(reopenedRow)
+        XCTAssertTrue(reopenedRow.waitForExistence(timeout: 5), "Custom ingredient should persist across a navigation round trip")
+        let gramsField = app.textFields["customIngredientGramsField_Rosemary Leaves"]
+        app.scrollToElement(gramsField)
+        XCTAssertEqual(gramsField.value as? String, "4.5", "Custom ingredient grams-per-unit should persist")
+    }
+
+    func testAddCustomIngredientAppearsAsSuggestionChipInCreateFlow() throws {
+        openSettings()
+        openIngredientConversions()
+        addCustomIngredient(name: "Rosemary Leaves", groupIdentifier: "Other", unitLabel: "Tablespoons", grams: "4.5")
+        app.navigateBack()
+        app.navigateBack()
+        app.waitForUITransition()
+
+        app.startCreateRecipe()
+        app.chooseMode(byPercent: false)
+        app.fillDetails(name: "Rosemary Focaccia", newCollection: "Chip Tests")
+
+        app.fillFlour(at: 0, name: "Bread Flour", value: "500")
+
+        let ingredientNameField = app.textFields["ingredientNameField_0"]
+        XCTAssertTrue(ingredientNameField.waitForExistence(timeout: 5))
+        ingredientNameField.tap()
+
+        app.tapSuggestionChip(named: "Rosemary Leaves")
+        let valueField = app.textFields["ingredientValueField_0"]
+        XCTAssertTrue(valueField.waitForExistence(timeout: 5))
+        valueField.enterText("10", app: app)
+
+        app.tapIngredientsNext()
+        app.saveRecipe()
+
+        XCTAssertTrue(app.staticTexts["Rosemary Focaccia"].waitForExistence(timeout: 5), "New recipe should appear in the recipe list")
+    }
+
+    func testAddCustomIngredientCyclesToConfiguredUnitInBakeSession() throws {
+        openSettings()
+        openIngredientConversions()
+        addCustomIngredient(name: "Rosemary Leaves", groupIdentifier: "Other", unitLabel: "Tablespoons", grams: "4.5")
+        app.navigateBack()
+        app.navigateBack()
+        app.waitForUITransition()
+
+        app.startCreateRecipe()
+        app.chooseMode(byPercent: false)
+        app.fillDetails(name: "Rosemary Loaf", newCollection: "Bake Session Tests")
+        app.fillFlour(at: 0, name: "Bread Flour", value: "500")
+        app.fillIngredient(at: 0, name: "Rosemary Leaves", value: "9")
+        app.tapIngredientsNext()
+        app.saveRecipe()
+
+        app.openCalculator(for: "Rosemary Loaf")
+        app.expandIngredients()
+
+        let weightText = app.staticTexts["ingredientWeight_Rosemary Leaves"]
+        XCTAssertTrue(weightText.waitForExistence(timeout: 5), "Rosemary Leaves weight not found on results screen")
+        let gramsLabel = weightText.label
+        XCTAssertTrue(gramsLabel.hasSuffix("g"), "Initial display should be in grams, got \"\(gramsLabel)\"")
+
+        weightText.tap()
+        let cycledLabel = app.staticTexts["ingredientWeight_Rosemary Leaves"].label
+        XCTAssertNotEqual(cycledLabel, gramsLabel, "Tapping the weight should cycle to the configured volume unit")
+        XCTAssertTrue(cycledLabel.lowercased().contains("tablespoon"), "Cycled label should show tablespoons, got \"\(cycledLabel)\"")
+
+        // Cycle again: back to grams, since only one custom unit is configured.
+        app.staticTexts["ingredientWeight_Rosemary Leaves"].tap()
+        let backToGrams = app.staticTexts["ingredientWeight_Rosemary Leaves"].label
+        XCTAssertEqual(backToGrams, gramsLabel, "Cycling twice should return to the original grams display")
+    }
+
+    func testDeletingCustomIngredientRemovesChipAndStopsCycling() throws {
+        openSettings()
+        openIngredientConversions()
+        addCustomIngredient(name: "Rosemary Leaves", groupIdentifier: "Other", unitLabel: "Tablespoons", grams: "4.5")
+        app.navigateBack()
+        app.navigateBack()
+        app.waitForUITransition()
+
+        // Create a recipe using the custom ingredient so we can confirm cycling stops after deletion.
+        app.startCreateRecipe()
+        app.chooseMode(byPercent: false)
+        app.fillDetails(name: "Rosemary Loaf 2", newCollection: "Delete Tests")
+        app.fillFlour(at: 0, name: "Bread Flour", value: "500")
+        app.fillIngredient(at: 0, name: "Rosemary Leaves", value: "9")
+        app.tapIngredientsNext()
+        app.saveRecipe()
+
+        // Delete the custom ingredient from Settings.
+        openSettings()
+        openIngredientConversions()
+        let row = app.staticTexts["customIngredientRow_Rosemary Leaves"]
+        app.scrollToElement(row)
+        XCTAssertTrue(row.waitForExistence(timeout: 5))
+        row.swipeLeft()
+        let deleteButton = app.buttons["Delete"]
+        XCTAssertTrue(deleteButton.waitForExistence(timeout: 5))
+        deleteButton.tap()
+        XCTAssertFalse(app.staticTexts["customIngredientRow_Rosemary Leaves"].exists, "Custom ingredient should be removed from the list")
+        app.navigateBack()
+        app.navigateBack()
+        app.waitForUITransition()
+
+        // Suggestion chip should no longer appear in the create flow.
+        app.startCreateRecipe()
+        app.chooseMode(byPercent: false)
+        app.fillDetails(name: "Post Delete Loaf", newCollection: "Post Delete Tests")
+        app.fillFlour(at: 0, name: "Bread Flour", value: "500")
+        let ingredientNameField = app.textFields["ingredientNameField_0"]
+        XCTAssertTrue(ingredientNameField.waitForExistence(timeout: 5))
+        ingredientNameField.tap()
+        ingredientNameField.typeText("Rosemary")
+        XCTAssertFalse(app.buttons["suggestionChip_Rosemary Leaves"].waitForExistence(timeout: 2),
+                        "Suggestion chip should no longer appear after the ingredient was deleted")
+        ingredientNameField.clearAndType("Rosemary Leaves", app: app)
+        let valueField = app.textFields["ingredientValueField_0"]
+        XCTAssertTrue(valueField.waitForExistence(timeout: 5))
+        valueField.enterText("9", app: app)
+        app.tapIngredientsNext()
+        app.saveRecipe()
+
+        // The amount should no longer cycle on the earlier recipe that already used it.
+        app.openCalculator(for: "Rosemary Loaf 2")
+        app.expandIngredients()
+        let weightText = app.staticTexts["ingredientWeight_Rosemary Leaves"]
+        XCTAssertTrue(weightText.waitForExistence(timeout: 5))
+        let gramsLabel = weightText.label
+        weightText.tap()
+        let afterTapLabel = app.staticTexts["ingredientWeight_Rosemary Leaves"].label
+        XCTAssertEqual(afterTapLabel, gramsLabel, "Amount should no longer cycle once its conversion has been deleted")
+    }
+
+    func testFluidOunceConversionAppearsInUnitMenu() throws {
+        openSettings()
+        selectPickerOption(identifier: "volumeUnitsPicker", optionLabel: "Imperial")
+
+        openIngredientConversions()
+        addCustomIngredient(name: "Fish Sauce", groupIdentifier: "Other", unitLabel: "Fluid Ounces", grams: "29.6")
+
+        let unitLabel = app.staticTexts["customIngredientUnitLabel_Fish Sauce"]
+        app.scrollToElement(unitLabel)
+        XCTAssertTrue(unitLabel.waitForExistence(timeout: 5), "Fish Sauce unit label not found")
+        XCTAssertTrue(unitLabel.label.contains("fl oz"), "Custom ingredient's stored unit should display as g/fl oz, got \"\(unitLabel.label)\"")
+    }
+
     // MARK: - Recently deleted
 
     func testRestoreRecentlyDeletedRecipeReturnsItToList() throws {
